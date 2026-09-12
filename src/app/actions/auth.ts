@@ -2,14 +2,18 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signInSchema, signUpSchema, type SignUpInput } from "@/lib/validation/auth";
+import { signInSchema, signUpSchema } from "@/lib/validation/auth";
+import type { UserRole } from "@/lib/supabase/types";
 
 export type FormState = {
   error: string | null;
   fieldErrors: Record<string, string>;
 };
 
-const ROLE_HOME: Record<SignUpInput["role"], string> = {
+// Keyed by the full UserRole (not just the sign-up roles) because sign-in
+// also has to route an existing admin account, even though admins can't
+// sign up through this form.
+const ROLE_HOME: Record<UserRole, string> = {
   student: "/student",
   rep: "/rep",
   supplier: "/supplier",

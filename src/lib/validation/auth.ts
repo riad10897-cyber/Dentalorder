@@ -51,17 +51,11 @@ export const supplierSignUpSchema = z.object({
   description: z.string().trim().optional(),
 });
 
-export const adminSignUpSchema = z.object({
-  role: z.literal("admin"),
-  email,
-  password,
-  full_name: fullName,
-});
-
+// No adminSignUpSchema: admin accounts are never created through the public
+// sign-up form. They're set manually in the database — see CLAUDE.md.
 export const signUpSchema = z.discriminatedUnion("role", [
   studentSignUpSchema,
   repSignUpSchema,
   supplierSignUpSchema,
-  adminSignUpSchema,
 ]);
 export type SignUpInput = z.infer<typeof signUpSchema>;

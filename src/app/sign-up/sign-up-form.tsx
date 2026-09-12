@@ -10,13 +10,12 @@ type Rep = {
   section: string | null;
 };
 
-type Role = "student" | "rep" | "supplier" | "admin";
+type Role = "student" | "rep" | "supplier";
 
 const ROLES: { value: Role; label: string }[] = [
   { value: "student", label: "Student" },
   { value: "rep", label: "Representative" },
   { value: "supplier", label: "Supplier" },
-  { value: "admin", label: "Admin" },
 ];
 
 const initialState: FormState = { error: null, fieldErrors: {} };
@@ -27,7 +26,7 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Account type">
+      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Account type">
         {ROLES.map((r) => (
           <button
             key={r.value}
@@ -131,12 +130,6 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
             Your account will be reviewed by an admin before you can list products.
           </p>
         </>
-      )}
-
-      {role === "admin" && (
-        <p className="text-xs text-warning">
-          Admin sign-up should be restricted before real launch — see the Phase 1 report.
-        </p>
       )}
 
       {state.error && <p className="text-sm text-red-400">{state.error}</p>}

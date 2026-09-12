@@ -35,6 +35,13 @@ Do not introduce a new dependency without saying what it is for and why nothing 
 
 ---
 
+## Auth notes
+
+- **Admin accounts are never created through the public sign-up form.** There is no "Admin" option in the sign-up UI, and the server action rejects `role: "admin"` outright. Admins are set manually in the database — see the SQL Editor steps sent along with each auth-related change.
+- **Email confirmation is currently OFF** in Supabase Auth (Providers → Email) to make testing possible without inbox access. Supabase's default email sender is rate-limited and not meant for real users. **Before turning email confirmation back on, set up a custom SMTP provider** (Project Settings → Auth → SMTP Settings) — otherwise confirmation emails will be slow, land in spam, or simply fail to send once past a handful of sign-ups.
+
+---
+
 ## Phase discipline — the most important rule here
 
 The spec has five phases in §13. **Build one phase, stop, and report.**
