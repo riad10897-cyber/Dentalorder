@@ -14,8 +14,10 @@
  * users — safe to run against a project that already has real data, but do
  * not point it at production without knowing that.
  */
-import "dotenv/config";
+import { config } from "dotenv";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+config({ path: ".env.local" });
 import type { Database } from "../src/lib/supabase/types";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -44,6 +46,7 @@ function record(name: string, passed: boolean, detail: string) {
 const RUN_ID = Date.now();
 const password = "Test-Password-123!";
 const createdUserIds: string[] = [];
+const createdOrderIds: string[] = [];
 
 async function createUser(
   email: string,
@@ -72,8 +75,26 @@ async function signInAs(email: string): Promise<SupabaseClient<Database>> {
 }
 
 async function cleanup() {
-  for (const id of createdUserIds) {
-    await admin.auth.admin.deleteUser(id).catch(() => {});
+  // Orders/order_items first (orders.student_id, .rep_id and .supplier_id
+  // are all ON DELETE RESTRICT, so a leftover order blocks user deletion).
+  // Delete by tracked id, and defensively by owning user too, in case a
+  // check that was supposed to be denied wasn't (leaking an extra row).
+  if (createdOrderIds.length > 0) {
+    const { error } = await admin.from("orders").delete().in("id", createdOrderIds);
+    if (error) console.error(`cleanup: could not delete test orders: ${error.message}`);
+  }
+  if (createdUserIds.length > 0) {
+    for (const column of ["student_id", "rep_id", "supplier_id"] as const) {
+      const { error } = await admin.from("orders").delete().in(column, createdUserIds);
+      if (error) console.error(`cleanup: could not delete orders by ${column}: ${error.message}`);
+    }
+  }
+  // Delete users in reverse creation order: students (whose student_reps
+  // row is ON DELETE CASCADE) before the reps they point to (student_reps.rep_id
+  // is ON DELETE RESTRICT, so a rep can't go while a student still references it).
+  for (const id of [...createdUserIds].reverse()) {
+    const { error } = await admin.auth.admin.deleteUser(id);
+    if (error) console.error(`cleanup: could not delete user ${id}: ${error.message}`);
   }
 }
 
@@ -133,6 +154,7 @@ async function main() {
   if (toothOrderErr || !toothOrder) {
     throw new Error(`fixture setup failed (tooth order): ${toothOrderErr?.message}`);
   }
+  createdOrderIds.push(toothOrder.id);
 
   const { data: toothItem, error: toothItemErr } = await admin
     .from("order_items")
@@ -168,6 +190,7 @@ async function main() {
   if (storeOrderErr || !storeOrder) {
     throw new Error(`fixture setup failed (store order): ${storeOrderErr?.message}`);
   }
+  createdOrderIds.push(storeOrder.id);
 
   // ── Sign in as each role ──
   const repA = await signInAs(repAEmail);
@@ -244,15 +267,30 @@ async function main() {
   }
 
   // 4. A crafted request cannot change a price or total on an existing order.
+  //
+  // Two different denial mechanisms are in play, and a client sees them
+  // differently: the protective trigger raises a real Postgres exception
+  // (surfaces as `error`), while an RLS policy that simply has no UPDATE
+  // grant for these rows just matches zero rows — no error, nothing
+  // changes. So the only reliable check is the row's actual state
+  // afterwards, read back with the service-role client.
   {
     const { error } = await repA
       .from("orders")
       .update({ total_price: "999.00" })
       .eq("id", toothOrder.id);
+    const { data: recheck } = await admin
+      .from("orders")
+      .select("total_price")
+      .eq("id", toothOrder.id)
+      .single();
+    const blocked = error !== null || recheck?.total_price === toothOrder.total_price;
     record(
       "rep A (order owner) cannot change total_price on an existing tooth order",
-      error !== null,
-      error ? `blocked: ${error.message}` : "update succeeded — NOT blocked",
+      blocked,
+      error
+        ? `blocked: ${error.message}`
+        : `total_price is still ${recheck?.total_price} (unchanged: ${blocked})`,
     );
   }
   {
@@ -260,10 +298,18 @@ async function main() {
       .from("orders")
       .update({ subtotal: "999.00" })
       .eq("id", toothOrder.id);
+    const { data: recheck } = await admin
+      .from("orders")
+      .select("subtotal")
+      .eq("id", toothOrder.id)
+      .single();
+    const blocked = error !== null || recheck?.subtotal === toothOrder.subtotal;
     record(
       "even the service-role client cannot change subtotal on an existing order (trigger, not just RLS)",
-      error !== null,
-      error ? `blocked: ${error.message}` : "update succeeded — NOT blocked",
+      blocked,
+      error
+        ? `blocked: ${error.message}`
+        : `subtotal is still ${recheck?.subtotal} (unchanged: ${blocked})`,
     );
   }
   {
@@ -271,10 +317,18 @@ async function main() {
       .from("order_items")
       .update({ unit_price: "0.01" })
       .eq("id", toothItem.id);
+    const { data: recheck } = await admin
+      .from("order_items")
+      .select("unit_price")
+      .eq("id", toothItem.id)
+      .single();
+    const blocked = error !== null || recheck?.unit_price === toothItem.unit_price;
     record(
       "rep A cannot change unit_price on an existing order item",
-      error !== null,
-      error ? `blocked: ${error.message}` : "update succeeded — NOT blocked",
+      blocked,
+      error
+        ? `blocked: ${error.message}`
+        : `unit_price is still ${recheck?.unit_price} (unchanged: ${blocked})`,
     );
   }
 

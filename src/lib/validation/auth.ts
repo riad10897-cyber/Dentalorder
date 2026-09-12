@@ -4,6 +4,14 @@ const email = z.string().trim().email("Enter a valid email address.");
 const password = z.string().min(8, "Password must be at least 8 characters.");
 const fullName = z.string().trim().min(2, "Enter your full name.");
 
+// Empty FormData values are "", not absent. Coercing "" straight to a number
+// gives 0, which then fails min(1) before .optional() ever gets a chance —
+// so blank out empty strings first.
+const optionalYearOfStudy = z.preprocess(
+  (v) => (v === "" ? undefined : v),
+  z.coerce.number().int().min(1).max(5).optional(),
+);
+
 export const signInSchema = z.object({
   email,
   password: z.string().min(1, "Enter your password."),
@@ -27,7 +35,7 @@ export const repSignUpSchema = z.object({
   password,
   full_name: fullName,
   university: z.string().trim().min(1, "Enter your university."),
-  year_of_study: z.coerce.number().int().min(1).max(5).optional(),
+  year_of_study: optionalYearOfStudy,
   section: z.string().trim().optional(),
   whish_number: z.string().trim().optional(),
 });
