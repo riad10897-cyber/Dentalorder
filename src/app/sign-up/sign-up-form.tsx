@@ -78,20 +78,30 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
           <Field label="Section (optional)" name="section" error={state.fieldErrors.section}>
             <input name="section" type="text" className={inputClass} />
           </Field>
-          <Field label="Your representative" name="rep_id" error={state.fieldErrors.rep_id}>
-            <select name="rep_id" required className={inputClass} defaultValue="">
-              <option value="" disabled>
-                {reps.length ? "Choose your rep" : "No reps registered yet"}
-              </option>
-              {reps.map((rep) => (
-                <option key={rep.id} value={rep.id}>
-                  {rep.display_name}
-                  {rep.university ? ` — ${rep.university}` : ""}
-                  {rep.section ? ` (${rep.section})` : ""}
+          {reps.length > 0 ? (
+            <Field label="Your representative" name="rep_id" error={state.fieldErrors.rep_id}>
+              <select name="rep_id" required className={inputClass} defaultValue="">
+                <option value="" disabled>
+                  Choose your rep
                 </option>
-              ))}
-            </select>
-          </Field>
+                {reps.map((rep) => (
+                  <option key={rep.id} value={rep.id}>
+                    {rep.display_name}
+                    {rep.university ? ` — ${rep.university}` : ""}
+                    {rep.section ? ` (${rep.section})` : ""}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          ) : (
+            <div className="rounded-sm border border-dashed border-border bg-surface p-3 text-sm text-text-muted">
+              <p>
+                No representative has joined yet. That&apos;s fine — create your account now and
+                pick your rep from your profile once they&apos;re on DentalOrder.
+              </p>
+              <input type="hidden" name="rep_id" value="" />
+            </div>
+          )}
         </>
       )}
 

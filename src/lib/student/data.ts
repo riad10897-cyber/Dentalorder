@@ -17,6 +17,28 @@ export interface StudentContext {
 const DEFAULT_FRASACO_PRICE = 2.5;
 const DEFAULT_COPY_A_PRICE = 1.2;
 
+export interface AvailableRep {
+  id: string;
+  displayName: string;
+  university: string | null;
+  section: string | null;
+}
+
+export async function listAvailableReps(): Promise<AvailableRep[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("representatives")
+    .select("id, display_name, university, section")
+    .order("display_name");
+
+  return (data ?? []).map((rep) => ({
+    id: rep.id,
+    displayName: rep.display_name,
+    university: rep.university,
+    section: rep.section,
+  }));
+}
+
 export async function getStudentContext(): Promise<StudentContext | null> {
   const supabase = await createClient();
   const {

@@ -1,20 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
+import { getStudentContext, getOrderDefaults, listAvailableReps } from "@/lib/student/data";
 import { OrderBuilder } from "./order-builder";
 import { StudentBottomNav } from "../_components/bottom-nav";
+import { RepPicker } from "../_components/rep-picker";
 
 export default async function NewOrderPage() {
   const student = await getStudentContext();
   if (!student) redirect("/sign-in");
 
   if (!student.repId) {
+    const availableReps = await listAvailableReps();
     return (
       <main className="mx-auto min-h-dvh max-w-md px-6 pb-28 pt-5">
         <Header />
-        <div className="mt-10 rounded-card border border-dashed border-border p-6 text-center text-sm text-text-muted">
-          You don&apos;t have a representative assigned yet, so you can&apos;t place a tooth
-          order. Contact an admin to get assigned to a rep.
+        <div className="mt-10 text-center text-sm text-text-muted">
+          You&apos;ll need a representative before you can order teeth.
+        </div>
+        <div className="mt-4">
+          <RepPicker reps={availableReps} />
         </div>
         <StudentBottomNav />
       </main>

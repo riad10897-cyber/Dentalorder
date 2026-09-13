@@ -12,6 +12,14 @@ const optionalYearOfStudy = z.preprocess(
   z.coerce.number().int().min(1).max(5).optional(),
 );
 
+// A student can sign up before their rep has joined the platform — they
+// pick a rep later instead. Same empty-string-to-undefined problem as
+// above: an unselected <select> still submits "".
+const optionalRepId = z.preprocess(
+  (v) => (v === "" ? undefined : v),
+  z.string().uuid("Choose your representative.").optional(),
+);
+
 export const signInSchema = z.object({
   email,
   password: z.string().min(1, "Enter your password."),
@@ -26,7 +34,7 @@ export const studentSignUpSchema = z.object({
   university: z.string().trim().min(1, "Select your university."),
   year_of_study: z.coerce.number().int().min(1).max(5),
   section: z.string().trim().optional(),
-  rep_id: z.string().uuid("Choose your representative."),
+  rep_id: optionalRepId,
 });
 
 export const repSignUpSchema = z.object({

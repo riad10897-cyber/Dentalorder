@@ -1,13 +1,17 @@
 import { redirect } from "next/navigation";
-import { getStudentContext, listStudentOrders } from "@/lib/student/data";
+import { getStudentContext, listStudentOrders, listAvailableReps } from "@/lib/student/data";
 import { StudentBottomNav } from "../_components/bottom-nav";
+import { RepPicker } from "../_components/rep-picker";
 import { signOut } from "@/app/actions/auth";
 
 export default async function StudentProfilePage() {
   const student = await getStudentContext();
   if (!student) redirect("/sign-in");
 
-  const orders = await listStudentOrders(student.userId);
+  const [orders, availableReps] = await Promise.all([
+    listStudentOrders(student.userId),
+    student.repId ? Promise.resolve([]) : listAvailableReps(),
+  ]);
   const totalTeeth = orders.reduce((sum, o) => sum + o.items.length, 0);
   const totalSpent = orders.reduce((sum, o) => sum + o.totalPrice, 0);
 
@@ -49,8 +53,8 @@ export default async function StudentProfilePage() {
           </div>
         </div>
       ) : (
-        <div className="mx-6 mt-4 rounded-card border border-dashed border-border p-4 text-center text-sm text-text-muted">
-          No representative assigned yet.
+        <div className="mx-6 mt-4">
+          <RepPicker reps={availableReps} />
         </div>
       )}
 
