@@ -1,0 +1,37 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { reorderOrder } from "@/app/student/_actions/orders";
+
+export function ReorderButton({ orderId }: { orderId: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleClick() {
+    setError(null);
+    startTransition(async () => {
+      const result = await reorderOrder(orderId);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      router.push(`/student/order/confirmed/${result.orderId}`);
+    });
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={pending}
+        className="min-h-9 rounded-full border border-border bg-surface2 px-3.5 py-1.5 text-xs font-semibold text-text disabled:opacity-50"
+      >
+        {pending ? "Reordering…" : "Reorder"}
+      </button>
+      {error && <span className="max-w-[140px] text-right text-[11px] text-red-400">{error}</span>}
+    </div>
+  );
+}

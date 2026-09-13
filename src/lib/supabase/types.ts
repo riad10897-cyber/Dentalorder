@@ -9,6 +9,112 @@ export type FulfillmentStatus = "pending" | "confirmed" | "fulfilled" | "cancell
 export type ToothType = "frasaco" | "copy_a";
 export type AccountStatus = "active" | "suspended" | "pending_approval";
 
+export interface SubmitToothOrderItem {
+  tooth_number: number;
+  tooth_type: ToothType;
+  quantity: number;
+}
+
+// postgrest-js resolves embeds (e.g. `.from("orders").select("order_items(*)")`)
+// by matching a literal `referencedRelation` string inside the CURRENT
+// table's own Relationships array — even for the "reverse" direction, where
+// the FK column actually lives on the other table. Real `supabase gen types`
+// output duplicates each relationship object onto both tables involved for
+// exactly this reason, so this hand-authored file does the same.
+//
+// foreignKeyName/referencedRelation/isOneToOne must stay narrow literal
+// types (hence the individual `as const`s below) or postgrest-js's embed
+// matching silently fails; columns/referencedColumns must stay plain
+// mutable string[] or the object stops structurally matching
+// GenericRelationship at all.
+/* eslint-disable @typescript-eslint/no-unused-vars -- each REL_* constant is
+   read only through `typeof` in the Relationships tuples below; that's a type
+   position, not a value read, so the linter can't see the usage. */
+const REL_REPRESENTATIVES_PROFILES = {
+  foreignKeyName: "representatives_id_fkey" as const,
+  columns: ["id"],
+  isOneToOne: true as const,
+  referencedRelation: "profiles" as const,
+  referencedColumns: ["id"],
+};
+const REL_STUDENT_REPS_PROFILES = {
+  foreignKeyName: "student_reps_student_id_fkey" as const,
+  columns: ["student_id"],
+  isOneToOne: true as const,
+  referencedRelation: "profiles" as const,
+  referencedColumns: ["id"],
+};
+const REL_STUDENT_REPS_REPRESENTATIVES = {
+  foreignKeyName: "student_reps_rep_id_fkey" as const,
+  columns: ["rep_id"],
+  isOneToOne: false as const,
+  referencedRelation: "representatives" as const,
+  referencedColumns: ["id"],
+};
+const REL_SUPPLIERS_PROFILES = {
+  foreignKeyName: "suppliers_id_fkey" as const,
+  columns: ["id"],
+  isOneToOne: true as const,
+  referencedRelation: "profiles" as const,
+  referencedColumns: ["id"],
+};
+const REL_PRODUCTS_SUPPLIERS = {
+  foreignKeyName: "products_supplier_id_fkey" as const,
+  columns: ["supplier_id"],
+  isOneToOne: false as const,
+  referencedRelation: "suppliers" as const,
+  referencedColumns: ["id"],
+};
+const REL_PRODUCTS_CATEGORIES = {
+  foreignKeyName: "products_category_id_fkey" as const,
+  columns: ["category_id"],
+  isOneToOne: false as const,
+  referencedRelation: "product_categories" as const,
+  referencedColumns: ["id"],
+};
+const REL_ORDERS_PROFILES = {
+  foreignKeyName: "orders_student_id_fkey" as const,
+  columns: ["student_id"],
+  isOneToOne: false as const,
+  referencedRelation: "profiles" as const,
+  referencedColumns: ["id"],
+};
+const REL_ORDERS_REPRESENTATIVES = {
+  foreignKeyName: "orders_rep_id_fkey" as const,
+  columns: ["rep_id"],
+  isOneToOne: false as const,
+  referencedRelation: "representatives" as const,
+  referencedColumns: ["id"],
+};
+const REL_ORDERS_SUPPLIERS = {
+  foreignKeyName: "orders_supplier_id_fkey" as const,
+  columns: ["supplier_id"],
+  isOneToOne: false as const,
+  referencedRelation: "suppliers" as const,
+  referencedColumns: ["id"],
+};
+const REL_ORDER_ITEMS_ORDERS = {
+  foreignKeyName: "order_items_order_id_fkey" as const,
+  columns: ["order_id"],
+  isOneToOne: false as const,
+  referencedRelation: "orders" as const,
+  referencedColumns: ["id"],
+};
+const REL_ORDER_ITEMS_PRODUCTS = {
+  foreignKeyName: "order_items_product_id_fkey" as const,
+  columns: ["product_id"],
+  isOneToOne: false as const,
+  referencedRelation: "products" as const,
+  referencedColumns: ["id"],
+};
+const REL_COMMISSION_STATEMENTS_SUPPLIERS = {
+  foreignKeyName: "commission_statements_supplier_id_fkey" as const,
+  columns: ["supplier_id"],
+  isOneToOne: false as const,
+  referencedRelation: "suppliers" as const,
+  referencedColumns: ["id"],
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -36,7 +142,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_REPRESENTATIVES_PROFILES, typeof REL_STUDENT_REPS_PROFILES, typeof REL_SUPPLIERS_PROFILES, typeof REL_ORDERS_PROFILES];
       };
       representatives: {
         Row: {
@@ -66,7 +172,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["representatives"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_REPRESENTATIVES_PROFILES, typeof REL_STUDENT_REPS_REPRESENTATIVES, typeof REL_ORDERS_REPRESENTATIVES];
       };
       student_reps: {
         Row: {
@@ -80,7 +186,7 @@ export interface Database {
           assigned_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["student_reps"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_STUDENT_REPS_PROFILES, typeof REL_STUDENT_REPS_REPRESENTATIVES];
       };
       suppliers: {
         Row: {
@@ -108,7 +214,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["suppliers"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_SUPPLIERS_PROFILES, typeof REL_PRODUCTS_SUPPLIERS, typeof REL_ORDERS_SUPPLIERS, typeof REL_COMMISSION_STATEMENTS_SUPPLIERS];
       };
       product_categories: {
         Row: {
@@ -124,7 +230,7 @@ export interface Database {
           sort_order?: number;
         };
         Update: Partial<Database["public"]["Tables"]["product_categories"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_PRODUCTS_CATEGORIES];
       };
       products: {
         Row: {
@@ -156,7 +262,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_PRODUCTS_SUPPLIERS, typeof REL_PRODUCTS_CATEGORIES, typeof REL_ORDER_ITEMS_PRODUCTS];
       };
       orders: {
         Row: {
@@ -196,7 +302,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_ORDERS_PROFILES, typeof REL_ORDERS_REPRESENTATIVES, typeof REL_ORDERS_SUPPLIERS, typeof REL_ORDER_ITEMS_ORDERS];
       };
       order_items: {
         Row: {
@@ -222,7 +328,7 @@ export interface Database {
           line_total: string;
         };
         Update: Partial<Database["public"]["Tables"]["order_items"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_ORDER_ITEMS_ORDERS, typeof REL_ORDER_ITEMS_PRODUCTS];
       };
       commission_statements: {
         Row: {
@@ -250,7 +356,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["commission_statements"]["Insert"]>;
-        Relationships: [];
+        Relationships: [typeof REL_COMMISSION_STATEMENTS_SUPPLIERS];
       };
     };
     Views: Record<string, never>;
@@ -262,6 +368,10 @@ export interface Database {
       is_admin: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      submit_tooth_order: {
+        Args: { p_week_number: number; p_items: SubmitToothOrderItem[] };
+        Returns: string;
       };
     };
     Enums: {
