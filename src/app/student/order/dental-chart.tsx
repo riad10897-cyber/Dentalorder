@@ -26,6 +26,7 @@ export function DentalChart({ selections, onTapTooth }: DentalChartProps) {
         rightLabel="Q2 (Upper Left)"
         leftQuadrant={QUADRANT_TEETH[1]}
         rightQuadrant={QUADRANT_TEETH[2]}
+        mirrorLeft
         selections={selections}
         onTapTooth={onTapTooth}
       />
@@ -37,6 +38,7 @@ export function DentalChart({ selections, onTapTooth }: DentalChartProps) {
         rightLabel="Q3 (Lower Left)"
         leftQuadrant={QUADRANT_TEETH[4]}
         rightQuadrant={QUADRANT_TEETH[3]}
+        mirrorLeft
         selections={selections}
         onTapTooth={onTapTooth}
       />
@@ -49,6 +51,7 @@ function ArchRow({
   rightLabel,
   leftQuadrant,
   rightQuadrant,
+  mirrorLeft,
   selections,
   onTapTooth,
 }: {
@@ -56,12 +59,19 @@ function ArchRow({
   rightLabel: string;
   leftQuadrant: number[];
   rightQuadrant: number[];
+  mirrorLeft?: boolean;
   selections: ToothSelections;
   onTapTooth: (toothNumber: number) => void;
 }) {
   return (
     <div className="flex justify-center gap-1">
-      <QuadrantBlock label={leftLabel} teeth={leftQuadrant} selections={selections} onTapTooth={onTapTooth} />
+      <QuadrantBlock
+        label={leftLabel}
+        teeth={leftQuadrant}
+        mirror={mirrorLeft}
+        selections={selections}
+        onTapTooth={onTapTooth}
+      />
       <QuadrantBlock label={rightLabel} teeth={rightQuadrant} selections={selections} onTapTooth={onTapTooth} />
     </div>
   );
@@ -70,15 +80,24 @@ function ArchRow({
 function QuadrantBlock({
   label,
   teeth,
+  mirror,
   selections,
   onTapTooth,
 }: {
   label: string;
   teeth: number[];
+  mirror?: boolean;
   selections: ToothSelections;
   onTapTooth: (toothNumber: number) => void;
 }) {
-  const [topRow, bottomRow] = chunk4(teeth);
+  let [topRow, bottomRow] = chunk4(teeth);
+  // Q1/Q4 read outward-to-midline (e.g. 14 13 12 11 | 21 22 23 24) so tooth
+  // 11 sits next to 21 — the two central incisors meet at the midline, same
+  // as a real dental chart.
+  if (mirror) {
+    topRow = [...topRow].reverse();
+    bottomRow = [...bottomRow].reverse();
+  }
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div className="w-[179px] truncate text-center text-[10px] tracking-wide text-text-muted">{label}</div>
