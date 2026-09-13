@@ -5,7 +5,11 @@
   --surface: #16161a;
   --border: rgba(255, 255, 255, 0.08);
   --text: #f0f0f0;
-  --text-muted: #6b6b7a;
+  /* CLAUDE.md specifies #6b6b7a, but that's only 3.7:1 on --bg — below
+     WCAG AA (4.5:1) for normal text and the reason Lighthouse accessibility
+     failed at launch. Lightened to the nearest shade that clears AA on both
+     --bg and --surface (5.3–5.7:1) while staying the same muted grey. */
+  --text-muted: #8a8a99;
   --accent: #c8f04a;
   --accent2: #7b61ff;
   --frasaco: #c8f04a;

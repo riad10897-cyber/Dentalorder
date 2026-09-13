@@ -77,7 +77,7 @@ function StatCard({
         accentBg ? "border-accent bg-accent" : "border-border bg-surface"
       }`}
     >
-      <div className={`text-[11px] uppercase tracking-wide ${accentBg ? "text-bg/60" : "text-text-muted"}`}>
+      <div className={`text-[11px] uppercase tracking-wide ${accentBg ? "text-bg/70" : "text-text-muted"}`}>
         {label}
       </div>
       <div
@@ -87,7 +87,7 @@ function StatCard({
       >
         {value}
       </div>
-      <div className={`mt-0.5 text-[11px] ${accentBg ? "text-bg/55" : "text-text-muted"}`}>{sub}</div>
+      <div className={`mt-0.5 text-[11px] ${accentBg ? "text-bg/70" : "text-text-muted"}`}>{sub}</div>
     </div>
   );
 }

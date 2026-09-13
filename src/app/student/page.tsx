@@ -62,7 +62,7 @@ export default async function StudentHomePage() {
       >
         <div className="flex flex-col gap-0.5">
           <div className="font-heading text-lg font-bold text-bg">Place Order</div>
-          <div className="text-[13px] text-bg/60">Week {nextWeek}</div>
+          <div className="text-[13px] text-bg/70">Week {nextWeek}</div>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg/15">
           <svg width="16" height="16" fill="none" stroke="#0e0e11" strokeWidth={2.5} viewBox="0 0 24 24">
