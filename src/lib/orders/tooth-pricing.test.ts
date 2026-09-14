@@ -28,6 +28,24 @@ test("priceToothOrder sums line totals into a subtotal across mixed types", () =
   assert.equal(subtotal, 8.6);
 });
 
+test("priceToothOrder prices both types for the same tooth number as separate lines", () => {
+  // A student can order Frasaco and Copy A for the same FDI position in one
+  // order (e.g. 2x Frasaco 11 + 1x Copy A 11) — line items are keyed by
+  // tooth number AND type, not tooth number alone, so neither overwrites
+  // the other.
+  const { items, subtotal } = priceToothOrder(
+    [
+      { toothNumber: 11, toothType: "frasaco", quantity: 2 }, // 5.00
+      { toothNumber: 11, toothType: "copy_a", quantity: 1 }, // 1.20
+    ],
+    PRICES,
+  );
+  assert.equal(items.length, 2);
+  assert.equal(items[0].lineTotal, 5);
+  assert.equal(items[1].lineTotal, 1.2);
+  assert.equal(subtotal, 6.2);
+});
+
 test("priceToothOrder with an empty order is a zero subtotal, not an error", () => {
   const { items, subtotal } = priceToothOrder([], PRICES);
   assert.deepEqual(items, []);

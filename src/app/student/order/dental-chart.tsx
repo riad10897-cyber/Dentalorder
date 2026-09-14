@@ -3,7 +3,14 @@
 import { QUADRANT_TEETH } from "@/lib/teeth/fdi";
 import type { ToothType } from "@/lib/supabase/types";
 
-export type ToothSelections = Record<number, { toothType: ToothType; quantity: number }>;
+// Keyed by tooth number + type (not tooth number alone) so a student can
+// order both Frasaco and Copy A for the same FDI position in one order.
+export type ToothSelectionKey = `${number}:${ToothType}`;
+export type ToothSelections = Record<ToothSelectionKey, { toothType: ToothType; quantity: number }>;
+
+export function toothSelectionKey(toothNumber: number, toothType: ToothType): ToothSelectionKey {
+  return `${toothNumber}:${toothType}`;
+}
 
 interface DentalChartProps {
   selections: ToothSelections;
@@ -103,10 +110,10 @@ function QuadrantBlock({
       <div className="w-[179px] truncate text-center text-[10px] tracking-wide text-text-muted">{label}</div>
       <div className="grid grid-cols-4 gap-px">
         {topRow.map((n) => (
-          <ToothButton key={n} toothNumber={n} selection={selections[n]} onTap={onTapTooth} />
+          <ToothButton key={n} toothNumber={n} selections={selections} onTap={onTapTooth} />
         ))}
         {bottomRow.map((n) => (
-          <ToothButton key={n} toothNumber={n} selection={selections[n]} onTap={onTapTooth} />
+          <ToothButton key={n} toothNumber={n} selections={selections} onTap={onTapTooth} />
         ))}
       </div>
     </div>
@@ -115,15 +122,17 @@ function QuadrantBlock({
 
 function ToothButton({
   toothNumber,
-  selection,
+  selections,
   onTap,
 }: {
   toothNumber: number;
-  selection?: { toothType: ToothType; quantity: number };
+  selections: ToothSelections;
   onTap: (toothNumber: number) => void;
 }) {
-  const selectedFrasaco = selection?.toothType === "frasaco";
-  const selectedCopy = selection?.toothType === "copy_a";
+  const frasaco = selections[toothSelectionKey(toothNumber, "frasaco")];
+  const copyA = selections[toothSelectionKey(toothNumber, "copy_a")];
+  const hasBoth = Boolean(frasaco) && Boolean(copyA);
+  const combinedQty = (frasaco?.quantity ?? 0) + (copyA?.quantity ?? 0);
 
   return (
     <button
@@ -131,24 +140,30 @@ function ToothButton({
       aria-label={`Tooth ${toothNumber}`}
       onClick={() => onTap(toothNumber)}
       className={`relative flex h-11 w-11 flex-col items-center justify-center rounded-lg border transition-colors ${
-        selectedFrasaco
-          ? "border-accent bg-accent/10"
-          : selectedCopy
-            ? "border-copy-a bg-copy-a/10"
-            : "border-transparent bg-white/5"
+        hasBoth
+          ? "border-accent2 bg-accent2/10"
+          : frasaco
+            ? "border-accent bg-accent/10"
+            : copyA
+              ? "border-copy-a bg-copy-a/10"
+              : "border-transparent bg-white/5"
       }`}
     >
       <span className="text-[13px] leading-none">🦷</span>
       <span
         className={`mt-0.5 font-heading text-[9px] font-bold leading-none ${
-          selectedFrasaco ? "text-accent" : selectedCopy ? "text-copy-a" : "text-text-muted"
+          hasBoth ? "text-accent2" : frasaco ? "text-accent" : copyA ? "text-copy-a" : "text-text-muted"
         }`}
       >
         {toothNumber}
       </span>
-      {selection && (
-        <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-bg">
-          {selection.quantity}
+      {combinedQty > 0 && (
+        <span
+          className={`absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-bold text-bg ${
+            hasBoth ? "bg-accent2" : frasaco ? "bg-accent" : "bg-copy-a"
+          }`}
+        >
+          {combinedQty}
         </span>
       )}
     </button>

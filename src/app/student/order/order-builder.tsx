@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { DentalChart, type ToothSelections } from "./dental-chart";
+import { DentalChart, toothSelectionKey, type ToothSelections } from "./dental-chart";
 import { submitToothOrder } from "@/app/student/_actions/orders";
 import { priceToothOrder } from "@/lib/orders/tooth-pricing";
 import { TOOTH_NAMES } from "@/lib/teeth/fdi";
@@ -27,8 +27,8 @@ export function OrderBuilder({
   const [week, setWeek] = useState(initialWeek);
   const [selections, setSelections] = useState<ToothSelections>({});
   const [sheetTooth, setSheetTooth] = useState<number | null>(null);
-  const [sheetType, setSheetType] = useState<ToothType>(initialToothType);
-  const [sheetQty, setSheetQty] = useState(1);
+  const [sheetFrasacoQty, setSheetFrasacoQty] = useState(0);
+  const [sheetCopyQty, setSheetCopyQty] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -37,8 +37,8 @@ export function OrderBuilder({
 
   const itemInputs = useMemo(
     () =>
-      Object.entries(selections).map(([toothNumber, sel]) => ({
-        toothNumber: Number(toothNumber),
+      Object.entries(selections).map(([key, sel]) => ({
+        toothNumber: Number(key.split(":")[0]),
         toothType: sel.toothType,
         quantity: sel.quantity,
       })),
@@ -53,10 +53,18 @@ export function OrderBuilder({
   const toothCount = itemInputs.length;
 
   function openSheet(toothNumber: number) {
-    const existing = selections[toothNumber];
+    const existingFrasaco = selections[toothSelectionKey(toothNumber, "frasaco")];
+    const existingCopy = selections[toothSelectionKey(toothNumber, "copy_a")];
     setSheetTooth(toothNumber);
-    setSheetType(existing?.toothType ?? initialToothType);
-    setSheetQty(existing?.quantity ?? 1);
+    if (!existingFrasaco && !existingCopy) {
+      // Nothing chosen for this tooth yet — default to the student's last
+      // used type, per the "286 orders, only 4 mixed" domain note.
+      setSheetFrasacoQty(initialToothType === "frasaco" ? 1 : 0);
+      setSheetCopyQty(initialToothType === "copy_a" ? 1 : 0);
+    } else {
+      setSheetFrasacoQty(existingFrasaco?.quantity ?? 0);
+      setSheetCopyQty(existingCopy?.quantity ?? 0);
+    }
   }
 
   function closeSheet() {
@@ -65,10 +73,16 @@ export function OrderBuilder({
 
   function addTooth() {
     if (sheetTooth === null) return;
-    setSelections((prev) => ({
-      ...prev,
-      [sheetTooth]: { toothType: sheetType, quantity: sheetQty },
-    }));
+    const frasacoKey = toothSelectionKey(sheetTooth, "frasaco");
+    const copyKey = toothSelectionKey(sheetTooth, "copy_a");
+    setSelections((prev) => {
+      const next = { ...prev };
+      if (sheetFrasacoQty > 0) next[frasacoKey] = { toothType: "frasaco", quantity: sheetFrasacoQty };
+      else delete next[frasacoKey];
+      if (sheetCopyQty > 0) next[copyKey] = { toothType: "copy_a", quantity: sheetCopyQty };
+      else delete next[copyKey];
+      return next;
+    });
     closeSheet();
   }
 
@@ -76,7 +90,8 @@ export function OrderBuilder({
     if (sheetTooth === null) return;
     setSelections((prev) => {
       const next = { ...prev };
-      delete next[sheetTooth];
+      delete next[toothSelectionKey(sheetTooth, "frasaco")];
+      delete next[toothSelectionKey(sheetTooth, "copy_a")];
       return next;
     });
     closeSheet();
@@ -148,13 +163,16 @@ export function OrderBuilder({
       {sheetTooth !== null && (
         <ToothSheet
           toothNumber={sheetTooth}
-          type={sheetType}
-          qty={sheetQty}
-          hasExisting={Boolean(selections[sheetTooth])}
+          frasacoQty={sheetFrasacoQty}
+          copyQty={sheetCopyQty}
+          hasExisting={Boolean(
+            selections[toothSelectionKey(sheetTooth, "frasaco")] ||
+              selections[toothSelectionKey(sheetTooth, "copy_a")],
+          )}
           frasacoPrice={frasacoPrice}
           copyAPrice={copyAPrice}
-          onChangeType={setSheetType}
-          onChangeQty={setSheetQty}
+          onChangeFrasacoQty={setSheetFrasacoQty}
+          onChangeCopyQty={setSheetCopyQty}
           onAdd={addTooth}
           onRemove={removeTooth}
           onClose={closeSheet}
@@ -188,29 +206,30 @@ function Legend({ swatchClass, label }: { swatchClass: string; label: string }) 
 
 function ToothSheet({
   toothNumber,
-  type,
-  qty,
+  frasacoQty,
+  copyQty,
   hasExisting,
   frasacoPrice,
   copyAPrice,
-  onChangeType,
-  onChangeQty,
+  onChangeFrasacoQty,
+  onChangeCopyQty,
   onAdd,
   onRemove,
   onClose,
 }: {
   toothNumber: number;
-  type: ToothType;
-  qty: number;
+  frasacoQty: number;
+  copyQty: number;
   hasExisting: boolean;
   frasacoPrice: number;
   copyAPrice: number;
-  onChangeType: (t: ToothType) => void;
-  onChangeQty: (q: number) => void;
+  onChangeFrasacoQty: (q: number) => void;
+  onChangeCopyQty: (q: number) => void;
   onAdd: () => void;
   onRemove: () => void;
   onClose: () => void;
 }) {
+  const canAdd = frasacoQty > 0 || copyQty > 0;
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm"
@@ -219,40 +238,33 @@ function ToothSheet({
       <div className="w-full max-w-md rounded-t-3xl bg-surface px-6 pb-10 pt-3">
         <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-border" />
         <div className="font-heading text-[22px] font-extrabold">Tooth #{toothNumber}</div>
-        <div className="mb-6 text-[13px] text-text-muted">{TOOTH_NAMES[toothNumber]}</div>
+        <div className="mb-1 text-[13px] text-text-muted">{TOOTH_NAMES[toothNumber]}</div>
+        <div className="mb-6 text-xs text-text-muted">Pick either type, or both.</div>
 
-        <div className="mb-6 flex gap-2.5">
+        <div className="mb-6 flex flex-col gap-2.5">
           <TypeOption
             label="Frasaco"
             price={frasacoPrice}
             colorClass="text-accent"
-            selected={type === "frasaco"}
             selectedBorder="border-accent bg-accent/10"
-            onClick={() => onChangeType("frasaco")}
+            qty={frasacoQty}
+            onChangeQty={onChangeFrasacoQty}
           />
           <TypeOption
             label="Copy A"
             price={copyAPrice}
             colorClass="text-copy-a"
-            selected={type === "copy_a"}
             selectedBorder="border-copy-a bg-copy-a/10"
-            onClick={() => onChangeType("copy_a")}
+            qty={copyQty}
+            onChangeQty={onChangeCopyQty}
           />
-        </div>
-
-        <div className="mb-6 flex items-center justify-between">
-          <span className="text-sm font-medium">Quantity</span>
-          <div className="flex items-center gap-4">
-            <QtyButton label="−" aria-label="Decrease quantity" onClick={() => onChangeQty(Math.max(1, qty - 1))} />
-            <span className="min-w-8 text-center font-heading text-xl font-bold">{qty}</span>
-            <QtyButton label="+" aria-label="Increase quantity" onClick={() => onChangeQty(Math.min(10, qty + 1))} />
-          </div>
         </div>
 
         <button
           type="button"
           onClick={onAdd}
-          className="min-h-11 w-full rounded-lg bg-accent py-4 font-heading text-base font-bold text-bg active:scale-[0.99]"
+          disabled={!canAdd}
+          className="min-h-11 w-full rounded-lg bg-accent py-4 font-heading text-base font-bold text-bg active:scale-[0.99] disabled:opacity-40"
         >
           {hasExisting ? "Update Tooth" : "Add to Order"}
         </button>
@@ -274,28 +286,48 @@ function TypeOption({
   label,
   price,
   colorClass,
-  selected,
   selectedBorder,
-  onClick,
+  qty,
+  onChangeQty,
 }: {
   label: string;
   price: number;
   colorClass: string;
-  selected: boolean;
   selectedBorder: string;
-  onClick: () => void;
+  qty: number;
+  onChangeQty: (q: number) => void;
 }) {
+  const selected = qty > 0;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-h-11 flex-1 rounded-lg border-[1.5px] p-3.5 text-center transition-colors ${
+    <div
+      className={`flex min-h-11 items-center justify-between rounded-lg border-[1.5px] p-3.5 transition-colors ${
         selected ? selectedBorder : "border-border bg-surface2"
       }`}
     >
-      <div className={`font-heading text-[15px] font-bold ${colorClass}`}>{label}</div>
-      <div className="text-xs text-text-muted">${price.toFixed(2)} / tooth</div>
-    </button>
+      <button
+        type="button"
+        onClick={() => onChangeQty(selected ? 0 : 1)}
+        className="flex-1 text-left"
+      >
+        <div className={`font-heading text-[15px] font-bold ${colorClass}`}>{label}</div>
+        <div className="text-xs text-text-muted">${price.toFixed(2)} / tooth</div>
+      </button>
+      {selected && (
+        <div className="flex items-center gap-3">
+          <QtyButton
+            label="−"
+            aria-label={`Decrease ${label} quantity`}
+            onClick={() => onChangeQty(Math.max(0, qty - 1))}
+          />
+          <span className="min-w-6 text-center font-heading text-lg font-bold">{qty}</span>
+          <QtyButton
+            label="+"
+            aria-label={`Increase ${label} quantity`}
+            onClick={() => onChangeQty(Math.min(10, qty + 1))}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
