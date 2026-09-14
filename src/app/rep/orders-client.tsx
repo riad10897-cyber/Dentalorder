@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { RepOrder } from "@/lib/rep/data"; // type-only: keeps the server-only data module out of this client bundle
 import { updateOrderStatus } from "./_actions/orders";
+import { haptic } from "@/lib/haptics";
 
 type Tab = "pending" | "confirmed" | "fulfilled";
 const TABS: { key: Tab; label: string }[] = [
@@ -67,6 +68,11 @@ function OrderCard({ order }: { order: RepOrder }) {
   const [pending, startTransition] = useTransition();
 
   function runStatus(fulfillmentStatus: "confirmed" | "fulfilled") {
+    // Fires on the tap, in the same frame as the button's own press
+    // feedback — waiting for the round trip would land the tick after
+    // the moment it is meant to confirm. Fulfilling is the one action
+    // here worth a haptic; confirming is a routine step along the way.
+    if (fulfillmentStatus === "fulfilled") haptic();
     startTransition(async () => {
       await updateOrderStatus({ orderId: order.id, fulfillmentStatus });
       router.refresh();

@@ -7,6 +7,7 @@ import { ToothSheet } from "./tooth-sheet";
 import { ReviewSheet } from "./review-sheet";
 import { submitToothOrder } from "@/app/student/_actions/orders";
 import { priceToothOrder } from "@/lib/orders/tooth-pricing";
+import { haptic } from "@/lib/haptics";
 import type { ToothType } from "@/lib/supabase/types";
 
 interface OrderBuilderProps {
@@ -150,6 +151,12 @@ export function OrderBuilder({
         setError(result.error);
         return;
       }
+      // Success is only knowable once the order is written, so this is
+      // as early as the tick can honestly fire. It goes in the same
+      // frame as the navigation that shows the confirmation, rather
+      // than on the confirmation screen after it has hydrated, which
+      // would land the tick noticeably late.
+      haptic();
       router.push(`/student/order/confirmed/${result.orderId}`);
     });
   }

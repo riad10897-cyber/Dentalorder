@@ -10,6 +10,7 @@ import {
   type AnimationPlaybackControls,
 } from "motion/react";
 import { TOOTH_NAMES } from "@/lib/teeth/fdi";
+import { haptic } from "@/lib/haptics";
 
 interface ToothSheetProps {
   toothNumber: number;
@@ -92,7 +93,10 @@ export function ToothSheet({
   }, []);
 
   const dismiss = useCallback(
-    (velocity = 0) => {
+    // `thrown` marks a dismissal the user physically flicked away, as
+    // opposed to tapping the scrim or pressing Escape. Only a thrown
+    // sheet gets a haptic, and only when it lands.
+    (velocity = 0, thrown = false) => {
       if (reduceMotion) {
         onClose();
         return;
@@ -108,7 +112,12 @@ export function ToothSheet({
         // already on its way out cancels the close rather than having it
         // land underneath the finger. The token guards a double-dismiss.
         onComplete: () => {
-          if (gestureToken.current === token) onClose();
+          if (gestureToken.current !== token) return;
+          // The landing is the visual event, so the tick belongs here
+          // rather than at release — that is what makes it read as the
+          // sheet hitting the bottom.
+          if (thrown) haptic();
+          onClose();
         },
       });
     },
@@ -164,7 +173,7 @@ export function ToothSheet({
     const projected = y.get() + projectMomentum(velocity);
 
     if (projected > heightRef.current * DISMISS_FRACTION) {
-      dismiss(velocity);
+      dismiss(velocity, true);
     } else {
       gestureToken.current++;
       running.current?.stop();
