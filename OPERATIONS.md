@@ -92,6 +92,8 @@ This only affects **future** orders. Every order already placed keeps the price 
 
 **If you can't make sense of a log:** copy the error text and paste it back to me (or the next developer) — you don't need to understand it yourself.
 
+**If every page errors after you touched an environment variable in Vercel:** this has happened twice — someone pastes the Supabase URL with extra text stuck on the end (like `/rest/v1/`) instead of just the plain address. The build now catches this automatically and refuses to deploy with a clear message, but if you're editing `NEXT_PUBLIC_SUPABASE_URL` by hand: it must be exactly `https://xxxxxxxx.supabase.co` — nothing before or after it, no trailing slash. Copy it fresh from Supabase → Project Settings → API → Project URL each time rather than editing the existing value. After saving any environment variable, Vercel will prompt you to **Redeploy** — that step isn't optional, the change does nothing until you click it.
+
 ---
 
 ## 6. Known limits — things to watch for
