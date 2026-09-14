@@ -42,13 +42,6 @@ export function OrderBuilder({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  // The share card on the confirmation screen quotes a real number, so
-  // count what the student actually did rather than inventing a figure.
-  const interactions = useRef(0);
-  const countInteraction = useCallback(() => {
-    interactions.current += 1;
-  }, []);
-
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const offerUndo = useCallback((message: string, snapshot: ToothSelections) => {
     setUndo({ message, snapshot });
@@ -88,7 +81,6 @@ export function OrderBuilder({
   const totalTeeth = itemInputs.reduce((sum, item) => sum + item.quantity, 0);
 
   function openSheet(toothNumber: number) {
-    countInteraction();
     const existingFrasaco = selections[toothSelectionKey(toothNumber, "frasaco")];
     const existingCopy = selections[toothSelectionKey(toothNumber, "copy_a")];
     setSheetTooth(toothNumber);
@@ -106,7 +98,6 @@ export function OrderBuilder({
 
   function commitSheet() {
     if (sheetTooth === null) return;
-    countInteraction();
     const snapshot = selections;
     const frasacoKey = toothSelectionKey(sheetTooth, "frasaco");
     const copyKey = toothSelectionKey(sheetTooth, "copy_a");
@@ -133,7 +124,6 @@ export function OrderBuilder({
 
   function removeFromSheet() {
     if (sheetTooth === null) return;
-    countInteraction();
     const snapshot = selections;
     setSelections((prev) => {
       const next = { ...prev };
@@ -147,14 +137,12 @@ export function OrderBuilder({
 
   function applyUndo() {
     if (!undo) return;
-    countInteraction();
     setSelections(undo.snapshot);
     setUndo(null);
     if (undoTimer.current) clearTimeout(undoTimer.current);
   }
 
   function handleConfirm() {
-    countInteraction();
     setError(null);
     startTransition(async () => {
       const result = await submitToothOrder({ weekNumber: week, items: itemInputs });
@@ -162,9 +150,7 @@ export function OrderBuilder({
         setError(result.error);
         return;
       }
-      router.push(
-        `/student/order/confirmed/${result.orderId}?taps=${Math.max(1, interactions.current)}`,
-      );
+      router.push(`/student/order/confirmed/${result.orderId}`);
     });
   }
 
@@ -178,10 +164,7 @@ export function OrderBuilder({
           <button
             key={w}
             type="button"
-            onClick={() => {
-              countInteraction();
-              setWeek(w);
-            }}
+            onClick={() => setWeek(w)}
             aria-pressed={w === week}
             className={`pressable tnum min-h-9 shrink-0 rounded-control border px-3 py-1.5 font-display text-small ${
               w === week
@@ -241,10 +224,7 @@ export function OrderBuilder({
           <button
             type="button"
             disabled={itemInputs.length === 0}
-            onClick={() => {
-              countInteraction();
-              setReviewOpen(true);
-            }}
+            onClick={() => setReviewOpen(true)}
             className="pressable min-h-11 rounded-control bg-ink px-6 py-3 font-display text-body text-card disabled:opacity-30"
           >
             Review
@@ -263,14 +243,8 @@ export function OrderBuilder({
             selections[toothSelectionKey(sheetTooth, "frasaco")] ||
               selections[toothSelectionKey(sheetTooth, "copy_a")],
           )}
-          onChangeFrasacoQty={(q) => {
-            countInteraction();
-            setSheetFrasacoQty(q);
-          }}
-          onChangeCopyQty={(q) => {
-            countInteraction();
-            setSheetCopyQty(q);
-          }}
+          onChangeFrasacoQty={setSheetFrasacoQty}
+          onChangeCopyQty={setSheetCopyQty}
           onCommit={commitSheet}
           onRemove={removeFromSheet}
           onClose={() => setSheetTooth(null)}
