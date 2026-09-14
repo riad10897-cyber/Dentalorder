@@ -12,10 +12,10 @@ export default async function RepSummaryPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <div className="px-6 pt-5">
-        <div className="text-[13px] text-text-muted">Weekly Summary</div>
-        <div className="font-heading text-xl font-bold">Batch View</div>
-      </div>
+      <header className="px-5 pt-6">
+        <p className="text-micro uppercase text-ink-faint">Weekly batch</p>
+        <h1 className="mt-1 font-display text-heading">What to buy</h1>
+      </header>
 
       <SummaryClient orders={orders} initialWeek={currentWeek} />
 

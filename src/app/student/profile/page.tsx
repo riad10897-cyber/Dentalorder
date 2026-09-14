@@ -22,12 +22,12 @@ export default async function StudentProfilePage() {
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
       <div className="flex items-center gap-4 px-6 pt-5">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent2 to-accent font-heading text-xl font-extrabold text-bg">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-ink to-ink font-display text-xl font-extrabold text-card">
           {initials(student.fullName)}
         </div>
         <div>
-          <div className="font-heading text-xl font-bold">{student.fullName}</div>
-          {metaParts && <div className="mt-0.5 text-[13px] text-text-muted">{metaParts}</div>}
+          <div className="font-display text-xl font-bold">{student.fullName}</div>
+          {metaParts && <div className="mt-0.5 text-[13px] text-ink-muted">{metaParts}</div>}
         </div>
       </div>
 
@@ -38,16 +38,16 @@ export default async function StudentProfilePage() {
       </div>
 
       {student.repName ? (
-        <div className="mx-6 mt-4 flex items-center gap-3.5 rounded-card border border-border bg-surface p-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent2/20 text-lg">
+        <div className="mx-6 mt-4 flex items-center gap-3.5 rounded-card border border-rule bg-card p-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/20 text-lg">
             👤
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-text-muted">
+            <div className="text-[11px] uppercase tracking-wide text-ink-muted">
               Your Representative
             </div>
-            <div className="font-heading text-[15px] font-bold">{student.repName}</div>
-            <div className="mt-0.5 text-xs text-text-muted">
+            <div className="font-display text-[15px] font-bold">{student.repName}</div>
+            <div className="mt-0.5 text-xs text-ink-muted">
               Frasaco ${student.frasacoPrice.toFixed(2)} · Copy A ${student.copyAPrice.toFixed(2)}
             </div>
           </div>
@@ -58,18 +58,18 @@ export default async function StudentProfilePage() {
         </div>
       )}
 
-      <div className="px-6 pb-3 pt-6 text-xs font-semibold uppercase tracking-wider text-text-muted">
+      <div className="px-6 pb-3 pt-6 text-xs font-semibold uppercase tracking-wider text-ink-muted">
         Account
       </div>
       <form action={signOut} className="mx-6">
         <button
           type="submit"
-          className="flex min-h-11 w-full items-center justify-between rounded-lg border border-border bg-surface px-4 py-3.5 text-sm font-medium text-text"
+          className="flex min-h-11 w-full items-center justify-between rounded-lg border border-rule bg-card px-4 py-3.5 text-sm font-medium text-ink"
         >
           <span className="flex items-center gap-3">
             <span>🚪</span> Sign Out
           </span>
-          <span className="text-text-muted">›</span>
+          <span className="text-ink-muted">›</span>
         </button>
       </form>
 
@@ -80,9 +80,9 @@ export default async function StudentProfilePage() {
 
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-lg border border-border bg-surface px-3 py-3.5 text-center">
-      <div className="font-heading text-[22px] font-extrabold text-accent">{value}</div>
-      <div className="mt-0.5 text-[11px] text-text-muted">{label}</div>
+    <div className="rounded-lg border border-rule bg-card px-3 py-3.5 text-center">
+      <div className="font-display text-[22px] font-extrabold text-ink">{value}</div>
+      <div className="mt-0.5 text-[11px] text-ink-muted">{label}</div>
     </div>
   );
 }

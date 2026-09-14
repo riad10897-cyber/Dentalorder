@@ -27,11 +27,15 @@ export function ReorderButton({ orderId }: { orderId: string }) {
         type="button"
         onClick={handleClick}
         disabled={pending}
-        className="min-h-9 rounded-full border border-border bg-surface2 px-3.5 py-1.5 text-xs font-semibold text-text disabled:opacity-50"
+        className="pressable min-h-9 rounded-control border border-rule bg-card px-3 py-1.5 font-display text-caption disabled:opacity-50"
       >
-        {pending ? "Reordering…" : "Reorder"}
+        {pending ? "Ordering…" : "Order again"}
       </button>
-      {error && <span className="max-w-[140px] text-right text-[11px] text-red-400">{error}</span>}
+      {error && (
+        <span className="max-w-[10rem] text-right text-micro text-ink-muted" role="alert">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

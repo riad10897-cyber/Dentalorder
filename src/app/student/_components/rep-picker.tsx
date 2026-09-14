@@ -13,7 +13,7 @@ export function RepPicker({ reps, compact }: { reps: AvailableRep[]; compact?: b
 
   if (reps.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-border p-4 text-center text-sm text-text-muted">
+      <div className="rounded-card border border-dashed border-rule p-4 text-center text-sm text-ink-muted">
         No representative has joined yet. Check back once someone from your group signs up as a
         rep — you&apos;ll be able to pick them here.
       </div>
@@ -37,16 +37,16 @@ export function RepPicker({ reps, compact }: { reps: AvailableRep[]; compact?: b
   }
 
   return (
-    <div className={compact ? "flex flex-col gap-2.5" : "rounded-card border border-border bg-surface p-4"}>
+    <div className={compact ? "flex flex-col gap-2.5" : "rounded-card border border-rule bg-card p-4"}>
       {!compact && (
-        <p className="mb-3 text-sm text-text-muted">
+        <p className="mb-3 text-sm text-ink-muted">
           You don&apos;t have a representative yet. Pick one to start ordering:
         </p>
       )}
       <select
         value={selected}
         onChange={(e) => setSelected(e.target.value)}
-        className="min-h-11 w-full rounded-sm border border-border bg-surface2 px-3 py-2 text-text focus:border-accent focus:outline-none"
+        className="min-h-11 w-full rounded-sm border border-rule bg-card-sunk px-3 py-2 text-ink focus:border-ink focus:outline-none"
       >
         <option value="" disabled>
           Choose your rep
@@ -59,12 +59,12 @@ export function RepPicker({ reps, compact }: { reps: AvailableRep[]; compact?: b
           </option>
         ))}
       </select>
-      {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-ink">{error}</p>}
       <button
         type="button"
         onClick={handlePick}
         disabled={pending}
-        className="mt-2.5 min-h-11 w-full rounded-sm bg-accent py-3 font-heading text-sm font-bold text-bg disabled:opacity-60"
+        className="mt-2.5 min-h-11 w-full rounded-sm bg-ink py-3 font-display text-sm font-bold text-card disabled:opacity-60"
       >
         {pending ? "Saving…" : "Set as my representative"}
       </button>

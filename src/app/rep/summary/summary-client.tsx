@@ -2,70 +2,68 @@
 
 import { useMemo, useState } from "react";
 import type { RepOrder } from "@/lib/rep/data";
+import { TOOTH_NAMES } from "@/lib/teeth/fdi";
+
+type ToothType = "frasaco" | "copy_a";
 
 export function SummaryClient({ orders, initialWeek }: { orders: RepOrder[]; initialWeek: number }) {
   const [week, setWeek] = useState(initialWeek);
 
   const summary = useMemo(() => {
     const weekOrders = orders.filter((o) => o.weekNumber === week);
-    const toothTotals = new Map<number, { toothType: "frasaco" | "copy_a"; quantity: number }>();
-    let frasacoQty = 0;
-    let frasacoTotal = 0;
-    let copyAQty = 0;
-    let copyATotal = 0;
+    // Keyed by tooth number AND type. Keying by number alone silently
+    // merged a position ordered in both types into one row, which is
+    // exactly the shopping list a rep would get wrong.
+    const totals = new Map<string, { toothNumber: number; toothType: ToothType; quantity: number }>();
+    const perType: Record<ToothType, { quantity: number; total: number }> = {
+      frasaco: { quantity: 0, total: 0 },
+      copy_a: { quantity: 0, total: 0 },
+    };
     const students = new Set<string>();
 
     for (const order of weekOrders) {
       students.add(order.studentId);
       for (const item of order.items) {
-        const existing = toothTotals.get(item.toothNumber) ?? {
+        const key = `${item.toothNumber}:${item.toothType}`;
+        const existing = totals.get(key) ?? {
+          toothNumber: item.toothNumber,
           toothType: item.toothType,
           quantity: 0,
         };
         existing.quantity += item.quantity;
-        toothTotals.set(item.toothNumber, existing);
+        totals.set(key, existing);
 
-        if (item.toothType === "frasaco") {
-          frasacoQty += item.quantity;
-          frasacoTotal += item.lineTotal;
-        } else {
-          copyAQty += item.quantity;
-          copyATotal += item.lineTotal;
-        }
+        perType[item.toothType].quantity += item.quantity;
+        perType[item.toothType].total += item.lineTotal;
       }
     }
 
-    const rows = (type: "frasaco" | "copy_a") =>
-      Array.from(toothTotals.entries())
-        .filter(([, v]) => v.toothType === type)
-        .map(([toothNumber, v]) => ({ toothNumber, quantity: v.quantity }))
-        .sort((a, b) => b.quantity - a.quantity);
+    const rows = (type: ToothType) =>
+      Array.from(totals.values())
+        .filter((row) => row.toothType === type)
+        .sort((a, b) => a.toothNumber - b.toothNumber);
 
     return {
       frasacoRows: rows("frasaco"),
-      frasacoQty,
-      frasacoTotal,
       copyARows: rows("copy_a"),
-      copyAQty,
-      copyATotal,
-      grandTotal: frasacoTotal + copyATotal,
-      totalTeeth: frasacoQty + copyAQty,
+      perType,
+      grandTotal: perType.frasaco.total + perType.copy_a.total,
+      totalTeeth: perType.frasaco.quantity + perType.copy_a.quantity,
       studentCount: students.size,
     };
   }, [orders, week]);
 
   return (
     <>
-      <div className="mx-6 mt-5 flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+      <div className="flex gap-1.5 overflow-x-auto px-5 pb-1 pt-4" style={{ scrollbarWidth: "none" }}>
         {Array.from({ length: 17 }, (_, i) => i + 1).map((w) => (
           <button
             key={w}
             type="button"
             onClick={() => setWeek(w)}
-            className={`min-h-9 shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
-              w === week
-                ? "border-accent bg-accent font-bold text-bg"
-                : "border-border bg-surface text-text-muted"
+            aria-pressed={w === week}
+            className={`pressable tnum min-h-9 shrink-0 rounded-control border px-3 py-1.5 font-display text-small ${
+              w === week ? "border-ink bg-ink text-card" : "border-rule bg-card text-ink-muted"
             }`}
           >
             Wk {w}
@@ -73,52 +71,43 @@ export function SummaryClient({ orders, initialWeek }: { orders: RepOrder[]; ini
         ))}
       </div>
 
-      <div className="px-6 pb-2 pt-6 text-xs font-semibold uppercase tracking-wider text-text-muted">
-        Teeth to Order This Week
-      </div>
-
       {summary.totalTeeth === 0 ? (
-        <div className="mx-6 rounded-card border border-dashed border-border p-6 text-center text-sm text-text-muted">
+        <p className="mx-5 mt-5 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
           No orders for week {week} yet.
-        </div>
+        </p>
       ) : (
         <>
+          <p className="px-5 pb-1 pt-5 text-caption text-ink-muted">
+            <span className="tnum font-display">{summary.studentCount}</span>{" "}
+            {summary.studentCount === 1 ? "student" : "students"} ·{" "}
+            <span className="tnum font-display">{summary.totalTeeth}</span>{" "}
+            {summary.totalTeeth === 1 ? "tooth" : "teeth"} to buy
+          </p>
+
           {summary.frasacoRows.length > 0 && (
-            <SummaryCard
-              title="Frasaco Teeth"
-              dotClass="bg-accent"
+            <BatchTable
+              title="Frasaco"
+              accent="var(--frasaco)"
               rows={summary.frasacoRows}
-              totalLabel="Total Frasaco"
-              totalQty={summary.frasacoQty}
-              totalPrice={summary.frasacoTotal}
+              quantity={summary.perType.frasaco.quantity}
+              total={summary.perType.frasaco.total}
             />
           )}
           {summary.copyARows.length > 0 && (
-            <SummaryCard
-              title="Copy A Teeth"
-              dotClass="bg-copy-a"
+            <BatchTable
+              title="Copy A"
+              accent="var(--copy-a)"
               rows={summary.copyARows}
-              totalLabel="Total Copy A"
-              totalQty={summary.copyAQty}
-              totalPrice={summary.copyATotal}
+              quantity={summary.perType.copy_a.quantity}
+              total={summary.perType.copy_a.total}
             />
           )}
 
-          <div className="mx-6 mb-3 rounded-card border border-accent/20 bg-accent/5 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="mb-1 text-xs uppercase tracking-wide text-text-muted">
-                  Week {week} Grand Total
-                </div>
-                <div className="font-heading text-[28px] font-extrabold text-accent">
-                  ${summary.grandTotal.toFixed(2)}
-                </div>
-              </div>
-              <div className="text-right text-xs text-text-muted">
-                <div>{summary.totalTeeth} teeth total</div>
-                <div className="mt-0.5">{summary.studentCount} students</div>
-              </div>
-            </div>
+          <div className="mx-5 mt-3 flex items-center justify-between rounded-card bg-ink px-4 py-4">
+            <span className="text-micro uppercase text-card/70">Week {week} total</span>
+            <span className="tnum font-display text-heading text-card">
+              ${summary.grandTotal.toFixed(2)}
+            </span>
           </div>
         </>
       )}
@@ -126,42 +115,48 @@ export function SummaryClient({ orders, initialWeek }: { orders: RepOrder[]; ini
   );
 }
 
-function SummaryCard({
+function BatchTable({
   title,
-  dotClass,
+  accent,
   rows,
-  totalLabel,
-  totalQty,
-  totalPrice,
+  quantity,
+  total,
 }: {
   title: string;
-  dotClass: string;
+  accent: string;
   rows: { toothNumber: number; quantity: number }[];
-  totalLabel: string;
-  totalQty: number;
-  totalPrice: number;
+  quantity: number;
+  total: number;
 }) {
   return (
-    <div className="mx-6 mb-2.5 rounded-card border border-border bg-surface p-4">
-      <div className="mb-3.5 font-heading text-sm font-bold">{title}</div>
-      {rows.map((row) => (
-        <div
-          key={row.toothNumber}
-          className="flex items-center justify-between border-b border-border py-2 text-[13px] last:border-none"
-        >
-          <span className="flex items-center gap-2 text-text-muted">
-            <span className={`inline-block h-2 w-2 rounded-full ${dotClass}`} />
-            Tooth #{row.toothNumber}
-          </span>
-          <span className="font-heading text-[15px] font-bold">{row.quantity} pcs</span>
-        </div>
-      ))}
-      <div className="mt-3.5 flex items-center justify-between border-t border-border pt-3.5">
-        <span className="text-[13px] font-semibold">{totalLabel}</span>
-        <span className="font-heading text-lg font-extrabold text-accent">
-          {totalQty} pcs · ${totalPrice.toFixed(2)}
+    <section className="mx-5 mt-3 overflow-hidden rounded-card border border-rule bg-card">
+      <h2 className="flex items-center gap-2 border-b border-rule px-4 py-3 font-display text-body">
+        <span className="inline-block h-2.5 w-2.5 rounded-[2px]" style={{ background: accent }} />
+        {title}
+      </h2>
+      <ul>
+        {rows.map((row) => (
+          <li
+            key={row.toothNumber}
+            className="flex items-baseline justify-between gap-3 border-b border-hairline px-4 py-2.5 last:border-none"
+          >
+            <span className="min-w-0">
+              <span className="tnum font-display text-body">{row.toothNumber}</span>
+              <span className="ml-2 text-caption text-ink-muted">
+                {TOOTH_NAMES[row.toothNumber]}
+              </span>
+            </span>
+            <span className="tnum shrink-0 font-display text-body">×{row.quantity}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="flex items-baseline justify-between border-t border-rule bg-card-sunk px-4 py-2.5">
+        <span className="text-small text-ink-muted">
+          <span className="tnum font-display">{quantity}</span> {title}{" "}
+          {quantity === 1 ? "tooth" : "teeth"}
         </span>
+        <span className="tnum font-display text-body">${total.toFixed(2)}</span>
       </div>
-    </div>
+    </section>
   );
 }

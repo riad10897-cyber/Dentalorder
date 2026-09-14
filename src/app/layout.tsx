@@ -1,18 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Syne, DM_Sans } from "next/font/google";
+import { Newsreader, Atkinson_Hyperlegible } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "./service-worker-registration";
 
-const syne = Syne({
-  variable: "--font-syne",
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600"],
 });
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const atkinson = Atkinson_Hyperlegible({
+  variable: "--font-atkinson",
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "DentalOrder",
   },
 };
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0e0e11",
+  themeColor: "#f2ede1",
 };
 
 export default function RootLayout({
@@ -38,8 +38,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${syne.variable} ${dmSans.variable} antialiased`}>
+    // The font variables must land on <html>, not <body>: globals.css
+    // maps them into the Tailwind theme from :root, and a variable
+    // defined one level lower resolves to nothing there — which silently
+    // renders the whole app in fallback serif.
+    <html lang="en" className={`${newsreader.variable} ${atkinson.variable}`}>
+      <body className="antialiased">
         {children}
         <ServiceWorkerRegistration />
       </body>

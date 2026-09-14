@@ -1,18 +1,23 @@
-"use client";
-
-import { motion, MotionConfig } from "motion/react";
-
+// A drawn tick rather than an emoji, and it scales in from 0.7 with a
+// slight overshoot — never from 0, because nothing in the real world
+// appears out of nothing. Reduced motion turns this into a plain fade
+// via the .tick-in rule in globals.css.
 export function ConfirmIcon() {
   return (
-    <MotionConfig reducedMotion="user">
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-accent/10 text-4xl"
+    <div className="tick-in mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-ink">
+      <svg
+        width="30"
+        height="30"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--card)"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
       >
-        🦷
-      </motion.div>
-    </MotionConfig>
+        <path d="M4.5 12.5l5 5 10-11" />
+      </svg>
+    </div>
   );
 }

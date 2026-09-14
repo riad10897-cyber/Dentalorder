@@ -12,11 +12,11 @@ export default async function NewOrderPage() {
   if (!student.repId) {
     const availableReps = await listAvailableReps();
     return (
-      <main className="mx-auto min-h-dvh max-w-md px-6 pb-28 pt-5">
-        <Header />
-        <div className="mt-10 text-center text-sm text-text-muted">
+      <main className="mx-auto min-h-dvh max-w-md px-5 pb-28 pt-5">
+        <Header name={student.fullName} section={student.section} university={student.university} />
+        <p className="mt-8 text-center text-small text-ink-muted">
           You&apos;ll need a representative before you can order teeth.
-        </div>
+        </p>
         <div className="mt-4">
           <RepPicker reps={availableReps} />
         </div>
@@ -27,10 +27,13 @@ export default async function NewOrderPage() {
 
   const { nextWeek, lastToothType } = await getOrderDefaults(student.userId);
 
+  // No bottom nav on this screen: the pinned order footer occupies that
+  // space, and stacking both leaves too little chart at 375px. The back
+  // link is the way out.
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <div className="px-6 pt-5">
-        <Header />
+    <main className="mx-auto min-h-dvh max-w-md">
+      <div className="px-5 pt-5">
+        <Header name={student.fullName} section={student.section} university={student.university} />
       </div>
       <OrderBuilder
         repName={student.repName}
@@ -39,24 +42,35 @@ export default async function NewOrderPage() {
         initialWeek={nextWeek}
         initialToothType={lastToothType}
       />
-      <StudentBottomNav />
     </main>
   );
 }
 
-function Header() {
+function Header({
+  name,
+  section,
+  university,
+}: {
+  name: string;
+  section: string | null;
+  university: string | null;
+}) {
+  const meta = [university, section].filter(Boolean).join(" · ");
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       <Link
         href="/student"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface"
+        className="pressable -ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-control"
         aria-label="Back"
       >
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
           <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
       </Link>
-      <div className="font-heading text-xl font-bold">New Order</div>
+      <div className="min-w-0">
+        <h1 className="truncate font-display text-title">{name}</h1>
+        {meta && <p className="truncate text-caption text-ink-muted">{meta}</p>}
+      </div>
     </div>
   );
 }

@@ -58,28 +58,59 @@ At the end of every phase, state:
 
 ## Design system
 
+Printed paper, not a dark app. This replaced the original dark lime theme
+outright — `#0e0e11` and `#c8f04a` are gone and must not come back.
+
 ```css
---bg:         #0e0e11;
---surface:    #16161a;
---border:     rgba(255,255,255,0.08);
---text:       #f0f0f0;
---text-muted: #6b6b7a;
---accent:     #c8f04a;   /* primary — lime */
---accent2:    #7b61ff;
---frasaco:    #c8f04a;
---copy-a:     #61d0ff;
---supplier:   #639922;
---warning:    #ef9f27;
+--paper:      #F2EDE1;   /* page background */
+--card:       #FBF8F0;   /* surfaces */
+--card-sunk:  #EFE8D9;   /* wells, tracks, inset areas */
+--ink:        #14120F;   /* primary text, primary buttons */
+--ink-muted:  #5E574C;   /* secondary text */
+--ink-faint:  #8A8175;   /* labels, disabled, tooth numbers */
+--rule:       rgba(20,18,15,0.16);   /* borders */
+--hairline:   rgba(20,18,15,0.09);   /* internal dividers */
+--frasaco:    #C0362C;   /* Frasaco, and only Frasaco */
+--copy-a:     #3F5F6E;   /* Copy A, and only Copy A */
+--fulfilled:  #4A6B41;   /* fulfilled status, nothing else */
 ```
 
-- Headings: **Syne** (600–800). Body: **DM Sans** (300–500).
-- Radius: 16px cards, 10px small elements.
-- Dark theme is the default and the primary. Do not add light mode.
-- Mobile-first. Every screen must work at 375px width. Tap targets minimum 44×44px.
-- Restrained micro-animation on tooth selection, order confirmation, route transitions. Respect `prefers-reduced-motion`.
+- **Light only. Do not build a dark mode.**
+- Each colour has one job. Never borrow `--frasaco` for a generic error or
+  `--fulfilled` for a generic success — a red that means "Frasaco" cannot
+  also mean "something went wrong".
+- Display: **Newsreader** (400/500/600) with `font-optical-sizing: auto` —
+  headings, numbers, money, button labels. Body: **Atkinson Hyperlegible**
+  (400/700).
+- Tracking is size-specific, never one global value; it is baked into the
+  `--text-*` scale in `globals.css`. Leading is tight on large text (~1.1),
+  loose on body (~1.5).
+- **Every font size in `rem`, every spacing value in `rem`/`em`.** Fixed
+  `px` makes the phone's text-size setting do nothing.
+- `tabular-nums` (the `.tnum` class) on every money figure, quantity and
+  count, or the running total jitters as digit widths change.
+- Radius: 4px controls and tags, 6px cards. Hairline rules, not shadows.
+  The only shadow in the app is the tooth sheet's.
+- Mobile-first. Every screen must work at 375px width. Tap targets minimum
+  44×44px.
 - Every list and empty view gets a designed empty state. No blank screens.
 
-When a screen exists in `/reference`, match it. Do not redesign it.
+### Motion
+
+Curves live in `globals.css` as `--ease-out`, `--ease-in-out` and
+`--ease-drawer`. Use those exact values; never `ease-in` on a UI element,
+never `transition: all`, never `scale(0)`, never animate width/height/
+margin/padding/top/left, never keyframes on anything triggerable twice a
+second.
+
+- Frequently-seen screens get **no entrance choreography**, and nothing
+  keyboard-initiated animates at all.
+- Press feedback (`.pressable`, `scale(0.97)` at 120ms) belongs on every
+  pressable element, and fires on pointer-down rather than release.
+- `prefers-reduced-motion`, `prefers-reduced-transparency`,
+  `prefers-contrast` and `(hover: hover)` gates ship with the motion, not
+  after it. Reduced motion means gentler, not none: keep opacity and
+  colour, drop movement.
 
 ---
 

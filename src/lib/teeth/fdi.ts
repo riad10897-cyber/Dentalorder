@@ -44,6 +44,16 @@ export const QUADRANT_TEETH: Record<1 | 2 | 3 | 4, number[]> = {
   4: [41, 42, 43, 44, 45, 46, 47, 48],
 };
 
+// How the chart is laid out on screen: four rows of eight, molars at the
+// outside, central incisors meeting at the midline (11 next to 21, 41 next
+// to 31) exactly as on a real dental chart. Upper arch first.
+export const CHART_ROWS: { arch: "upper" | "lower"; teeth: number[] }[] = [
+  { arch: "upper", teeth: [18, 17, 16, 15, 25, 26, 27, 28] },
+  { arch: "upper", teeth: [14, 13, 12, 11, 21, 22, 23, 24] },
+  { arch: "lower", teeth: [44, 43, 42, 41, 31, 32, 33, 34] },
+  { arch: "lower", teeth: [48, 47, 46, 45, 35, 36, 37, 38] },
+];
+
 export const ALL_TOOTH_NUMBERS = [
   ...QUADRANT_TEETH[1],
   ...QUADRANT_TEETH[2],

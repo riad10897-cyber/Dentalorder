@@ -1,6 +1,6 @@
 "use client";
 
-import { QUADRANT_TEETH } from "@/lib/teeth/fdi";
+import { CHART_ROWS } from "@/lib/teeth/fdi";
 import type { ToothType } from "@/lib/supabase/types";
 
 // Keyed by tooth number + type (not tooth number alone) so a student can
@@ -14,118 +14,126 @@ export function toothSelectionKey(toothNumber: number, toothType: ToothType): To
 
 interface DentalChartProps {
   selections: ToothSelections;
+  frasacoPrice: number;
+  copyAPrice: number;
   onTapTooth: (toothNumber: number) => void;
 }
 
-function chunk4(arr: number[]): [number[], number[]] {
-  return [arr.slice(0, 4), arr.slice(4, 8)];
+// The chart is a fixed-geometry anatomical diagram, not text, so its cell
+// sizes are deliberately in px and do not scale with the reader's text
+// size — 32 cells across cannot survive being scaled 150% at 375px, and
+// an arch that reflows stops being a dental chart. Text inside it still
+// scales, and every other measurement in the app is in rem.
+const CELL_W = 36;
+const CELL_H = 48;
+const GUTTER = 6;
+const TOOTH_W = 34;
+const TOOTH_H = 42;
+
+// Columns sit on a shallow parabola so each row reads as an arch: no dip
+// at the midline, ~12px at the outer molars. Upper rows dip down at the
+// edges, lower rows dip up.
+const MAX_DIP = 12;
+
+function columnDip(columnIndex: number, arch: "upper" | "lower"): string {
+  const fromMidline = (columnIndex - 3.5) / 3.5;
+  const dip = MAX_DIP * fromMidline * fromMidline;
+  return `${arch === "upper" ? dip : -dip}px`;
 }
 
-export function DentalChart({ selections, onTapTooth }: DentalChartProps) {
+export function DentalChart({
+  selections,
+  frasacoPrice,
+  copyAPrice,
+  onTapTooth,
+}: DentalChartProps) {
   return (
-    <div className="mx-1 rounded-card border border-border bg-surface py-4">
-      <div className="mb-4 px-3 text-center text-[11px] uppercase tracking-wide text-text-muted">
-        Tap a tooth to add it to your order
+    <div className="mx-2 rounded-card border border-rule bg-card px-2 py-4">
+      <ColourKey frasacoPrice={frasacoPrice} copyAPrice={copyAPrice} />
+
+      <ArchLabel>Upper</ArchLabel>
+      {CHART_ROWS.slice(0, 2).map((row, i) => (
+        <ArchRow key={i} row={row} rowIndex={i} selections={selections} onTapTooth={onTapTooth} />
+      ))}
+
+      <div className="my-2 flex items-center gap-2 px-1" aria-hidden="true">
+        <span className="h-px flex-1 bg-rule" />
+        <span className="text-micro uppercase text-ink-faint">Midline</span>
+        <span className="h-px flex-1 bg-rule" />
       </div>
 
-      <ArchRow
-        leftLabel="Q1 (Upper Right)"
-        rightLabel="Q2 (Upper Left)"
-        leftQuadrant={QUADRANT_TEETH[1]}
-        rightQuadrant={QUADRANT_TEETH[2]}
-        mirrorLeft
-        selections={selections}
-        onTapTooth={onTapTooth}
-      />
-
-      <div className="mx-3 my-4 h-px bg-border" />
-
-      <ArchRow
-        leftLabel="Q4 (Lower Right)"
-        rightLabel="Q3 (Lower Left)"
-        leftQuadrant={QUADRANT_TEETH[4]}
-        rightQuadrant={QUADRANT_TEETH[3]}
-        mirrorLeft
-        selections={selections}
-        onTapTooth={onTapTooth}
-      />
+      {CHART_ROWS.slice(2).map((row, i) => (
+        <ArchRow
+          key={i + 2}
+          row={row}
+          rowIndex={i + 2}
+          selections={selections}
+          onTapTooth={onTapTooth}
+        />
+      ))}
+      <ArchLabel>Lower</ArchLabel>
     </div>
+  );
+}
+
+function ColourKey({ frasacoPrice, copyAPrice }: { frasacoPrice: number; copyAPrice: number }) {
+  return (
+    <div className="mb-3 flex items-center justify-center gap-4 px-1 text-caption text-ink-muted">
+      <span className="flex items-center gap-1.5">
+        <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-frasaco" />
+        Frasaco <span className="tnum font-display text-ink">${frasacoPrice.toFixed(2)}</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-copy-a" />
+        Copy A <span className="tnum font-display text-ink">${copyAPrice.toFixed(2)}</span>
+      </span>
+    </div>
+  );
+}
+
+function ArchLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-1 py-1 text-center text-micro uppercase text-ink-faint">{children}</div>
   );
 }
 
 function ArchRow({
-  leftLabel,
-  rightLabel,
-  leftQuadrant,
-  rightQuadrant,
-  mirrorLeft,
+  row,
+  rowIndex,
   selections,
   onTapTooth,
 }: {
-  leftLabel: string;
-  rightLabel: string;
-  leftQuadrant: number[];
-  rightQuadrant: number[];
-  mirrorLeft?: boolean;
+  row: { arch: "upper" | "lower"; teeth: number[] };
+  rowIndex: number;
   selections: ToothSelections;
   onTapTooth: (toothNumber: number) => void;
 }) {
   return (
-    <div className="flex justify-center gap-1">
-      <QuadrantBlock
-        label={leftLabel}
-        teeth={leftQuadrant}
-        mirror={mirrorLeft}
-        selections={selections}
-        onTapTooth={onTapTooth}
-      />
-      <QuadrantBlock label={rightLabel} teeth={rightQuadrant} selections={selections} onTapTooth={onTapTooth} />
-    </div>
-  );
-}
-
-function QuadrantBlock({
-  label,
-  teeth,
-  mirror,
-  selections,
-  onTapTooth,
-}: {
-  label: string;
-  teeth: number[];
-  mirror?: boolean;
-  selections: ToothSelections;
-  onTapTooth: (toothNumber: number) => void;
-}) {
-  let [topRow, bottomRow] = chunk4(teeth);
-  // Q1/Q4 read outward-to-midline (e.g. 14 13 12 11 | 21 22 23 24) so tooth
-  // 11 sits next to 21 — the two central incisors meet at the midline, same
-  // as a real dental chart.
-  if (mirror) {
-    topRow = [...topRow].reverse();
-    bottomRow = [...bottomRow].reverse();
-  }
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="w-[179px] truncate text-center text-[10px] tracking-wide text-text-muted">{label}</div>
-      <div className="grid grid-cols-4 gap-px">
-        {topRow.map((n) => (
-          <ToothButton key={n} toothNumber={n} selections={selections} onTap={onTapTooth} />
-        ))}
-        {bottomRow.map((n) => (
-          <ToothButton key={n} toothNumber={n} selections={selections} onTap={onTapTooth} />
-        ))}
-      </div>
+    <div
+      className="arch-row flex justify-center"
+      style={{ "--row-index": rowIndex, gap: `${GUTTER}px` } as React.CSSProperties}
+    >
+      {row.teeth.map((toothNumber, columnIndex) => (
+        <ToothButton
+          key={toothNumber}
+          toothNumber={toothNumber}
+          dip={columnDip(columnIndex, row.arch)}
+          selections={selections}
+          onTap={onTapTooth}
+        />
+      ))}
     </div>
   );
 }
 
 function ToothButton({
   toothNumber,
+  dip,
   selections,
   onTap,
 }: {
   toothNumber: number;
+  dip: string;
   selections: ToothSelections;
   onTap: (toothNumber: number) => void;
 }) {
@@ -134,38 +142,59 @@ function ToothButton({
   const hasBoth = Boolean(frasaco) && Boolean(copyA);
   const combinedQty = (frasaco?.quantity ?? 0) + (copyA?.quantity ?? 0);
 
+  // Every tooth is the same silhouette at every state — colour and the
+  // badge carry all of the meaning.
+  let fill: string;
+  if (hasBoth) {
+    fill = `linear-gradient(135deg, var(--frasaco) 0 50%, var(--copy-a) 50% 100%)`;
+  } else if (frasaco) {
+    fill = "var(--frasaco)";
+  } else if (copyA) {
+    fill = "var(--copy-a)";
+  } else {
+    fill = "var(--card)";
+  }
+
+  const selected = Boolean(frasaco || copyA);
+
   return (
     <button
       type="button"
-      aria-label={`Tooth ${toothNumber}`}
+      aria-label={`Tooth ${toothNumber}${describe(frasaco?.quantity, copyA?.quantity)}`}
       onClick={() => onTap(toothNumber)}
-      className={`relative flex h-11 w-11 flex-col items-center justify-center rounded-lg border transition-colors ${
-        hasBoth
-          ? "border-accent2 bg-accent2/10"
-          : frasaco
-            ? "border-accent bg-accent/10"
-            : copyA
-              ? "border-copy-a bg-copy-a/10"
-              : "border-transparent bg-white/5"
-      }`}
+      // Tap target is the full 36x48 cell, not the drawn 34x42 tooth
+      // inside it.
+      className="tooth-cell flex shrink-0 items-center justify-center"
+      style={
+        { "--dip": dip, width: `${CELL_W}px`, height: `${CELL_H}px` } as React.CSSProperties
+      }
     >
-      <span className="text-[13px] leading-none">🦷</span>
       <span
-        className={`mt-0.5 font-heading text-[9px] font-bold leading-none ${
-          hasBoth ? "text-accent2" : frasaco ? "text-accent" : copyA ? "text-copy-a" : "text-text-muted"
+        className={`relative flex items-center justify-center rounded-control border ${
+          selected ? "border-transparent" : "border-rule"
         }`}
+        style={{ background: fill, width: `${TOOTH_W}px`, height: `${TOOTH_H}px` }}
       >
-        {toothNumber}
-      </span>
-      {combinedQty > 0 && (
         <span
-          className={`absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-bold text-bg ${
-            hasBoth ? "bg-accent2" : frasaco ? "bg-accent" : "bg-copy-a"
+          className={`tnum font-display text-caption ${
+            selected ? "text-card" : "text-ink-faint"
           }`}
         >
-          {combinedQty}
+          {toothNumber}
         </span>
-      )}
+        {combinedQty > 1 && (
+          <span className="tnum absolute -right-1 -top-1 flex h-[1.0625rem] min-w-[1.0625rem] items-center justify-center rounded-full bg-ink px-1 font-display text-[0.625rem] leading-none text-card">
+            {combinedQty}
+          </span>
+        )}
+      </span>
     </button>
   );
+}
+
+function describe(frasacoQty?: number, copyAQty?: number): string {
+  const parts: string[] = [];
+  if (frasacoQty) parts.push(`${frasacoQty} Frasaco`);
+  if (copyAQty) parts.push(`${copyAQty} Copy A`);
+  return parts.length ? `, ${parts.join(" and ")} selected` : "";
 }

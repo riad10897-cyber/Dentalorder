@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { DentalChart, toothSelectionKey, type ToothSelections } from "./dental-chart";
+import { ToothSheet } from "./tooth-sheet";
+import { ReviewSheet } from "./review-sheet";
 import { submitToothOrder } from "@/app/student/_actions/orders";
 import { priceToothOrder } from "@/lib/orders/tooth-pricing";
-import { TOOTH_NAMES } from "@/lib/teeth/fdi";
 import type { ToothType } from "@/lib/supabase/types";
 
 interface OrderBuilderProps {
@@ -15,6 +16,13 @@ interface OrderBuilderProps {
   initialWeek: number;
   initialToothType: ToothType;
 }
+
+interface UndoState {
+  message: string;
+  snapshot: ToothSelections;
+}
+
+const UNDO_TIMEOUT_MS = 7000;
 
 export function OrderBuilder({
   repName,
@@ -30,18 +38,45 @@ export function OrderBuilder({
   const [sheetFrasacoQty, setSheetFrasacoQty] = useState(0);
   const [sheetCopyQty, setSheetCopyQty] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [undo, setUndo] = useState<UndoState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // The share card on the confirmation screen quotes a real number, so
+  // count what the student actually did rather than inventing a figure.
+  const interactions = useRef(0);
+  const countInteraction = useCallback(() => {
+    interactions.current += 1;
+  }, []);
+
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const offerUndo = useCallback((message: string, snapshot: ToothSelections) => {
+    setUndo({ message, snapshot });
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setUndo(null), UNDO_TIMEOUT_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimer.current) clearTimeout(undoTimer.current);
+    };
+  }, []);
 
   const prices = useMemo(() => ({ frasacoPrice, copyAPrice }), [frasacoPrice, copyAPrice]);
 
   const itemInputs = useMemo(
     () =>
-      Object.entries(selections).map(([key, sel]) => ({
-        toothNumber: Number(key.split(":")[0]),
-        toothType: sel.toothType,
-        quantity: sel.quantity,
-      })),
+      Object.entries(selections)
+        .map(([key, sel]) => ({
+          toothNumber: Number(key.split(":")[0]),
+          toothType: sel.toothType,
+          quantity: sel.quantity,
+        }))
+        .sort(
+          (a, b) =>
+            a.toothNumber - b.toothNumber ||
+            (a.toothType === "frasaco" ? 0 : 1) - (b.toothType === "frasaco" ? 0 : 1),
+        ),
     [selections],
   );
 
@@ -50,15 +85,17 @@ export function OrderBuilder({
     [itemInputs, prices],
   );
 
-  const toothCount = itemInputs.length;
+  const totalTeeth = itemInputs.reduce((sum, item) => sum + item.quantity, 0);
 
   function openSheet(toothNumber: number) {
+    countInteraction();
     const existingFrasaco = selections[toothSelectionKey(toothNumber, "frasaco")];
     const existingCopy = selections[toothSelectionKey(toothNumber, "copy_a")];
     setSheetTooth(toothNumber);
     if (!existingFrasaco && !existingCopy) {
-      // Nothing chosen for this tooth yet — default to the student's last
-      // used type, per the "286 orders, only 4 mixed" domain note.
+      // Default to the student's last used type: of 286 orders in a
+      // semester only 4 mixed both types, so the common case should need
+      // no extra taps.
       setSheetFrasacoQty(initialToothType === "frasaco" ? 1 : 0);
       setSheetCopyQty(initialToothType === "copy_a" ? 1 : 0);
     } else {
@@ -67,14 +104,14 @@ export function OrderBuilder({
     }
   }
 
-  function closeSheet() {
-    setSheetTooth(null);
-  }
-
-  function addTooth() {
+  function commitSheet() {
     if (sheetTooth === null) return;
+    countInteraction();
+    const snapshot = selections;
     const frasacoKey = toothSelectionKey(sheetTooth, "frasaco");
     const copyKey = toothSelectionKey(sheetTooth, "copy_a");
+    const hadAny = Boolean(snapshot[frasacoKey] || snapshot[copyKey]);
+
     setSelections((prev) => {
       const next = { ...prev };
       if (sheetFrasacoQty > 0) next[frasacoKey] = { toothType: "frasaco", quantity: sheetFrasacoQty };
@@ -83,47 +120,73 @@ export function OrderBuilder({
       else delete next[copyKey];
       return next;
     });
-    closeSheet();
+
+    // Committing zero quantities is a removal, and a removal the student
+    // didn't mean is exactly the mis-tap they need a way back from.
+    const removed = sheetFrasacoQty === 0 && sheetCopyQty === 0;
+    if (removed) offerUndo(`Removed tooth ${sheetTooth}`, snapshot);
+    else if (hadAny) offerUndo(`Updated tooth ${sheetTooth}`, snapshot);
+    else offerUndo(`Added tooth ${sheetTooth}`, snapshot);
+
+    setSheetTooth(null);
   }
 
-  function removeTooth() {
+  function removeFromSheet() {
     if (sheetTooth === null) return;
+    countInteraction();
+    const snapshot = selections;
     setSelections((prev) => {
       const next = { ...prev };
       delete next[toothSelectionKey(sheetTooth, "frasaco")];
       delete next[toothSelectionKey(sheetTooth, "copy_a")];
       return next;
     });
-    closeSheet();
+    offerUndo(`Removed tooth ${sheetTooth}`, snapshot);
+    setSheetTooth(null);
+  }
+
+  function applyUndo() {
+    if (!undo) return;
+    countInteraction();
+    setSelections(undo.snapshot);
+    setUndo(null);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
   }
 
   function handleConfirm() {
+    countInteraction();
     setError(null);
     startTransition(async () => {
-      const result = await submitToothOrder({
-        weekNumber: week,
-        items: itemInputs,
-      });
+      const result = await submitToothOrder({ weekNumber: week, items: itemInputs });
       if (result.error) {
         setError(result.error);
         return;
       }
-      router.push(`/student/order/confirmed/${result.orderId}`);
+      router.push(
+        `/student/order/confirmed/${result.orderId}?taps=${Math.max(1, interactions.current)}`,
+      );
     });
   }
 
   return (
     <>
-      <div className="mx-6 mt-5 flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+      <div
+        className="flex gap-1.5 overflow-x-auto px-5 pb-1 pt-4"
+        style={{ scrollbarWidth: "none" }}
+      >
         {Array.from({ length: 17 }, (_, i) => i + 1).map((w) => (
           <button
             key={w}
             type="button"
-            onClick={() => setWeek(w)}
-            className={`min-h-9 shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+            onClick={() => {
+              countInteraction();
+              setWeek(w);
+            }}
+            aria-pressed={w === week}
+            className={`pressable tnum min-h-9 shrink-0 rounded-control border px-3 py-1.5 font-display text-small ${
               w === week
-                ? "border-accent bg-accent font-bold text-bg"
-                : "border-border bg-surface text-text-muted"
+                ? "border-ink bg-ink text-card"
+                : "border-rule bg-card text-ink-muted"
             }`}
           >
             Wk {w}
@@ -131,51 +194,86 @@ export function OrderBuilder({
         ))}
       </div>
 
-      <div className="mx-6 mt-3.5 flex gap-3 text-xs text-text-muted">
-        <Legend swatchClass="bg-accent/30" label="Frasaco" />
-        <Legend swatchClass="bg-copy-a/30" label="Copy A" />
-        <Legend swatchClass="bg-white/5" label="Tap to add" />
+      <div className="mt-3">
+        <DentalChart
+          selections={selections}
+          frasacoPrice={frasacoPrice}
+          copyAPrice={copyAPrice}
+          onTapTooth={openSheet}
+        />
       </div>
 
-      <div className="mt-5">
-        <DentalChart selections={selections} onTapTooth={openSheet} />
-      </div>
+      <InThisOrder items={pricedItems} />
 
-      <div className="mx-6 mt-4 flex items-center justify-between rounded-lg border border-border bg-surface2 px-4 py-3.5">
-        <div>
-          <div className="text-[13px] text-text-muted">Order total</div>
-          <div className="font-heading text-lg font-bold">
-            {toothCount} teeth · <span className="text-accent">${subtotal.toFixed(2)}</span>
+      {/* Footer is pinned; this keeps the last card clear of it. */}
+      <div className="h-32" />
+
+      <div className="scroll-edge fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md bg-paper px-5 pb-6 pt-3">
+        {undo && (
+          <div className="total-change mb-2 flex items-center justify-between rounded-control border border-rule bg-card-sunk px-3 py-2">
+            <span className="text-small text-ink-muted">{undo.message}</span>
+            <button
+              type="button"
+              onClick={applyUndo}
+              className="pressable -my-2 px-2 py-2 font-display text-small underline underline-offset-2"
+            >
+              Undo
+            </button>
           </div>
-        </div>
-        <button
-          type="button"
-          disabled={toothCount === 0}
-          onClick={() => setReviewOpen(true)}
-          className="min-h-11 rounded-full bg-accent px-5 py-2.5 font-heading text-sm font-bold text-bg disabled:opacity-40"
-        >
-          Review
-        </button>
-      </div>
+        )}
 
-      <div className="h-6" />
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-micro uppercase text-ink-faint">Order total</div>
+            <div className="flex items-baseline gap-2">
+              <span
+                key={subtotal}
+                className="total-change tnum font-display text-heading"
+                data-testid="order-total"
+              >
+                ${subtotal.toFixed(2)}
+              </span>
+              <span className="tnum font-display text-caption text-ink-muted">
+                {totalTeeth} {totalTeeth === 1 ? "tooth" : "teeth"}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={itemInputs.length === 0}
+            onClick={() => {
+              countInteraction();
+              setReviewOpen(true);
+            }}
+            className="pressable min-h-11 rounded-control bg-ink px-6 py-3 font-display text-body text-card disabled:opacity-30"
+          >
+            Review
+          </button>
+        </div>
+      </div>
 
       {sheetTooth !== null && (
         <ToothSheet
           toothNumber={sheetTooth}
           frasacoQty={sheetFrasacoQty}
           copyQty={sheetCopyQty}
+          frasacoPrice={frasacoPrice}
+          copyAPrice={copyAPrice}
           hasExisting={Boolean(
             selections[toothSelectionKey(sheetTooth, "frasaco")] ||
               selections[toothSelectionKey(sheetTooth, "copy_a")],
           )}
-          frasacoPrice={frasacoPrice}
-          copyAPrice={copyAPrice}
-          onChangeFrasacoQty={setSheetFrasacoQty}
-          onChangeCopyQty={setSheetCopyQty}
-          onAdd={addTooth}
-          onRemove={removeTooth}
-          onClose={closeSheet}
+          onChangeFrasacoQty={(q) => {
+            countInteraction();
+            setSheetFrasacoQty(q);
+          }}
+          onChangeCopyQty={(q) => {
+            countInteraction();
+            setSheetCopyQty(q);
+          }}
+          onCommit={commitSheet}
+          onRemove={removeFromSheet}
+          onClose={() => setSheetTooth(null)}
         />
       )}
 
@@ -195,240 +293,44 @@ export function OrderBuilder({
   );
 }
 
-function Legend({ swatchClass, label }: { swatchClass: string; label: string }) {
+function InThisOrder({ items }: { items: ReturnType<typeof priceToothOrder>["items"] }) {
   return (
-    <span className="flex items-center gap-1.5">
-      <span className={`inline-block h-2.5 w-2.5 rounded-[3px] ${swatchClass}`} />
-      {label}
-    </span>
-  );
-}
-
-function ToothSheet({
-  toothNumber,
-  frasacoQty,
-  copyQty,
-  hasExisting,
-  frasacoPrice,
-  copyAPrice,
-  onChangeFrasacoQty,
-  onChangeCopyQty,
-  onAdd,
-  onRemove,
-  onClose,
-}: {
-  toothNumber: number;
-  frasacoQty: number;
-  copyQty: number;
-  hasExisting: boolean;
-  frasacoPrice: number;
-  copyAPrice: number;
-  onChangeFrasacoQty: (q: number) => void;
-  onChangeCopyQty: (q: number) => void;
-  onAdd: () => void;
-  onRemove: () => void;
-  onClose: () => void;
-}) {
-  const canAdd = frasacoQty > 0 || copyQty > 0;
-  return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="w-full max-w-md rounded-t-3xl bg-surface px-6 pb-10 pt-3">
-        <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-border" />
-        <div className="font-heading text-[22px] font-extrabold">Tooth #{toothNumber}</div>
-        <div className="mb-1 text-[13px] text-text-muted">{TOOTH_NAMES[toothNumber]}</div>
-        <div className="mb-6 text-xs text-text-muted">Pick either type, or both.</div>
-
-        <div className="mb-6 flex flex-col gap-2.5">
-          <TypeOption
-            label="Frasaco"
-            price={frasacoPrice}
-            colorClass="text-accent"
-            selectedBorder="border-accent bg-accent/10"
-            qty={frasacoQty}
-            onChangeQty={onChangeFrasacoQty}
-          />
-          <TypeOption
-            label="Copy A"
-            price={copyAPrice}
-            colorClass="text-copy-a"
-            selectedBorder="border-copy-a bg-copy-a/10"
-            qty={copyQty}
-            onChangeQty={onChangeCopyQty}
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={onAdd}
-          disabled={!canAdd}
-          className="min-h-11 w-full rounded-lg bg-accent py-4 font-heading text-base font-bold text-bg active:scale-[0.99] disabled:opacity-40"
-        >
-          {hasExisting ? "Update Tooth" : "Add to Order"}
-        </button>
-        {hasExisting && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="mt-2 min-h-11 w-full rounded-lg py-3 text-sm text-text-muted"
-          >
-            Remove from order
-          </button>
-        )}
+    <div className="mx-2 mt-3 rounded-card border border-rule bg-card">
+      <div className="border-b border-hairline px-4 py-3 text-micro uppercase text-ink-faint">
+        In this order
       </div>
-    </div>
-  );
-}
-
-function TypeOption({
-  label,
-  price,
-  colorClass,
-  selectedBorder,
-  qty,
-  onChangeQty,
-}: {
-  label: string;
-  price: number;
-  colorClass: string;
-  selectedBorder: string;
-  qty: number;
-  onChangeQty: (q: number) => void;
-}) {
-  const selected = qty > 0;
-  return (
-    <div
-      className={`flex min-h-11 items-center justify-between rounded-lg border-[1.5px] p-3.5 transition-colors ${
-        selected ? selectedBorder : "border-border bg-surface2"
-      }`}
-    >
-      <button
-        type="button"
-        onClick={() => onChangeQty(selected ? 0 : 1)}
-        className="flex-1 text-left"
-      >
-        <div className={`font-heading text-[15px] font-bold ${colorClass}`}>{label}</div>
-        <div className="text-xs text-text-muted">${price.toFixed(2)} / tooth</div>
-      </button>
-      {selected && (
-        <div className="flex items-center gap-3">
-          <QtyButton
-            label="−"
-            aria-label={`Decrease ${label} quantity`}
-            onClick={() => onChangeQty(Math.max(0, qty - 1))}
-          />
-          <span className="min-w-6 text-center font-heading text-lg font-bold">{qty}</span>
-          <QtyButton
-            label="+"
-            aria-label={`Increase ${label} quantity`}
-            onClick={() => onChangeQty(Math.min(10, qty + 1))}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function QtyButton({
-  label,
-  "aria-label": ariaLabel,
-  onClick,
-}: {
-  label: string;
-  "aria-label": string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      onClick={onClick}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface2 text-lg"
-    >
-      {label}
-    </button>
-  );
-}
-
-function ReviewSheet({
-  week,
-  repName,
-  items,
-  subtotal,
-  error,
-  pending,
-  onClose,
-  onConfirm,
-}: {
-  week: number;
-  repName: string | null;
-  items: ReturnType<typeof priceToothOrder>["items"];
-  subtotal: number;
-  error: string | null;
-  pending: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
-      <div className="flex max-h-[85vh] w-full max-w-md flex-col rounded-t-3xl bg-surface px-6 pb-8 pt-3">
-        <div className="mx-auto mb-5 h-1 w-9 shrink-0 rounded-full bg-border" />
-        <div className="mb-1 font-heading text-xl font-bold">Review Order</div>
-        <div className="mb-5 text-[13px] text-text-muted">
-          Week {week}
-          {repName ? ` · to ${repName}` : ""}
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
+      {items.length === 0 ? (
+        <p className="px-4 py-5 text-center text-small text-ink-muted">
+          Nothing yet. Tap a tooth above to add it.
+        </p>
+      ) : (
+        <ul>
           {items.map((item) => (
-            <div
-              key={item.toothNumber}
-              className="flex items-center justify-between border-b border-border py-2.5 text-sm last:border-none"
+            <li
+              key={`${item.toothNumber}:${item.toothType}`}
+              className="flex items-center justify-between border-b border-hairline px-4 py-2.5 last:border-none"
             >
-              <div>
-                <span className="font-medium">Tooth #{item.toothNumber}</span>
-                <span className="ml-2 text-text-muted">
-                  {item.toothType === "frasaco" ? "Frasaco" : "Copy A"} · x{item.quantity}
+              <span className="flex items-center gap-2.5">
+                <span
+                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                  style={{
+                    background:
+                      item.toothType === "frasaco" ? "var(--frasaco)" : "var(--copy-a)",
+                  }}
+                />
+                <span className="tnum font-display text-body">Tooth {item.toothNumber}</span>
+                <span className="text-caption text-ink-muted">
+                  {item.toothType === "frasaco" ? "Frasaco" : "Copy A"}
                 </span>
-              </div>
-              <span className="font-heading font-bold">${item.lineTotal.toFixed(2)}</span>
-            </div>
+              </span>
+              <span className="flex items-baseline gap-3">
+                <span className="tnum font-display text-caption text-ink-muted">×{item.quantity}</span>
+                <span className="tnum font-display text-body">${item.lineTotal.toFixed(2)}</span>
+              </span>
+            </li>
           ))}
-        </div>
-
-        <div className="mt-4 flex items-center justify-between rounded-lg bg-surface2 px-4 py-3.5">
-          <span className="text-sm font-semibold">Order Total</span>
-          <span
-            data-testid="review-total"
-            className="font-heading text-xl font-extrabold text-accent"
-          >
-            ${subtotal.toFixed(2)}
-          </span>
-        </div>
-
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
-
-        <div className="mt-4 flex gap-2.5">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={pending}
-            className="min-h-11 flex-1 rounded-lg border border-border py-3.5 text-sm font-semibold text-text-muted"
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={pending}
-            className="min-h-11 flex-[2] rounded-lg bg-accent py-3.5 font-heading text-sm font-bold text-bg disabled:opacity-60"
-          >
-            {pending ? "Submitting…" : "Confirm Order"}
-          </button>
-        </div>
-      </div>
+        </ul>
+      )}
     </div>
   );
 }

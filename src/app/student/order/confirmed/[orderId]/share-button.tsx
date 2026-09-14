@@ -26,12 +26,20 @@ export function ShareButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleShare}
-      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface py-3.5 text-sm font-semibold text-text"
+      className="pressable flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-rule bg-card py-3 font-display text-body"
     >
-      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <svg
+        width="16"
+        height="16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.75}
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
         <path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v14" />
       </svg>
-      {copied ? "Copied to clipboard" : "Share"}
+      {copied ? "Copied" : "Share"}
     </button>
   );
 }

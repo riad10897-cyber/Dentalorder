@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""One-off PWA icon generator. Draws a simple tooth glyph on the app's
-accent-lime background at every size the manifest/iOS/favicon need.
+"""One-off PWA icon generator. Draws a simple tooth glyph in ink on the
+app's paper background at every size the manifest/iOS/favicon need.
 Not a runtime dependency — run once, commit the PNGs, delete this if
 the art is ever replaced by a real designer."""
 
 from PIL import Image, ImageDraw
 
-BG = (200, 240, 74, 255)  # --accent, opaque (iOS ignores alpha and fills black otherwise)
-TOOTH = (14, 14, 17, 255)  # --bg
+BG = (242, 237, 225, 255)  # --paper, opaque (iOS ignores alpha and fills black otherwise)
+TOOTH = (20, 18, 15, 255)  # --ink
 
 
 def draw_tooth(size: int) -> Image.Image:
@@ -56,7 +56,7 @@ def draw_tooth(size: int) -> Image.Image:
             cx - crown_half_w * 0.45 + highlight_r,
             crown_top + crown_h * 0.32 + highlight_r,
         ],
-        fill=(255, 255, 255, 110),
+        fill=(242, 237, 225, 140),
     )
 
     return img

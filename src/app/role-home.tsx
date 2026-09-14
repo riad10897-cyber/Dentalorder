@@ -21,19 +21,19 @@ export async function RoleHome({ role }: { role: UserRole }) {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-4 py-10 text-center">
-      <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs uppercase tracking-wide text-accent">
+      <span className="rounded-full border border-rule bg-card px-3 py-1 text-xs uppercase tracking-wide text-ink">
         {ROLE_LABEL[role]}
       </span>
-      <h1 className="text-2xl font-semibold text-text">
+      <h1 className="text-2xl font-semibold text-ink">
         {profile?.full_name ?? "Welcome"}
       </h1>
-      <p className="text-sm text-text-muted">
+      <p className="text-sm text-ink-muted">
         This is the {ROLE_LABEL[role].toLowerCase()} home. Phase 1 stops here.
       </p>
       <form action={signOut}>
         <button
           type="submit"
-          className="min-h-11 rounded-sm border border-border px-4 py-2 text-sm text-text-muted"
+          className="min-h-11 rounded-sm border border-rule px-4 py-2 text-sm text-ink-muted"
         >
           Sign out
         </button>

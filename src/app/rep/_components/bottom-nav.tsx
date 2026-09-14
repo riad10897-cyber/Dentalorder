@@ -49,25 +49,28 @@ export function RepBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-md items-center justify-around border-t border-border bg-bg/90 pb-7 pt-3 backdrop-blur-xl">
+    // Opaque with a scroll-edge fade, matching the student nav. No
+    // backdrop-filter: a blur layer fights the flat printed-paper design.
+    <nav className="scroll-edge fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-md items-center justify-around border-t border-rule bg-paper pb-6 pt-2">
       {ITEMS.map((item) => {
         const active = item.href === "/rep" ? pathname === "/rep" : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
-            className="flex min-w-[44px] flex-col items-center gap-1 px-3 py-1"
+            aria-current={active ? "page" : undefined}
+            className="pressable flex min-h-11 min-w-11 flex-col items-center gap-1 px-3 py-1"
           >
             <svg
-              className={`h-6 w-6 ${active ? "text-accent" : "text-text-muted"}`}
+              className={`h-6 w-6 ${active ? "text-ink" : "text-ink-faint"}`}
               fill="none"
               stroke="currentColor"
-              strokeWidth={1.8}
+              strokeWidth={1.6}
               viewBox="0 0 24 24"
             >
               {item.icon}
             </svg>
-            <span className={`text-[10px] tracking-wide ${active ? "text-accent" : "text-text-muted"}`}>
+            <span className={`text-micro uppercase ${active ? "text-ink" : "text-ink-faint"}`}>
               {item.label}
             </span>
           </Link>

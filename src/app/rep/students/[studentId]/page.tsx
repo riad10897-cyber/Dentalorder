@@ -4,10 +4,10 @@ import { getRepContext, getStudentDetail } from "@/lib/rep/data";
 import { RepBottomNav } from "../../_components/bottom-nav";
 
 const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-warning/10 text-warning",
+  pending: "bg-warning/10 text-ink-muted",
   confirmed: "bg-copy-a/10 text-copy-a",
-  fulfilled: "bg-accent/10 text-accent",
-  cancelled: "bg-white/5 text-text-muted",
+  fulfilled: "bg-ink/10 text-ink",
+  cancelled: "bg-card-sunk text-ink-muted",
 };
 
 export default async function RepStudentDetailPage({
@@ -36,7 +36,7 @@ export default async function RepStudentDetailPage({
       <div className="flex items-center gap-4 px-6 pt-5">
         <Link
           href="/rep/students"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-rule bg-card"
           aria-label="Back"
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -44,42 +44,42 @@ export default async function RepStudentDetailPage({
           </svg>
         </Link>
         <div>
-          <div className="font-heading text-lg font-bold">{profile.full_name}</div>
-          {metaParts && <div className="text-xs text-text-muted">{metaParts}</div>}
+          <div className="font-display text-lg font-bold">{profile.full_name}</div>
+          {metaParts && <div className="text-xs text-ink-muted">{metaParts}</div>}
         </div>
       </div>
 
       <div className="mx-6 mt-5 grid grid-cols-2 gap-2.5">
-        <div className="rounded-lg border border-border bg-surface px-4 py-3.5 text-center">
-          <div className="font-heading text-2xl font-extrabold text-accent">{orders.length}</div>
-          <div className="mt-0.5 text-[11px] text-text-muted">Orders</div>
+        <div className="rounded-lg border border-rule bg-card px-4 py-3.5 text-center">
+          <div className="font-display text-2xl font-extrabold text-ink">{orders.length}</div>
+          <div className="mt-0.5 text-[11px] text-ink-muted">Orders</div>
         </div>
-        <div className="rounded-lg border border-border bg-surface px-4 py-3.5 text-center">
-          <div className="font-heading text-2xl font-extrabold text-accent">
+        <div className="rounded-lg border border-rule bg-card px-4 py-3.5 text-center">
+          <div className="font-display text-2xl font-extrabold text-ink">
             ${totalSpent.toFixed(2)}
           </div>
-          <div className="mt-0.5 text-[11px] text-text-muted">Total Spent</div>
+          <div className="mt-0.5 text-[11px] text-ink-muted">Total Spent</div>
         </div>
       </div>
 
-      <div className="px-6 pb-2 pt-6 text-xs font-semibold uppercase tracking-wider text-text-muted">
+      <div className="px-6 pb-2 pt-6 text-xs font-semibold uppercase tracking-wider text-ink-muted">
         Order History
       </div>
 
       {orders.length === 0 ? (
-        <div className="mx-6 rounded-card border border-dashed border-border p-6 text-center text-sm text-text-muted">
+        <div className="mx-6 rounded-card border border-dashed border-rule p-6 text-center text-sm text-ink-muted">
           This student hasn&apos;t placed an order yet.
         </div>
       ) : (
         <div className="flex flex-col gap-2 px-6">
           {orders.map((order) => (
-            <div key={order.id} className="rounded-lg border border-border bg-surface px-4 py-3">
+            <div key={order.id} className="rounded-lg border border-rule bg-card px-4 py-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">Week {order.weekNumber}</span>
-                <span className="font-heading text-sm font-bold">${order.totalPrice.toFixed(2)}</span>
+                <span className="font-display text-sm font-bold">${order.totalPrice.toFixed(2)}</span>
               </div>
               <div className="mt-1 flex items-center justify-between">
-                <span className="text-xs text-text-muted">
+                <span className="text-xs text-ink-muted">
                   {order.items
                     .map((i) => `#${i.toothNumber}`)
                     .slice(0, 6)

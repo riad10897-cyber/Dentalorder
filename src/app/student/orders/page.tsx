@@ -4,13 +4,6 @@ import { getStudentContext, listStudentOrders } from "@/lib/student/data";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { ReorderButton } from "./reorder-button";
 
-const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-accent2/10 text-accent2",
-  confirmed: "bg-copy-a/10 text-copy-a",
-  fulfilled: "bg-accent/10 text-accent",
-  cancelled: "bg-white/5 text-text-muted",
-};
-
 export default async function OrderHistoryPage() {
   const student = await getStudentContext();
   if (!student) redirect("/sign-in");
@@ -19,61 +12,74 @@ export default async function OrderHistoryPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <div className="flex items-center gap-4 px-6 pt-5">
+      <div className="flex items-center gap-3 px-5 pt-5">
         <Link
           href="/student"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface"
+          className="pressable -ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-control"
           aria-label="Back"
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </Link>
-        <div className="font-heading text-xl font-bold">Order History</div>
+        <h1 className="font-display text-title">Order history</h1>
       </div>
 
       {orders.length === 0 ? (
-        <div className="mx-6 mt-10 rounded-card border border-dashed border-border p-6 text-center text-sm text-text-muted">
-          No orders yet. Once you place your first weekly order, it&apos;ll show up here.
-        </div>
+        <p className="mx-5 mt-8 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+          No orders yet. Once you place your first weekly order, it will be listed here.
+        </p>
       ) : (
-        <div className="mt-5 flex flex-col gap-2.5 px-6">
+        <ul className="mt-4 flex flex-col gap-2.5 px-5">
           {orders.map((order) => {
-            const typeLabel =
-              order.items.length > 0 &&
-              order.items.every((i) => i.toothType === order.items[0].toothType)
-                ? order.items[0].toothType === "frasaco"
-                  ? "Frasaco"
-                  : "Copy A"
-                : "Mixed";
+            const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
+            const fulfilled = order.fulfillmentStatus === "fulfilled";
             return (
-              <div
-                key={order.id}
-                className="flex items-center gap-3.5 rounded-lg border border-border bg-surface px-4 py-3.5"
-              >
-                <div className="flex-1">
-                  <div className="text-[13px] font-medium">Week {order.weekNumber}</div>
-                  <div className="mt-0.5 text-xs text-text-muted">
-                    {order.items.length} teeth · {typeLabel}
+              <li key={order.id} className="rounded-card border border-rule bg-card p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div>
+                    <h2 className="font-display text-body">
+                      Week <span className="tnum">{order.weekNumber}</span>
+                    </h2>
+                    <p className="tnum font-display text-caption text-ink-muted">
+                      {formatDate(order.createdAt)} · {teeth} {teeth === 1 ? "tooth" : "teeth"}
+                    </p>
                   </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="font-heading text-sm font-bold">
-                      ${order.totalPrice.toFixed(2)}
-                    </span>
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 text-[11px] ${
-                        STATUS_STYLE[order.fulfillmentStatus] ?? STATUS_STYLE.pending
-                      }`}
-                    >
-                      {capitalize(order.fulfillmentStatus)}
-                    </span>
-                  </div>
+                  <span className="tnum font-display text-lead">
+                    ${order.totalPrice.toFixed(2)}
+                  </span>
                 </div>
-                <ReorderButton orderId={order.id} />
-              </div>
+
+                <ul className="mt-3 flex flex-wrap gap-1">
+                  {order.items.map((item, i) => (
+                    <li
+                      key={i}
+                      className="tnum rounded-control px-1.5 py-0.5 text-caption text-card"
+                      style={{
+                        background:
+                          item.toothType === "frasaco" ? "var(--frasaco)" : "var(--copy-a)",
+                      }}
+                    >
+                      {item.toothNumber}
+                      {item.quantity > 1 ? `×${item.quantity}` : ""}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-3 flex items-center justify-between border-t border-hairline pt-3">
+                  <span
+                    className={`inline-block rounded-control px-1.5 py-0.5 text-micro uppercase ${
+                      fulfilled ? "bg-fulfilled text-card" : "bg-card-sunk text-ink-muted"
+                    }`}
+                  >
+                    {order.fulfillmentStatus}
+                  </span>
+                  <ReorderButton orderId={order.id} />
+                </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
 
       <StudentBottomNav />
@@ -81,6 +87,9 @@ export default async function OrderHistoryPage() {
   );
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
 }

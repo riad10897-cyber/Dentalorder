@@ -104,7 +104,7 @@ export interface StudentOrderSummary {
   paymentStatus: string;
   fulfillmentStatus: string;
   createdAt: string;
-  items: { toothNumber: number; toothType: ToothType }[];
+  items: { toothNumber: number; toothType: ToothType; quantity: number }[];
 }
 
 export async function listStudentOrders(userId: string): Promise<StudentOrderSummary[]> {
@@ -112,7 +112,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, created_at, order_items(tooth_number, tooth_type)",
+      "id, week_number, total_price, payment_status, fulfillment_status, created_at, order_items(tooth_number, tooth_type, quantity)",
     )
     .eq("student_id", userId)
     .eq("order_type", "tooth")
@@ -127,6 +127,10 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
     createdAt: order.created_at,
     items: (order.order_items ?? [])
       .filter((item) => item.tooth_number !== null && item.tooth_type !== null)
-      .map((item) => ({ toothNumber: item.tooth_number!, toothType: item.tooth_type! })),
+      .map((item) => ({
+        toothNumber: item.tooth_number!,
+        toothType: item.tooth_type!,
+        quantity: item.quantity,
+      })),
   }));
 }

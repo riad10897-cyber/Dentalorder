@@ -36,8 +36,8 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
             onClick={() => setRole(r.value)}
             className={`min-h-11 rounded-sm border px-3 py-2 text-sm font-medium transition-colors ${
               role === r.value
-                ? "border-accent bg-accent/10 text-accent"
-                : "border-border bg-surface text-text-muted"
+                ? "border-ink bg-ink/10 text-ink"
+                : "border-rule bg-card text-ink-muted"
             }`}
           >
             {r.label}
@@ -94,7 +94,7 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
               </select>
             </Field>
           ) : (
-            <div className="rounded-sm border border-dashed border-border bg-surface p-3 text-sm text-text-muted">
+            <div className="rounded-sm border border-dashed border-rule bg-card p-3 text-sm text-ink-muted">
               <p>
                 No representative has joined yet. That&apos;s fine — create your account now and
                 pick your rep from your profile once they&apos;re on DentalOrder.
@@ -136,18 +136,18 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
           <Field label="Description (optional)" name="description" error={state.fieldErrors.description}>
             <textarea name="description" rows={3} className={inputClass} />
           </Field>
-          <p className="text-xs text-warning">
+          <p className="text-xs text-ink-muted">
             Your account will be reviewed by an admin before you can list products.
           </p>
         </>
       )}
 
-      {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+      {state.error && <p className="text-sm text-ink">{state.error}</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 rounded-sm bg-accent px-4 py-2 font-semibold text-bg disabled:opacity-60"
+        className="min-h-11 rounded-sm bg-ink px-4 py-2 font-semibold text-card disabled:opacity-60"
       >
         {pending ? "Creating account…" : "Create account"}
       </button>
@@ -156,7 +156,7 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
 }
 
 const inputClass =
-  "min-h-11 w-full rounded-sm border border-border bg-surface px-3 py-2 text-text placeholder:text-text-muted focus:border-accent focus:outline-none";
+  "min-h-11 w-full rounded-sm border border-rule bg-card px-3 py-2 text-ink placeholder:text-ink-muted focus:border-ink focus:outline-none";
 
 function Field({
   label,
@@ -169,10 +169,10 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm text-text-muted">
+    <label className="flex flex-col gap-1 text-sm text-ink-muted">
       {label}
       {children}
-      {error && <span className="text-xs text-red-400">{error}</span>}
+      {error && <span className="text-xs text-ink">{error}</span>}
     </label>
   );
 }
