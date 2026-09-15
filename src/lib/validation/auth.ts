@@ -42,7 +42,7 @@ export const repSignUpSchema = z.object({
   email,
   password,
   full_name: fullName,
-  university: z.string().trim().min(1, "Enter your university."),
+  university: z.string().trim().min(1, "Select your university."),
   year_of_study: optionalYearOfStudy,
   section: z.string().trim().optional(),
   whish_number: z.string().trim().optional(),

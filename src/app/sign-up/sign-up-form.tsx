@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { signUp, type FormState } from "@/app/actions/auth";
+import { OTHER_UNIVERSITY, UNIVERSITIES } from "@/lib/universities";
 
 type Rep = {
   id: string;
@@ -60,9 +61,7 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
 
       {role === "student" && (
         <>
-          <Field label="University" name="university" error={state.fieldErrors.university}>
-            <input name="university" type="text" required placeholder="BAU, LU, USJ..." className={inputClass} />
-          </Field>
+          <UniversityField error={state.fieldErrors.university} />
           <Field label="Year of study" name="year_of_study" error={state.fieldErrors.year_of_study}>
             <select name="year_of_study" required className={inputClass} defaultValue="">
               <option value="" disabled>
@@ -107,9 +106,7 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
 
       {role === "rep" && (
         <>
-          <Field label="University" name="university" error={state.fieldErrors.university}>
-            <input name="university" type="text" required className={inputClass} />
-          </Field>
+          <UniversityField error={state.fieldErrors.university} />
           <Field label="Year of study (optional)" name="year_of_study" error={state.fieldErrors.year_of_study}>
             <input name="year_of_study" type="number" min={1} max={5} className={inputClass} />
           </Field>
@@ -157,6 +154,55 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
 
 const inputClass =
   "min-h-11 w-full rounded-sm border border-rule bg-card px-3 py-2 text-ink placeholder:text-ink-muted focus:border-ink focus:outline-none";
+
+function UniversityField({ error }: { error?: string }) {
+  const [choice, setChoice] = useState("");
+  const isOther = choice === OTHER_UNIVERSITY;
+  const [typed, setTyped] = useState("");
+
+  // One hidden field carries the answer either way, so the server sees a
+  // plain university string and never has to know about the sentinel.
+  const submitted = isOther ? typed : choice;
+
+  return (
+    <Field label="University" name="university" error={error}>
+      <select
+        // Unnamed on purpose: the hidden input below is the single source
+        // of what gets submitted. `required` still gates the form.
+        required
+        aria-label="University"
+        value={choice}
+        onChange={(event) => setChoice(event.target.value)}
+        className={inputClass}
+      >
+        <option value="" disabled>
+          Select your university
+        </option>
+        {UNIVERSITIES.map((university) => (
+          <option key={university.value} value={university.value}>
+            {university.label}
+          </option>
+        ))}
+        <option value={OTHER_UNIVERSITY}>Other</option>
+      </select>
+
+      {isOther && (
+        <input
+          type="text"
+          required
+          autoFocus
+          aria-label="University name"
+          placeholder="Type your university"
+          value={typed}
+          onChange={(event) => setTyped(event.target.value)}
+          className={`${inputClass} mt-2`}
+        />
+      )}
+
+      <input type="hidden" name="university" value={submitted} />
+    </Field>
+  );
+}
 
 function Field({
   label,
