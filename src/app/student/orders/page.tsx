@@ -1,14 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStudentContext, listStudentOrders } from "@/lib/student/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { ReorderButton } from "./reorder-button";
 
 export default async function OrderHistoryPage() {
-  const student = await getStudentContext();
-  if (!student) redirect("/sign-in");
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
 
-  const orders = await listStudentOrders(student.userId);
+  const [student, orders] = await Promise.all([
+    getStudentContext(userId),
+    listStudentOrders(userId),
+  ]);
+  if (!student) redirect("/sign-in");
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">

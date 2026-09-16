@@ -1,17 +1,23 @@
 import { redirect } from "next/navigation";
 import { getStudentContext, listStudentOrders, listAvailableReps } from "@/lib/student/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { RepPicker } from "../_components/rep-picker";
 import { signOut } from "@/app/actions/auth";
 
 export default async function StudentProfilePage() {
-  const student = await getStudentContext();
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
+
+  const [student, orders] = await Promise.all([
+    getStudentContext(userId),
+    listStudentOrders(userId),
+  ]);
   if (!student) redirect("/sign-in");
 
-  const [orders, availableReps] = await Promise.all([
-    listStudentOrders(student.userId),
-    student.repId ? Promise.resolve([]) : listAvailableReps(),
-  ]);
+  // Only needed when they have no rep yet, so it stays conditional
+  // rather than being paid for on every visit.
+  const availableReps = student.repId ? [] : await listAvailableReps();
   const totalTeeth = orders.reduce((sum, o) => sum + o.items.length, 0);
   const totalSpent = orders.reduce((sum, o) => sum + o.totalPrice, 0);
 

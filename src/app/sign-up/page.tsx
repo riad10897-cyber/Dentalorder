@@ -1,12 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { getRepDirectory } from "@/lib/reps/directory";
 import { SignUpForm } from "./sign-up-form";
 
 export default async function SignUpPage() {
-  const supabase = await createClient();
-  const { data: reps } = await supabase
-    .from("representatives")
-    .select("id, display_name, university, section")
-    .order("display_name");
+  const reps = await getRepDirectory();
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4 py-10">
@@ -16,7 +12,7 @@ export default async function SignUpPage() {
           Pick your role to get started with DentalOrder.
         </p>
       </div>
-      <SignUpForm reps={reps ?? []} />
+      <SignUpForm reps={reps} />
       <p className="text-center text-sm text-ink-muted">
         Already have an account?{" "}
         <a href="/sign-in" className="text-ink underline underline-offset-4">

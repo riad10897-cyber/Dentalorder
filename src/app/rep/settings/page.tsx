@@ -1,11 +1,14 @@
 import { redirect } from "next/navigation";
 import { getRepContext } from "@/lib/rep/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { RepBottomNav } from "../_components/bottom-nav";
 import { PricingForm } from "./pricing-form";
 import { signOut } from "@/app/actions/auth";
 
 export default async function RepSettingsPage() {
-  const rep = await getRepContext();
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
+  const rep = await getRepContext(userId);
   if (!rep) redirect("/sign-in");
 
   return (

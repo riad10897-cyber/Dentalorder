@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { ConfirmIcon } from "./confirm-icon";
 
 export default async function OrderConfirmedPage({
@@ -9,13 +10,10 @@ export default async function OrderConfirmedPage({
   params: Promise<{ orderId: string }>;
 }) {
   const { orderId } = await params;
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
+
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
-
   const { data: order } = await supabase
     .from("orders")
     .select("id, week_number, total_price, order_items(quantity), representatives(display_name)")

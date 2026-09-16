@@ -213,6 +213,32 @@ h6 {
   animation-delay: calc(120ms + var(--stagger-index) * 60ms);
 }
 
+/* ── Skeletons ─────────────────────────────────────────────────────
+   Placeholders for streamed content. They match the real layout's size
+   and shape so nothing jumps when the data lands. The pulse is a slow
+   opacity fade — no transform, nothing that moves. */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.skeleton {
+  background: var(--card-sunk);
+  border-radius: var(--radius-control);
+  animation: skeleton-pulse 1.6s var(--ease-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
 /* ── Scroll-edge fade ──────────────────────────────────────────────
    The design is flat printed paper; a blur layer fights that, so the
    nav is opaque and content fades out where it passes underneath

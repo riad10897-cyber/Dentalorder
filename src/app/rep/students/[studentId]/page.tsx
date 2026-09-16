@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getRepContext, getStudentDetail } from "@/lib/rep/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { RepBottomNav } from "../../_components/bottom-nav";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -16,10 +17,16 @@ export default async function RepStudentDetailPage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = await params;
-  const rep = await getRepContext();
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
+
+  const [rep, detail] = await Promise.all([
+    getRepContext(userId),
+    getStudentDetail(userId, studentId),
+  ]);
   if (!rep) redirect("/sign-in");
 
-  const { profile, orders } = await getStudentDetail(rep.userId, studentId);
+  const { profile, orders } = detail;
   if (!profile) notFound();
 
   const totalSpent = orders.reduce((sum, o) => sum + o.totalPrice, 0);

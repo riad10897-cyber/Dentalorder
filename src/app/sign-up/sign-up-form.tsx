@@ -4,12 +4,7 @@ import { useActionState, useState } from "react";
 import { signUp, type FormState } from "@/app/actions/auth";
 import { OTHER_UNIVERSITY, UNIVERSITIES } from "@/lib/universities";
 
-type Rep = {
-  id: string;
-  display_name: string;
-  university: string | null;
-  section: string | null;
-};
+import type { DirectoryRep } from "@/lib/reps/directory";
 
 type Role = "student" | "rep" | "supplier";
 
@@ -21,7 +16,7 @@ const ROLES: { value: Role; label: string }[] = [
 
 const initialState: FormState = { error: null, fieldErrors: {} };
 
-export function SignUpForm({ reps }: { reps: Rep[] }) {
+export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
   const [role, setRole] = useState<Role>("student");
   const [state, formAction, pending] = useActionState(signUp, initialState);
 
@@ -85,7 +80,7 @@ export function SignUpForm({ reps }: { reps: Rep[] }) {
                 </option>
                 {reps.map((rep) => (
                   <option key={rep.id} value={rep.id}>
-                    {rep.display_name}
+                    {rep.displayName}
                     {rep.university ? ` — ${rep.university}` : ""}
                     {rep.section ? ` (${rep.section})` : ""}
                   </option>

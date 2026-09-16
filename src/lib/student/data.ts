@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { getRepDirectory } from "@/lib/reps/directory";
 import type { ToothType } from "@/lib/supabase/types";
 
 export interface StudentContext {
@@ -24,45 +25,39 @@ export interface AvailableRep {
   section: string | null;
 }
 
+// Same public list the sign-up picker uses, so it shares that cache
+// rather than paying for the query again.
 export async function listAvailableReps(): Promise<AvailableRep[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("representatives")
-    .select("id, display_name, university, section")
-    .order("display_name");
-
-  return (data ?? []).map((rep) => ({
-    id: rep.id,
-    displayName: rep.display_name,
-    university: rep.university,
-    section: rep.section,
-  }));
+  return getRepDirectory();
 }
 
-export async function getStudentContext(): Promise<StudentContext | null> {
+export async function getStudentContext(
+  // Taken as an argument rather than resolved internally so a page can
+  // fire this alongside its other queries in one parallel batch instead
+  // of waiting for identity first.
+  userId: string,
+): Promise<StudentContext | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
 
   const [{ data: profile }, { data: studentRep }] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, university, year_of_study, section")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single(),
     supabase
       .from("student_reps")
       .select("rep_id, representatives(display_name, frasaco_price, copy_a_price)")
-      .eq("student_id", user.id)
+      .eq("student_id", userId)
       .maybeSingle(),
   ]);
+
+  if (!profile) return null;
 
   const rep = studentRep?.representatives ?? null;
 
   return {
-    userId: user.id,
+    userId,
     fullName: profile?.full_name ?? "",
     university: profile?.university ?? null,
     yearOfStudy: profile?.year_of_study ?? null,

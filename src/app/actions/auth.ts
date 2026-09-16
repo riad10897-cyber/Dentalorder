@@ -1,9 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { signInSchema, signUpSchema } from "@/lib/validation/auth";
 import type { UserRole } from "@/lib/supabase/types";
+import { REP_DIRECTORY_TAG } from "@/lib/reps/directory";
 
 export type FormState = {
   error: string | null;
@@ -56,6 +58,12 @@ export async function signUp(
 
   if (error) {
     return { error: error.message, fieldErrors: {} };
+  }
+
+  // A new rep changes the public directory every student picks from, so
+  // drop that cache rather than leaving them invisible until it expires.
+  if (role === "rep") {
+    revalidateTag(REP_DIRECTORY_TAG);
   }
 
   if (!data.session) {

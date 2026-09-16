@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStudentContext, getOrderDefaults, listStudentOrders } from "@/lib/student/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import type { StudentOrderSummary } from "@/lib/student/data";
 import { StudentBottomNav } from "./_components/bottom-nav";
 
 export default async function StudentHomePage() {
-  const student = await getStudentContext();
-  if (!student) redirect("/sign-in");
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
 
-  const [{ nextWeek }, orders] = await Promise.all([
-    getOrderDefaults(student.userId),
-    listStudentOrders(student.userId),
+  // One parallel batch: none of these depend on each other, they only
+  // needed the user id, which is now verified locally.
+  const [student, { nextWeek }, orders] = await Promise.all([
+    getStudentContext(userId),
+    getOrderDefaults(userId),
+    listStudentOrders(userId),
   ]);
+  if (!student) redirect("/sign-in");
 
   const recentOrders = orders.slice(0, 3);
   const lastOrder = orders[0] ?? null;

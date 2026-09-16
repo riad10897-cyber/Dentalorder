@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import type { UserRole } from "@/lib/supabase/types";
 
 const ROLE_HOME: Record<UserRole, string> = {
@@ -10,16 +11,14 @@ const ROLE_HOME: Record<UserRole, string> = {
 };
 
 export default async function LandingPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getVerifiedUserId();
 
-  if (user) {
+  if (userId) {
+    const supabase = await createClient();
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     redirect(profile ? ROLE_HOME[profile.role] : "/sign-in");

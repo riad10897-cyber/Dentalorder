@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { signOut } from "@/app/actions/auth";
 import type { UserRole } from "@/lib/supabase/types";
 
@@ -10,13 +11,11 @@ const ROLE_LABEL: Record<UserRole, string> = {
 };
 
 export async function RoleHome({ role }: { role: UserRole }) {
+  const userId = await getVerifiedUserId();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: profile } = user
-    ? await supabase.from("profiles").select("full_name, role").eq("id", user.id).single()
+  const { data: profile } = userId
+    ? await supabase.from("profiles").select("full_name, role").eq("id", userId).single()
     : { data: null };
 
   return (

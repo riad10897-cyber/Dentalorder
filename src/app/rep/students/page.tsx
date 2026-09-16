@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getRepContext, listRepStudents } from "@/lib/rep/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { RepBottomNav } from "../_components/bottom-nav";
 
 const AVATAR_COLORS = [
@@ -28,10 +29,14 @@ function initials(name: string) {
 }
 
 export default async function RepStudentsPage() {
-  const rep = await getRepContext();
-  if (!rep) redirect("/sign-in");
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
 
-  const students = await listRepStudents(rep.userId);
+  const [rep, students] = await Promise.all([
+    getRepContext(userId),
+    listRepStudents(userId),
+  ]);
+  if (!rep) redirect("/sign-in");
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">

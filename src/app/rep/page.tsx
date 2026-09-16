@@ -1,16 +1,21 @@
 import { redirect } from "next/navigation";
 import { getRepContext, listRepOrders, listRepStudents } from "@/lib/rep/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { RepBottomNav } from "./_components/bottom-nav";
 import { OrdersClient } from "./orders-client";
 
 export default async function RepOrdersPage() {
-  const rep = await getRepContext();
-  if (!rep) redirect("/sign-in");
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
 
-  const [orders, students] = await Promise.all([
-    listRepOrders(rep.userId),
-    listRepStudents(rep.userId),
+  // One parallel batch — the orders and students lists only ever needed
+  // the rep's id, not the whole context.
+  const [rep, orders, students] = await Promise.all([
+    getRepContext(userId),
+    listRepOrders(userId),
+    listRepStudents(userId),
   ]);
+  if (!rep) redirect("/sign-in");
 
   const currentWeek = orders.reduce((max, o) => Math.max(max, o.weekNumber ?? 0), 0) || 1;
   const orderedThisWeek = new Set(

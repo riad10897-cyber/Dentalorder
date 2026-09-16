@@ -35,27 +35,35 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims verifies the JWT signature locally (this project signs with
+  // ES256) instead of calling /auth/v1/user, which was a network round
+  // trip on every single request. It still refreshes an expiring session,
+  // and it still rejects a forged or expired token — unlike getSession,
+  // which trusts the cookie and must never be used here.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub ?? null;
 
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
     path.startsWith(prefix),
   );
 
-  if (isProtected && !user) {
+  if (isProtected && !userId) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";
     url.searchParams.set("redirect", path);
     return NextResponse.redirect(url);
   }
 
-  if (isProtected && user) {
+  if (isProtected && userId) {
+    // Role still comes from the profiles table, not from the JWT's
+    // user_metadata: metadata is writable by the user themselves, so
+    // routing on it would let anyone put themselves in another role's
+    // section. RLS would still hold, but the redirect would be wrong.
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     const role = profile?.role;

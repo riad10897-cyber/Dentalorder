@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { updateOrderStatusSchema, updateRepPricesSchema } from "@/lib/validation/orders";
 import type { Database } from "@/lib/supabase/types";
 
@@ -44,12 +45,10 @@ export async function updateRepPrices(input: {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid prices." };
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not signed in." };
+  const userId = await getVerifiedUserId();
+  if (!userId) return { ok: false, error: "Not signed in." };
 
+  const supabase = await createClient();
   const { error } = await supabase
     .from("representatives")
     .update({
@@ -57,7 +56,7 @@ export async function updateRepPrices(input: {
       copy_a_price: parsed.data.copyAPrice.toFixed(2),
       price_updated_at: new Date().toISOString(),
     })
-    .eq("id", user.id);
+    .eq("id", userId);
 
   if (error) return { ok: false, error: error.message };
   return { ok: true };

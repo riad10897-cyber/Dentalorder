@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStudentContext, getOrderDefaults, listAvailableReps } from "@/lib/student/data";
+import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { OrderBuilder } from "./order-builder";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { RepPicker } from "../_components/rep-picker";
 
 export default async function NewOrderPage() {
-  const student = await getStudentContext();
+  const userId = await getVerifiedUserId();
+  if (!userId) redirect("/sign-in");
+
+  // Fetched together rather than one after the other: the order defaults
+  // only ever needed the user id.
+  const [student, orderDefaults] = await Promise.all([
+    getStudentContext(userId),
+    getOrderDefaults(userId),
+  ]);
   if (!student) redirect("/sign-in");
 
   if (!student.repId) {
@@ -25,7 +34,7 @@ export default async function NewOrderPage() {
     );
   }
 
-  const { nextWeek, lastToothType } = await getOrderDefaults(student.userId);
+  const { nextWeek, lastToothType } = orderDefaults;
 
   // No bottom nav on this screen: the pinned order footer occupies that
   // space, and stacking both leaves too little chart at 375px. The back

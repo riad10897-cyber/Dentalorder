@@ -11,26 +11,26 @@ export interface RepContext {
   copyAPrice: number;
 }
 
-export async function getRepContext(): Promise<RepContext | null> {
+export async function getRepContext(
+  // As with the student context: the caller supplies the id so this can
+  // run in parallel with the page's other queries.
+  userId: string,
+): Promise<RepContext | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
 
   const [{ data: profile }, { data: rep }] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase.from("profiles").select("full_name").eq("id", userId).single(),
     supabase
       .from("representatives")
       .select("display_name, university, frasaco_price, copy_a_price")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single(),
   ]);
 
   if (!rep) return null;
 
   return {
-    userId: user.id,
+    userId,
     fullName: profile?.full_name ?? "",
     displayName: rep.display_name,
     university: rep.university,
