@@ -1,0 +1,98 @@
+name: Keep Supabase awake
+
+# Free Supabase projects pause after a stretch of low activity. Students
+# order in weekly bursts and a semester break is a multi-week gap, so
+# without this the project pauses and students meet a dead app. One cheap
+# read a day counts as activity and keeps it running.
+
+on:
+  schedule:
+    # Twice a day on purpose. GitHub delays scheduled runs when its queues
+    # are busy and can skip them outright, so a single daily run is not
+    # dependable enough to be the only thing standing between a student
+    # and a paused database. The minute is deliberately off the hour —
+    # :00 is the most congested slot and the most likely to be delayed.
+    - cron: "23 6 * * *"
+    - cron: "23 15 * * *"
+  workflow_dispatch:
+
+# Two runs that overlap would be pointless, and a queued one is stale.
+concurrency:
+  group: keep-supabase-awake
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping the database
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read one row from Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          # Fail with something readable rather than a confusing curl
+          # error if the secrets were never added or were misnamed.
+          if [ -z "${SUPABASE_URL:-}" ]; then
+            echo "::error::Repository secret SUPABASE_URL is missing or empty."
+            echo "Add it under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "::error::Repository secret SUPABASE_PUBLISHABLE_KEY is missing or empty."
+            echo "Add it under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          # Trim any trailing slash so the path cannot come out doubled.
+          BASE="${SUPABASE_URL%/}"
+
+          # A single row from a small table. Read only — this workflow
+          # must never write. The key travels as a header, never in the
+          # query string, so it cannot end up in a logged URL.
+          STATUS=$(curl \
+            --silent \
+            --show-error \
+            --location \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 5 \
+            --retry-connrefused \
+            --output response.txt \
+            --write-out '%{http_code}' \
+            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Accept: application/json" \
+            "${BASE}/rest/v1/representatives?select=id&limit=1")
+
+          echo "HTTP status: ${STATUS}"
+          echo "Response body:"
+          cat response.txt
+          echo
+
+          if [ "${STATUS}" != "200" ]; then
+            echo "::error::Supabase ping failed with HTTP ${STATUS} (expected 200)."
+            {
+              echo "### Supabase ping FAILED"
+              echo ""
+              echo "HTTP status: \`${STATUS}\` (expected \`200\`)"
+              echo ""
+              echo "The database did not answer. It may be paused, the"
+              echo "secrets may be wrong, or Supabase may be down."
+              echo ""
+              echo "Response body:"
+              echo '```'
+              cat response.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          {
+            echo "### Supabase ping OK"
+            echo ""
+            echo "HTTP status: \`200\` at $(date -u '+%Y-%m-%d %H:%M UTC')"
+          } >> "$GITHUB_STEP_SUMMARY"
