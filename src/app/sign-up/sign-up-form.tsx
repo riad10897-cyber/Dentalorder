@@ -19,10 +19,27 @@ const initialState: FormState = { error: null, fieldErrors: {} };
 
 export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
   const [role, setRole] = useState<Role>("student");
+  const [university, setUniversity] = useState("");
+  const [repId, setRepId] = useState("");
+  const [repError, setRepError] = useState<string | null>(null);
   const [state, formAction, pending] = useActionState(signUp, initialState);
 
+  // rep_id rides in a hidden input, and the browser does not validate
+  // hidden inputs, so the `required` the old <select> carried has to be
+  // re-created here or picking a rep would quietly become optional.
+  const needsRep = role === "student" && reps.length > 0;
+
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form
+      action={formAction}
+      onSubmit={(event) => {
+        if (needsRep && !repId) {
+          event.preventDefault();
+          setRepError("Choose your representative.");
+        }
+      }}
+      className="flex flex-col gap-4"
+    >
       <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Account type">
         {ROLES.map((r) => (
           <button
@@ -57,7 +74,7 @@ export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
 
       {role === "student" && (
         <>
-          <UniversityField error={state.fieldErrors.university} />
+          <UniversityField error={state.fieldErrors.university} onChange={setUniversity} />
           <Field label="Year of study" name="year_of_study" error={state.fieldErrors.year_of_study}>
             <select name="year_of_study" required className={inputClass} defaultValue="">
               <option value="" disabled>
@@ -74,20 +91,27 @@ export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
             <input name="section" type="text" className={inputClass} />
           </Field>
           {reps.length > 0 ? (
-            <Field label="Your representative" name="rep_id" error={state.fieldErrors.rep_id}>
-              <select name="rep_id" required className={inputClass} defaultValue="">
-                <option value="" disabled>
-                  Choose your rep
-                </option>
-                {reps.map((rep) => (
-                  <option key={rep.id} value={rep.id}>
-                    {rep.displayName}
-                    {rep.university ? ` — ${rep.university}` : ""}
-                    {rep.section ? ` (${rep.section})` : ""}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            // Not a <Field>: that wraps its children in a <label>, and a
+            // label around a radiogroup reads the whole list out as one
+            // control.
+            <div className="flex flex-col gap-1 text-sm text-ink-muted">
+              Your representative
+              <RepList
+                reps={reps}
+                university={university || null}
+                value={repId}
+                onChange={(id) => {
+                  setRepId(id);
+                  setRepError(null);
+                }}
+              />
+              <input type="hidden" name="rep_id" value={repId} />
+              {(repError ?? state.fieldErrors.rep_id) && (
+                <span className="text-xs text-ink" role="alert">
+                  {repError ?? state.fieldErrors.rep_id}
+                </span>
+              )}
+            </div>
           ) : (
             <div className="rounded-sm border border-dashed border-rule bg-card p-3 text-sm text-ink-muted">
               <p>
@@ -151,7 +175,13 @@ export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
 const inputClass =
   "min-h-11 w-full rounded-sm border border-rule bg-card px-3 py-2 text-ink placeholder:text-ink-muted focus:border-ink focus:outline-none";
 
-function UniversityField({ error }: { error?: string }) {
+function UniversityField({
+  error,
+  onChange,
+}: {
+  error?: string;
+  onChange?: (university: string) => void;
+}) {
   const [choice, setChoice] = useState("");
   const isOther = choice === OTHER_UNIVERSITY;
   const [typed, setTyped] = useState("");
@@ -159,6 +189,15 @@ function UniversityField({ error }: { error?: string }) {
   // One hidden field carries the answer either way, so the server sees a
   // plain university string and never has to know about the sentinel.
   const submitted = isOther ? typed : choice;
+
+  // Reported from the change handlers rather than during render, so the
+  // rep list regroups only when this control is touched — never while a
+  // finger is down on a rep row below.
+  function update(nextChoice: string, nextTyped: string) {
+    setChoice(nextChoice);
+    setTyped(nextTyped);
+    onChange?.(nextChoice === OTHER_UNIVERSITY ? nextTyped : nextChoice);
+  }
 
   return (
     <Field label="University" name="university" error={error}>
@@ -168,7 +207,7 @@ function UniversityField({ error }: { error?: string }) {
         required
         aria-label="University"
         value={choice}
-        onChange={(event) => setChoice(event.target.value)}
+        onChange={(event) => update(event.target.value, typed)}
         className={inputClass}
       >
         <option value="" disabled>
@@ -190,7 +229,7 @@ function UniversityField({ error }: { error?: string }) {
           aria-label="University name"
           placeholder="Type your university"
           value={typed}
-          onChange={(event) => setTyped(event.target.value)}
+          onChange={(event) => update(choice, event.target.value)}
           className={`${inputClass} mt-2`}
         />
       )}
