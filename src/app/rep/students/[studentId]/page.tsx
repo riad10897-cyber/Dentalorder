@@ -29,7 +29,9 @@ export default async function RepStudentDetailPage({
   const { profile, orders } = detail;
   if (!profile) notFound();
 
-  const totalSpent = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+  const totalSpent = orders
+    .filter((o) => o.fulfillmentStatus !== "cancelled")
+    .reduce((sum, o) => sum + o.totalPrice, 0);
   const metaParts = [
     profile.university,
     profile.year_of_study ? `Year ${profile.year_of_study}` : null,

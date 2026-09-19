@@ -9,13 +9,11 @@ const toothItemSchema = z.object({
 
 export const submitToothOrderSchema = z.object({
   weekNumber: z.number().int().min(1).max(17),
-  items: z.array(toothItemSchema).min(1, "Add at least one tooth."),
+  // 64 is every line the chart can produce: 32 FDI positions in two types.
+  // The database enforces the same ceiling — this just fails faster.
+  items: z.array(toothItemSchema).min(1, "Add at least one tooth.").max(64),
 });
 export type SubmitToothOrderInput = z.infer<typeof submitToothOrderSchema>;
-
-export const reorderSchema = z.object({
-  orderId: z.string().uuid(),
-});
 
 export const fulfillmentStatusSchema = z.enum([
   "pending",

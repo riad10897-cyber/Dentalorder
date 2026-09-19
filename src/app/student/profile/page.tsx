@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getStudentContext, listStudentOrders, listAvailableReps } from "@/lib/student/data";
+import { getStudentContext, listStudentOrders, listAvailableReps, isSpend } from "@/lib/student/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { RepPicker } from "../_components/rep-picker";
@@ -18,8 +18,9 @@ export default async function StudentProfilePage() {
   // Only needed when they have no rep yet, so it stays conditional
   // rather than being paid for on every visit.
   const availableReps = student.repId ? [] : await listAvailableReps();
-  const totalTeeth = orders.reduce((sum, o) => sum + o.items.length, 0);
-  const totalSpent = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+  const counted = orders.filter(isSpend);
+  const totalTeeth = counted.reduce((sum, o) => sum + o.items.length, 0);
+  const totalSpent = counted.reduce((sum, o) => sum + o.totalPrice, 0);
 
   const metaParts = [student.university, student.yearOfStudy ? `Year ${student.yearOfStudy}` : null, student.section]
     .filter(Boolean)
