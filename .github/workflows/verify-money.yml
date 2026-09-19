@@ -3,8 +3,14 @@ name: Money rules
 # CLAUDE.md: "A price change must never alter a past order's total." That
 # rule lives in SQL — the RPC copies the rep's price onto every line at
 # insert, and a trigger blocks any later edit — so no unit test can reach
-# it. This runs the real thing against the real database on every push,
-# and fails the build if a past order ever moves.
+# it. This runs the real thing against a real Postgres and fails the build
+# if a past order ever moves.
+#
+# It runs against a SEPARATE test Supabase project, never production. The
+# test signs accounts up and deletes them again, which needs a secret key,
+# and a production secret key does not belong in CI. The test project
+# carries the same migrations, so what passes here is the same schema that
+# ships — see OPERATIONS.md for how to keep it in step.
 
 on:
   push:
@@ -13,7 +19,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # Two runs at once would each be creating and deleting accounts.
+  # Two runs at once would each be creating and deleting accounts in the
+  # same project.
   group: verify-money
   cancel-in-progress: false
 
@@ -35,18 +42,35 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Price snapshot, against the database
+      - name: Price snapshot, against the test project
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.TEST_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.TEST_SUPABASE_SECRET_KEY }}
         run: |
           set -euo pipefail
 
-          if [ -z "${SUPABASE_SECRET_KEY:-}" ]; then
-            echo "::error::Repository secret SUPABASE_SECRET_KEY is missing."
-            echo "The test signs up and deletes its own accounts, which needs the secret key."
-            echo "Add it under Settings -> Secrets and variables -> Actions."
+          missing=""
+          [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ] && missing="$missing TEST_SUPABASE_URL"
+          [ -z "${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}" ] && missing="$missing TEST_SUPABASE_PUBLISHABLE_KEY"
+          [ -z "${SUPABASE_SECRET_KEY:-}" ] && missing="$missing TEST_SUPABASE_SECRET_KEY"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo ""
+            echo "These belong to the TEST Supabase project, never production."
+            echo "Add them under Settings -> Secrets and variables -> Actions."
+            echo "OPERATIONS.md has the full setup."
+            exit 1
+          fi
+
+          # A guard, not a formality: pointing this at production would have
+          # CI creating and deleting accounts in the live project on every
+          # push. The test project's ref is expected to differ from the one
+          # Vercel deploys against.
+          if [ "${NEXT_PUBLIC_SUPABASE_URL}" = "${{ secrets.SUPABASE_URL }}" ]; then
+            echo "::error::TEST_SUPABASE_URL is the production project."
+            echo "This workflow signs accounts up and deletes them. Point it at the test project."
             exit 1
           fi
 

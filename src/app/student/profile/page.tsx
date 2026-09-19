@@ -19,7 +19,12 @@ export default async function StudentProfilePage() {
   // rather than being paid for on every visit.
   const availableReps = student.repId ? [] : await listAvailableReps();
   const counted = orders.filter(isSpend);
-  const totalTeeth = counted.reduce((sum, o) => sum + o.items.length, 0);
+  // Teeth, not line items: three Frasaco 11s are three teeth, and one
+  // line. items.length read as 1 and the stat is labelled "Teeth".
+  const totalTeeth = counted.reduce(
+    (sum, order) => sum + order.items.reduce((n, item) => n + item.quantity, 0),
+    0,
+  );
   const totalSpent = counted.reduce((sum, o) => sum + o.totalPrice, 0);
 
   const metaParts = [student.university, student.yearOfStudy ? `Year ${student.yearOfStudy}` : null, student.section]

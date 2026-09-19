@@ -96,7 +96,69 @@ This only affects **future** orders. Every order already placed keeps the price 
 
 ---
 
-## 6. Known limits — things to watch for
+## 6. The test Supabase project (one-time setup)
+
+There is one rule in DentalOrder that everything else rests on: **a rep
+changing their prices must never change what a past order cost.** A student
+who ordered at $2.50 owes $2.50, forever, even if the rep moves to $3.00
+tomorrow.
+
+That rule lives in the database, not in the app code, so no ordinary test can
+check it. Instead, a GitHub Action signs up a fake rep and a fake student,
+places a real order, changes the price, and checks the old order did not move.
+If it ever does move, the build goes red.
+
+It needs to create and delete accounts, which needs the **secret key** — and
+the production secret key must never sit in GitHub. So this runs against a
+**second, throwaway Supabase project** that holds nothing real.
+
+### What to create
+
+1. Go to **supabase.com** → **New project**.
+2. Name it `dentalorder-test`. Any region, free tier is fine.
+3. Pick a database password and save it somewhere — you won't need it often.
+4. Wait for it to finish setting up (a minute or two).
+
+### Put the schema in it
+
+5. Open the new project → **SQL Editor** → **New query**.
+6. Run the migration files from `supabase/migrations/` **in filename order**,
+   one at a time, oldest first. Paste one, press **Run**, wait for "Success",
+   then the next. The order matters — each one builds on the last.
+7. Go to **Authentication → Providers → Email** and turn **Confirm email**
+   **off**, same as production. The test signs accounts in immediately and
+   cannot click a confirmation link.
+
+### Add the three secrets to GitHub
+
+8. In the new project: **Project Settings → API**. You need two values from
+   this page, and they are not the same as production's — copy them from the
+   test project, not the live one.
+9. On GitHub, go to the DentalOrder repository → **Settings** →
+   **Secrets and variables** → **Actions** → **New repository secret**.
+10. Add these three:
+
+| Secret name | Where it comes from |
+|---|---|
+| `TEST_SUPABASE_URL` | Test project → Project Settings → API → **Project URL** |
+| `TEST_SUPABASE_PUBLISHABLE_KEY` | Test project → Project Settings → API → the **publishable / anon** key |
+| `TEST_SUPABASE_SECRET_KEY` | Test project → Project Settings → API → the **secret / service_role** key |
+
+The workflow refuses to run if any of the three is missing, and refuses to run
+if `TEST_SUPABASE_URL` turns out to be the production project — so a
+copy-paste slip can't have CI creating accounts in the live database.
+
+### Keeping it in step
+
+Every time a new file appears in `supabase/migrations/` and you run it against
+production, run the same file against `dentalorder-test` too. If the two drift
+apart, the test still passes but it is no longer testing the schema that
+students are using, which is worse than having no test. There is no automatic
+check for this yet.
+
+---
+
+## 7. Known limits — things to watch for
 
 - **Email confirmation is off.** New sign-ups don't need to click a confirmation email — this was turned off on purpose so testing wouldn't need real inboxes. It also means anyone can sign up with any email, even one they don't own. Before this matters at real scale, turn on a proper email service (see CLAUDE.md's Auth notes) and re-enable confirmation in Supabase under **Authentication → Providers → Email**.
 
