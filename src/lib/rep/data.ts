@@ -135,9 +135,12 @@ export async function listRepStudents(repId: string): Promise<RepStudent[]> {
       .eq("rep_id", repId),
     supabase
       .from("orders")
-      .select("student_id, total_price, week_number")
+      .select("student_id, total_price, week_number, fulfillment_status")
       .eq("rep_id", repId)
-      .eq("order_type", "tooth"),
+      .eq("order_type", "tooth")
+      // A cancelled order is not an order this student placed and not money
+      // they spent. Counting it inflated both figures on the rep's list.
+      .neq("fulfillment_status", "cancelled"),
   ]);
 
   const statsByStudent = new Map<string, { count: number; total: number; lastWeek: number | null }>();

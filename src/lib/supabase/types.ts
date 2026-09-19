@@ -359,7 +359,22 @@ export interface Database {
         Relationships: [typeof REL_COMMISSION_STATEMENTS_SUPPLIERS];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      // The sanctioned public window onto representatives. Four columns:
+      // no prices, no whish_number, no subscription state.
+      rep_directory: {
+        Row: {
+          id: string;
+          display_name: string;
+          university: string | null;
+          section: string | null;
+        };
+        // A view carries no foreign keys of its own; postgrest-js still
+        // requires the key to be present, and omitting it makes every
+        // table in this file resolve to `never`.
+        Relationships: [];
+      };
+    };
     Functions: {
       current_user_role: {
         Args: Record<string, never>;

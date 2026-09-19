@@ -32,8 +32,12 @@ async function fetchRepDirectory(): Promise<DirectoryRep[]> {
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 
+  // rep_directory, not representatives: the view carries only the four
+  // columns a stranger is allowed to see. The base table no longer answers
+  // an unauthenticated read at all, and this page needs one — sign-up shows
+  // the list before the account exists.
   const { data } = await supabase
-    .from("representatives")
+    .from("rep_directory")
     .select("id, display_name, university, section")
     .order("display_name");
 

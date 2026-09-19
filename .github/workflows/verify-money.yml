@@ -1,0 +1,53 @@
+name: Money rules
+
+# CLAUDE.md: "A price change must never alter a past order's total." That
+# rule lives in SQL — the RPC copies the rep's price onto every line at
+# insert, and a trigger blocks any later edit — so no unit test can reach
+# it. This runs the real thing against the real database on every push,
+# and fails the build if a past order ever moves.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # Two runs at once would each be creating and deleting accounts.
+  group: verify-money
+  cancel-in-progress: false
+
+jobs:
+  price-snapshot:
+    name: A price change must not move a past order
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Price snapshot, against the database
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_SECRET_KEY:-}" ]; then
+            echo "::error::Repository secret SUPABASE_SECRET_KEY is missing."
+            echo "The test signs up and deletes its own accounts, which needs the secret key."
+            echo "Add it under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          node scripts/verify-price-snapshot.mjs
