@@ -115,6 +115,24 @@ try {
     );
   }
 
+  {
+    // The view is not security_invoker on purpose, so writes through it
+    // would run as its owner and bypass RLS on representatives entirely.
+    // Supabase's default privileges hand every new view in this schema
+    // INSERT/UPDATE/DELETE to anon before any GRANT runs, so the view has
+    // to be revoked, not merely granted SELECT.
+    const NOBODY = "00000000-0000-0000-0000-000000000000";
+    const patch = await rest("PATCH", `rep_directory?id=eq.${NOBODY}`, null, { display_name: "probe" });
+    const del = await rest("DELETE", `rep_directory?id=eq.${NOBODY}`, null);
+    check(
+      "nobody can write through the rep directory view",
+      patch.status === 403 && del.status === 403,
+      `PATCH ${patch.status}, DELETE ${del.status} (204 means the privilege is there)`,
+    );
+    const { data: repsStillThere } = await admin.from("representatives").select("id");
+    check("and the reps are all still present", (repsStillThere ?? []).length > 0, `${(repsStillThere ?? []).length} rep(s)`);
+  }
+
   console.log("\n── M2 / D2: line count and duplicates ──");
   {
     const many = Array.from({ length: 65 }, (_, i) => ({
