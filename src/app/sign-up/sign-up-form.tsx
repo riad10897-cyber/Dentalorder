@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { signUp, type FormState } from "@/app/actions/auth";
+import { RepList } from "@/app/_components/rep-list";
 import { OTHER_UNIVERSITY, UNIVERSITIES } from "@/lib/universities";
 
 import type { DirectoryRep } from "@/lib/reps/directory";

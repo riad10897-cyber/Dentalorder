@@ -27,7 +27,7 @@ export default async function NewOrderPage() {
           You&apos;ll need a representative before you can order teeth.
         </p>
         <div className="mt-4">
-          <RepPicker reps={availableReps} />
+          <RepPicker reps={availableReps} university={student.university} />
         </div>
         <StudentBottomNav />
       </main>

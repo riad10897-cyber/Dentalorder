@@ -60,7 +60,7 @@ export default async function StudentProfilePage() {
         </div>
       ) : (
         <div className="mx-6 mt-4">
-          <RepPicker reps={availableReps} />
+          <RepPicker reps={availableReps} university={student.university} />
         </div>
       )}
 

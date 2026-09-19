@@ -3,9 +3,16 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { assignRep } from "../_actions/rep";
+import { RepList } from "@/app/_components/rep-list";
 import type { AvailableRep } from "@/lib/student/data";
 
-export function RepPicker({ reps, compact }: { reps: AvailableRep[]; compact?: boolean }) {
+export function RepPicker({
+  reps,
+  university,
+}: {
+  reps: AvailableRep[];
+  university: string | null;
+}) {
   const router = useRouter();
   const [selected, setSelected] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,34 +44,17 @@ export function RepPicker({ reps, compact }: { reps: AvailableRep[]; compact?: b
   }
 
   return (
-    <div className={compact ? "flex flex-col gap-2.5" : "rounded-card border border-rule bg-card p-4"}>
-      {!compact && (
-        <p className="mb-3 text-sm text-ink-muted">
-          You don&apos;t have a representative yet. Pick one to start ordering:
-        </p>
-      )}
-      <select
-        value={selected}
-        onChange={(e) => setSelected(e.target.value)}
-        className="min-h-11 w-full rounded-sm border border-rule bg-card-sunk px-3 py-2 text-ink focus:border-ink focus:outline-none"
-      >
-        <option value="" disabled>
-          Choose your rep
-        </option>
-        {reps.map((rep) => (
-          <option key={rep.id} value={rep.id}>
-            {rep.displayName}
-            {rep.university ? ` — ${rep.university}` : ""}
-            {rep.section ? ` (${rep.section})` : ""}
-          </option>
-        ))}
-      </select>
+    <div>
+      <p className="mb-3 text-sm text-ink-muted">
+        You don&apos;t have a representative yet. Pick one to start ordering:
+      </p>
+      <RepList reps={reps} university={university} value={selected} onChange={setSelected} />
       {error && <p className="mt-1.5 text-xs text-ink">{error}</p>}
       <button
         type="button"
         onClick={handlePick}
         disabled={pending}
-        className="mt-2.5 min-h-11 w-full rounded-sm bg-ink py-3 font-display text-sm font-bold text-card disabled:opacity-60"
+        className="pressable mt-2.5 min-h-11 w-full rounded-sm bg-ink py-3 font-display text-sm font-bold text-card disabled:opacity-60"
       >
         {pending ? "Saving…" : "Set as my representative"}
       </button>
