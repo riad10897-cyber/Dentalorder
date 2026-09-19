@@ -30,9 +30,20 @@ export async function updateOrderStatus(input: {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("orders").update(update).eq("id", parsed.data.orderId);
+  // .select() matters: when RLS filters the row out, PostgREST answers 200
+  // with no error and nothing updated. Without reading back what changed,
+  // a rep whose session had gone stale was told the order was fulfilled
+  // when it was still pending.
+  const { data, error } = await supabase
+    .from("orders")
+    .update(update)
+    .eq("id", parsed.data.orderId)
+    .select("id");
 
   if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) {
+    return { ok: false, error: "That order couldn't be updated. Refresh and try again." };
+  }
   return { ok: true };
 }
 

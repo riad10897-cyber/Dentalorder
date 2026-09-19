@@ -66,15 +66,21 @@ export function OrdersClient({ orders }: { orders: RepOrder[] }) {
 function OrderCard({ order }: { order: RepOrder }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function runStatus(fulfillmentStatus: "confirmed" | "fulfilled") {
+    setError(null);
     // Fires on the tap, in the same frame as the button's own press
     // feedback — waiting for the round trip would land the tick after
     // the moment it is meant to confirm. Fulfilling is the one action
     // here worth a haptic; confirming is a routine step along the way.
     if (fulfillmentStatus === "fulfilled") haptic();
     startTransition(async () => {
-      await updateOrderStatus({ orderId: order.id, fulfillmentStatus });
+      const result = await updateOrderStatus({ orderId: order.id, fulfillmentStatus });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
       router.refresh();
     });
   }
@@ -133,6 +139,12 @@ function OrderCard({ order }: { order: RepOrder }) {
             Mark fulfilled
           </button>
         </div>
+      )}
+
+      {error && (
+        <p className="mt-2 text-caption text-ink" role="alert">
+          {error}
+        </p>
       )}
     </li>
   );
