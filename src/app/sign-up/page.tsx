@@ -9,7 +9,7 @@ export default async function SignUpPage() {
       <div>
         <h1 className="text-2xl font-semibold text-ink">Create your account</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Pick your role to get started with DentalOrder.
+          Pick your role to get started with Dentora.
         </p>
       </div>
       <SignUpForm reps={reps} />

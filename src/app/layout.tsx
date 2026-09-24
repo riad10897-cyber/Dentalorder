@@ -16,13 +16,13 @@ const atkinson = Atkinson_Hyperlegible({
 });
 
 export const metadata: Metadata = {
-  title: "DentalOrder",
+  title: "Dentora",
   description: "Weekly tooth ordering and dental supplies for students in Lebanon.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "DentalOrder",
+    title: "Dentora",
   },
 };
 

@@ -116,7 +116,7 @@ export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
             <div className="rounded-sm border border-dashed border-rule bg-card p-3 text-sm text-ink-muted">
               <p>
                 No representative has joined yet. That&apos;s fine — create your account now and
-                pick your rep from your profile once they&apos;re on DentalOrder.
+                pick your rep from your profile once they&apos;re on Dentora.
               </p>
               <input type="hidden" name="rep_id" value="" />
             </div>
