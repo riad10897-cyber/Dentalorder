@@ -8,6 +8,7 @@ import { ReviewSheet } from "./review-sheet";
 import { submitToothOrder } from "@/app/student/_actions/orders";
 import { priceToothOrder } from "@/lib/orders/tooth-pricing";
 import { haptic } from "@/lib/haptics";
+import { useCountingMoney } from "@/lib/use-counting-money";
 import type { ToothType } from "@/lib/supabase/types";
 
 interface OrderBuilderProps {
@@ -80,6 +81,7 @@ export function OrderBuilder({
   );
 
   const totalTeeth = itemInputs.reduce((sum, item) => sum + item.quantity, 0);
+  const totalRef = useCountingMoney(subtotal);
 
   function openSheet(toothNumber: number) {
     const existingFrasaco = selections[toothSelectionKey(toothNumber, "frasaco")];
@@ -217,8 +219,8 @@ export function OrderBuilder({
             <div className="text-micro uppercase text-ink-faint">Order total</div>
             <div className="flex items-baseline gap-2">
               <span
-                key={subtotal}
-                className="total-change tnum font-display text-heading"
+                ref={totalRef}
+                className="tnum font-display text-heading"
                 data-testid="order-total"
               >
                 ${subtotal.toFixed(2)}

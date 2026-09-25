@@ -136,7 +136,43 @@ h6 {
 }
 
 .tooth-cell:active {
-  transform: translateY(var(--dip, 0rem)) scale(0.97);
+  /* 0.94, not the 0.97 every other control uses. That figure is tuned for
+     a 44px button; on a 34px tooth it moves the edge by a single pixel and
+     reads as nothing happening. This is the most repeated interaction in
+     the app and it has to land. */
+  transform: translateY(var(--dip, 0rem)) scale(0.94);
+}
+
+/* ── Tooth state change ────────────────────────────────────────────
+   The press was animated; the thing the press is *for* was not. Colour,
+   border and numeral all snapped between states with no transition, on
+   the one control a student touches thirty times an order. Paint-only
+   properties, so this costs no layout. 140ms because it follows the
+   sheet closing — long enough to read as a change, short enough that a
+   student tapping quickly never waits for it. */
+.tooth-face {
+  transition:
+    background-color 140ms var(--ease-out),
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+/* The quantity badge is new content, not a state change, so it arrives
+   rather than fading in place. Never from scale(0) — 0.9 keeps it a
+   thing that grew rather than a thing conjured. */
+@keyframes badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tooth-badge {
+  animation: badge-in 140ms var(--ease-out) both;
 }
 
 /* ── Chart entry ───────────────────────────────────────────────────
@@ -239,6 +275,40 @@ h6 {
   }
 }
 
+/* ── Route transitions ────────────────────────────────────────────
+   Opacity only, and deliberately so. A slide would read better, but a
+   transform on this wrapper makes it the containing block for every
+   `position: fixed` descendant — the bottom nav and the pinned order
+   footer — which would fly to the bottom of the scrollable document for
+   the length of the animation. Opacity creates a stacking context but
+   not a containing block, so it is the one safe property here.
+
+   Direction is carried by duration instead: going deeper takes longer
+   than coming back, because back is a return to something already seen.
+   Lateral moves between nav tabs are faster still. Entry only — holding
+   the outgoing tree to animate it out would fight streaming and delay
+   the navigation, and nothing here may delay a tap. */
+@keyframes route-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.route-forward {
+  animation: route-in 200ms var(--ease-out) both;
+}
+
+.route-back {
+  animation: route-in 140ms var(--ease-out) both;
+}
+
+.route-lateral {
+  animation: route-in 120ms var(--ease-out) both;
+}
+
 /* ── Scroll-edge fade ──────────────────────────────────────────────
    The design is flat printed paper; a blur layer fights that, so the
    nav is opaque and content fades out where it passes underneath
@@ -283,9 +353,27 @@ h6 {
   .arch-row,
   .total-change,
   .tick-in,
-  .confirm-stagger {
+  .confirm-stagger,
+  .tooth-badge {
     animation-name: fade-only;
     animation-duration: 180ms;
+  }
+
+  /* The colour change is the state, so it stays — it is the only thing
+     telling a student the tooth is now selected. Nothing here moves. */
+  .tooth-face {
+    transition:
+      background-color 140ms var(--ease-out),
+      border-color 140ms var(--ease-out),
+      color 140ms var(--ease-out);
+  }
+
+  /* Already opacity-only, so these need no transform stripped — just
+     shorter, since a cross-fade with no movement reads sooner. */
+  .route-forward,
+  .route-back,
+  .route-lateral {
+    animation-duration: 120ms;
   }
 
   @keyframes fade-only {

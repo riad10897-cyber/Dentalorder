@@ -144,16 +144,22 @@ function ToothButton({
 
   // Every tooth is the same silhouette at every state — colour and the
   // badge carry all of the meaning.
-  let fill: string;
-  if (hasBoth) {
-    fill = `linear-gradient(135deg, var(--frasaco) 0 50%, var(--copy-a) 50% 100%)`;
-  } else if (frasaco) {
-    fill = "var(--frasaco)";
+  // Colour and gradient are set separately rather than through the
+  // `background` shorthand: a shorthand cannot transition from a colour to
+  // a gradient, and the colour is what has to animate. The both-types
+  // gradient rides on top as an image and simply appears — it is 4 orders
+  // in 286, and not worth crossfading two layers for.
+  let backgroundColor: string;
+  if (frasaco) {
+    backgroundColor = "var(--frasaco)";
   } else if (copyA) {
-    fill = "var(--copy-a)";
+    backgroundColor = "var(--copy-a)";
   } else {
-    fill = "var(--card)";
+    backgroundColor = "var(--card)";
   }
+  const backgroundImage = hasBoth
+    ? "linear-gradient(135deg, var(--frasaco) 0 50%, var(--copy-a) 50% 100%)"
+    : "none";
 
   const selected = Boolean(frasaco || copyA);
 
@@ -170,10 +176,15 @@ function ToothButton({
       }
     >
       <span
-        className={`relative flex items-center justify-center rounded-control border ${
+        className={`tooth-face relative flex items-center justify-center rounded-control border ${
           selected ? "border-transparent" : "border-rule"
         }`}
-        style={{ background: fill, width: `${TOOTH_W}px`, height: `${TOOTH_H}px` }}
+        style={{
+          backgroundColor,
+          backgroundImage,
+          width: `${TOOTH_W}px`,
+          height: `${TOOTH_H}px`,
+        }}
       >
         <span
           className={`tnum font-display text-caption ${
@@ -183,7 +194,7 @@ function ToothButton({
           {toothNumber}
         </span>
         {combinedQty > 1 && (
-          <span className="tnum absolute -right-1 -top-1 flex h-[1.0625rem] min-w-[1.0625rem] items-center justify-center rounded-full bg-ink px-1 font-display text-[0.625rem] leading-none text-card">
+          <span className="tooth-badge tnum absolute -right-1 -top-1 flex h-[1.0625rem] min-w-[1.0625rem] items-center justify-center rounded-full bg-ink px-1 font-display text-[0.625rem] leading-none text-card">
             {combinedQty}
           </span>
         )}
