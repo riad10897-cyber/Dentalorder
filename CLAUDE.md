@@ -136,6 +136,11 @@ Before finishing any phase that adds a table, prove the RLS policies work:
 
 Test these against the running database, not by reading the policy file.
 
+**Assert the outcome, not the status code.** A test that checks for 403 when
+the server answers 401 reports a closed hole as open, or an open one as
+closed. Check what actually happened: the persisted value, the error code,
+whether the row exists. Three false signals in one week all came from this.
+
 ---
 
 ## Domain notes
