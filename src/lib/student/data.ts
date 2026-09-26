@@ -23,6 +23,8 @@ export interface AvailableRep {
   displayName: string;
   university: string | null;
   section: string | null;
+  frasacoPrice: number;
+  copyAPrice: number;
 }
 
 // Same public list the sign-up picker uses, so it shares that cache

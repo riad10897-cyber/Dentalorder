@@ -7,6 +7,8 @@ const rep = (id: string, university: string | null) => ({
   displayName: id,
   university,
   section: null,
+  frasacoPrice: 2.5,
+  copyAPrice: 1.2,
 });
 
 const BAU_A = rep("bau-a", "BAU");

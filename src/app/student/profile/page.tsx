@@ -3,6 +3,7 @@ import { getStudentContext, listStudentOrders, listAvailableReps, isSpend } from
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { RepPicker } from "../_components/rep-picker";
+import { RepCard } from "../_components/rep-card";
 import { signOut } from "@/app/actions/auth";
 
 export default async function StudentProfilePage() {
@@ -15,9 +16,10 @@ export default async function StudentProfilePage() {
   ]);
   if (!student) redirect("/sign-in");
 
-  // Only needed when they have no rep yet, so it stays conditional
-  // rather than being paid for on every visit.
-  const availableReps = student.repId ? [] : await listAvailableReps();
+  // Fetched whether or not they already have a rep: the card offers a
+  // switch, so the list has to be there either way. It is the cached
+  // directory, so this is not a new query per visit.
+  const availableReps = await listAvailableReps();
   const counted = orders.filter(isSpend);
   // Teeth, not line items: three Frasaco 11s are three teeth, and one
   // line. items.length read as 1 and the stat is labelled "Teeth".
@@ -49,26 +51,20 @@ export default async function StudentProfilePage() {
         <StatCard value={`$${totalSpent.toFixed(0)}`} label="Spent" />
       </div>
 
-      {student.repName ? (
-        <div className="mx-6 mt-4 flex items-center gap-3.5 rounded-card border border-rule bg-card p-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/20 text-lg">
-            👤
-          </div>
-          <div>
-            <div className="text-[11px] uppercase tracking-wide text-ink-muted">
-              Your Representative
-            </div>
-            <div className="font-display text-[15px] font-bold">{student.repName}</div>
-            <div className="mt-0.5 text-xs text-ink-muted">
-              Frasaco ${student.frasacoPrice.toFixed(2)} · Copy A ${student.copyAPrice.toFixed(2)}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="mx-6 mt-4">
+      <div className="mx-6 mt-4">
+        {student.repName && student.repId ? (
+          <RepCard
+            repName={student.repName}
+            frasacoPrice={student.frasacoPrice}
+            copyAPrice={student.copyAPrice}
+            currentRepId={student.repId}
+            reps={availableReps}
+            university={student.university}
+          />
+        ) : (
           <RepPicker reps={availableReps} university={student.university} />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="px-6 pb-3 pt-6 text-xs font-semibold uppercase tracking-wider text-ink-muted">
         Account

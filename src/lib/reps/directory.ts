@@ -10,6 +10,10 @@ export interface DirectoryRep {
   displayName: string;
   university: string | null;
   section: string | null;
+  // What the student will actually pay. Shown when confirming a switch,
+  // because the prices are the thing that changes for them.
+  frasacoPrice: number;
+  copyAPrice: number;
 }
 
 /**
@@ -32,13 +36,14 @@ async function fetchRepDirectory(): Promise<DirectoryRep[]> {
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 
-  // rep_directory, not representatives: the view carries only the four
-  // columns a stranger is allowed to see. The base table no longer answers
-  // an unauthenticated read at all, and this page needs one — sign-up shows
-  // the list before the account exists.
+  // rep_directory, not representatives: the view carries only the columns a
+  // stranger is allowed to see — name, faculty, section and prices, but not
+  // the payment handle. The base table no longer answers an unauthenticated
+  // read at all, and this page needs one: sign-up shows the list before the
+  // account exists.
   const { data } = await supabase
     .from("rep_directory")
-    .select("id, display_name, university, section")
+    .select("id, display_name, university, section, frasaco_price, copy_a_price")
     .order("display_name");
 
   return (data ?? []).map((rep) => ({
@@ -46,6 +51,8 @@ async function fetchRepDirectory(): Promise<DirectoryRep[]> {
     displayName: rep.display_name,
     university: rep.university,
     section: rep.section,
+    frasacoPrice: Number(rep.frasaco_price),
+    copyAPrice: Number(rep.copy_a_price),
   }));
 }
 

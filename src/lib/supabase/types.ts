@@ -368,6 +368,8 @@ export interface Database {
           display_name: string;
           university: string | null;
           section: string | null;
+          frasaco_price: string;
+          copy_a_price: string;
         };
         // A view carries no foreign keys of its own; postgrest-js still
         // requires the key to be present, and omitting it makes every
