@@ -89,6 +89,12 @@ async function cleanup() {
       if (error) console.error(`cleanup: could not delete orders by ${column}: ${error.message}`);
     }
   }
+  // The suppliers row points at the profile, which points at the auth
+  // user, so it goes before them.
+  if (createdUserIds.length > 0) {
+    const { error } = await admin.from("suppliers").delete().in("id", createdUserIds);
+    if (error) console.error(`cleanup: could not delete test suppliers: ${error.message}`);
+  }
   // Delete users in reverse creation order. There is no binding table any
   // more, so the only thing holding a supplier down is their orders — and
   // those went above.
@@ -111,22 +117,43 @@ async function main() {
   const studentAEmail = `rls-student-a-${RUN_ID}@test.dentalorder.dev`;
   const studentBEmail = `rls-student-b-${RUN_ID}@test.dentalorder.dev`;
 
+  // The sellers are made as students and then given a suppliers row
+  // directly, which is the shape a student who sells actually has — and
+  // keeps this suite independent of whatever the sign-up trigger does.
   const sellerAId = await createUser(sellerAEmail, {
-    role: "supplier",
+    role: "student",
     full_name: "RLS Seller A",
     university: "BAU",
   });
-  await createUser(sellerBEmail, {
-    role: "supplier",
+  const sellerBId = await createUser(sellerBEmail, {
+    role: "student",
     full_name: "RLS Seller B",
     university: "BAU",
   });
+  for (const [id, name] of [[sellerAId, "RLS Seller A"], [sellerBId, "RLS Seller B"]] as const) {
+    const { error } = await admin.from("suppliers").insert({
+      id,
+      kind: "student_supplier",
+      display_name: name,
+      university: "BAU",
+    });
+    if (error) throw new Error(`fixture setup failed (${name}): ${error.message}`);
+  }
+  // Same reason as the sellers: the account, then the row.
   const supplierAId = await createUser(supplierAEmail, {
-    role: "supplier",
+    role: "student",
     full_name: "RLS Supplier A",
-    business_name: "RLS Test Supplier",
-    contact_phone: "00000000",
   });
+  {
+    const { error } = await admin.from("suppliers").insert({
+      id: supplierAId,
+      kind: "shop",
+      display_name: "RLS Test Supplier",
+      business_name: "RLS Test Supplier",
+      contact_phone: "00000000",
+    });
+    if (error) throw new Error(`fixture setup failed (shop): ${error.message}`);
+  }
   const studentAId = await createUser(studentAEmail, {
     role: "student",
     full_name: "RLS Student A",
@@ -340,11 +367,19 @@ async function main() {
   {
     const pendingSupplierEmail = `rls-supplier-pending-${RUN_ID}@test.dentalorder.dev`;
     const pendingSupplierId = await createUser(pendingSupplierEmail, {
-      role: "supplier",
+      role: "student",
       full_name: "RLS Pending Supplier",
-      business_name: "Pending Co",
-      contact_phone: "00000000",
     });
+    {
+      const { error } = await admin.from("suppliers").insert({
+        id: pendingSupplierId,
+        kind: "shop",
+        display_name: "Pending Co",
+        business_name: "Pending Co",
+        contact_phone: "00000000",
+      });
+      if (error) throw new Error(`fixture setup failed (pending shop): ${error.message}`);
+    }
     const pendingSupplier = await signInAs(pendingSupplierEmail);
     const { error } = await pendingSupplier.from("products").insert({
       supplier_id: pendingSupplierId,

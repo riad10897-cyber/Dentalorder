@@ -154,7 +154,9 @@ export interface Database {
           price_updated_at?: string | null;
           subscription_paid_until?: string | null;
           business_name?: string | null;
-          contact_phone: string | null;
+          // Nullable since 20260109000000: a student who sells to their
+          // year has no shop phone number to give.
+          contact_phone?: string | null;
           contact_email?: string | null;
           logo_url?: string | null;
           description?: string | null;
