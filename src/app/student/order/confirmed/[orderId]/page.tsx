@@ -45,10 +45,7 @@ export default async function OrderConfirmedPage({
       >
         <p className="text-micro uppercase text-ink-faint">Total due</p>
         <p className="tnum mt-1 font-display text-figure">${total.toFixed(2)}</p>
-        <p className="mt-2 text-caption text-ink-muted">
-          You pay {repName} directly — Dentora never handles the money.
-        </p>
-        <p className="tnum mt-3 border-t border-hairline pt-3 text-caption text-ink-muted">
+        <p className="tnum mt-2 text-caption text-ink-muted">
           {toothCount} {toothCount === 1 ? "tooth" : "teeth"} · week {order.week_number}
         </p>
       </section>
