@@ -44,7 +44,9 @@ export const getSupplierDirectory = unstable_cache(
   fetchSupplierDirectory,
   ["supplier-directory"],
   {
-    // A new supplier being approved calls revalidateTag, so this ceiling
+    // Sign-up calls revalidateTag. Approval happens by hand in SQL and
+    // cannot, so this ceiling is what actually bounds how long an
+    // approved supplier stays invisible to students.
     // only matters if that is missed.
     tags: [SUPPLIER_DIRECTORY_TAG],
     revalidate: 300,

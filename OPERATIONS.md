@@ -52,9 +52,11 @@ The `returning` line means Supabase prints the row it changed. **If it prints
 nothing, nothing was approved** — the email did not match. Check for a typo and
 run it again.
 
-Approving takes effect within a minute for students (the market list is cached
-for that long); for the supplier themselves it is immediate on their next
-screen.
+Approving takes **up to five minutes** to show for students. The market list
+is cached that long, and a change you make in the SQL Editor cannot tell the
+app to drop the cache — only something done inside the app can. For the
+supplier themselves it is immediate on their next screen, so if you are on
+the phone with them, they will see it before their customers do.
 
 **To un-approve someone** — they stopped supplying, or you approved the wrong
 person — the same query with `'suspended'` instead of `'active'`. Their past
