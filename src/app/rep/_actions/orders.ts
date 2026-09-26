@@ -2,7 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import { updateOrderStatusSchema, updateRepPricesSchema } from "@/lib/validation/orders";
+import {
+  rejectOrderSchema,
+  updateOrderStatusSchema,
+  updateRepPricesSchema,
+} from "@/lib/validation/orders";
 import type { Database } from "@/lib/supabase/types";
 
 type OrderUpdate = Database["public"]["Tables"]["orders"]["Update"];
@@ -43,6 +47,40 @@ export async function updateOrderStatus(input: {
   if (error) return { ok: false, error: error.message };
   if (!data || data.length === 0) {
     return { ok: false, error: "That order couldn't be updated. Refresh and try again." };
+  }
+  return { ok: true };
+}
+
+// Rejecting is a status change plus a reason, and the two must land
+// together — an order that says "rejected" with no reason is the thing this
+// is meant to prevent. The database enforces that pairing too, and that
+// only a pending order can be rejected, so a crafted request cannot slip
+// past this action.
+export async function rejectOrder(input: {
+  orderId: string;
+  reason: string;
+}): Promise<ActionResult> {
+  const parsed = rejectOrderSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid rejection." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      fulfillment_status: "rejected",
+      rejection_reason: parsed.data.reason,
+    })
+    .eq("id", parsed.data.orderId)
+    .eq("fulfillment_status", "pending")
+    .select("id");
+
+  if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) {
+    // Either RLS filtered it out or it is no longer pending. Both mean the
+    // supplier is looking at a stale screen.
+    return { ok: false, error: "That order can no longer be rejected. Refresh and try again." };
   }
   return { ok: true };
 }

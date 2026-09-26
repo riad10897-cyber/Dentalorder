@@ -2,33 +2,81 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { RepOrder } from "@/lib/rep/data"; // type-only: keeps the server-only data module out of this client bundle
-import { updateOrderStatus } from "./_actions/orders";
+// type-only: keeps the server-only data module out of this client bundle
+import type { RepOrder } from "@/lib/rep/data";
+import { rejectOrder, updateOrderStatus } from "./_actions/orders";
 import { haptic } from "@/lib/haptics";
 
-type Tab = "pending" | "confirmed" | "fulfilled";
+type Tab = "pending" | "confirmed" | "fulfilled" | "rejected";
 const TABS: { key: Tab; label: string }[] = [
   { key: "pending", label: "Pending" },
   { key: "confirmed", label: "Confirmed" },
   { key: "fulfilled", label: "Done" },
+  { key: "rejected", label: "Rejected" },
 ];
+
+const EMPTY: Record<Tab, string> = {
+  pending: "No pending orders. New orders appear here as students place them.",
+  confirmed: "Nothing confirmed right now.",
+  fulfilled: "Nothing handed over yet.",
+  rejected: "You haven't rejected any orders.",
+};
+
+function handedOverUnpaid(order: RepOrder): boolean {
+  return order.fulfillmentStatus === "fulfilled" && order.paymentStatus !== "paid";
+}
 
 export function OrdersClient({ orders }: { orders: RepOrder[] }) {
   const [tab, setTab] = useState<Tab>("pending");
+  const [query, setQuery] = useState("");
 
-  const filtered = useMemo(() => orders.filter((o) => o.fulfillmentStatus === tab), [orders, tab]);
   const counts = useMemo(
-    () => ({
-      pending: orders.filter((o) => o.fulfillmentStatus === "pending").length,
-      confirmed: orders.filter((o) => o.fulfillmentStatus === "confirmed").length,
-      fulfilled: orders.filter((o) => o.fulfillmentStatus === "fulfilled").length,
-    }),
+    () =>
+      TABS.reduce(
+        (acc, t) => {
+          acc[t.key] = orders.filter((o) => o.fulfillmentStatus === t.key).length;
+          return acc;
+        },
+        {} as Record<Tab, number>,
+      ),
     [orders],
   );
 
+  // Filters what is already on screen. Every order for this supplier is
+  // loaded for the tabs and counts regardless, so searching costs nothing.
+  const filtered = useMemo(() => {
+    const inTab = orders.filter((o) => o.fulfillmentStatus === tab);
+    const q = query.trim().toLowerCase();
+    if (!q) return inTab;
+    return inTab.filter(
+      (o) =>
+        o.studentName.toLowerCase().includes(q) ||
+        o.items.some((item) => String(item.toothNumber).includes(q)),
+    );
+  }, [orders, tab, query]);
+
+  // What a supplier actually wants to know on a Sunday night, without
+  // opening anything.
+  const owed = useMemo(() => {
+    const rows = orders.filter(handedOverUnpaid);
+    return { count: rows.length, total: rows.reduce((sum, o) => sum + o.totalPrice, 0) };
+  }, [orders]);
+
   return (
     <>
-      <div className="mt-5 flex gap-1.5 px-5" role="tablist">
+      {owed.count > 0 && (
+        <p className="mx-5 mt-4 rounded-card border border-rule bg-card-sunk px-4 py-2.5 text-small text-ink">
+          <span className="tnum font-display">{owed.count}</span>{" "}
+          {owed.count === 1 ? "order" : "orders"} handed over, not paid ·{" "}
+          <span className="tnum font-display">${owed.total.toFixed(2)}</span> outstanding
+        </p>
+      )}
+
+      <div
+        className="mt-4 flex gap-1.5 overflow-x-auto px-5 pb-1"
+        style={{ scrollbarWidth: "none" }}
+        role="tablist"
+      >
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -36,7 +84,7 @@ export function OrdersClient({ orders }: { orders: RepOrder[] }) {
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`pressable flex min-h-9 items-center gap-1.5 rounded-control border px-3 py-1.5 font-display text-small ${
+            className={`pressable flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border px-3 py-1.5 font-display text-small ${
               tab === t.key ? "border-ink bg-ink text-card" : "border-rule bg-card text-ink-muted"
             }`}
           >
@@ -46,11 +94,22 @@ export function OrdersClient({ orders }: { orders: RepOrder[] }) {
         ))}
       </div>
 
+      <div className="mt-3 px-5">
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search a name or tooth number"
+          aria-label="Search orders by student name or tooth number"
+          className="min-h-11 w-full rounded-control border border-rule bg-card px-3 py-2 text-body text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none"
+        />
+      </div>
+
       {filtered.length === 0 ? (
         <p className="mx-5 mt-4 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
-          {tab === "pending"
-            ? "No pending orders. New orders appear here as students place them."
-            : `No ${tab} orders yet.`}
+          {query.trim()
+            ? `Nothing in ${TABS.find((t) => t.key === tab)?.label.toLowerCase()} matches “${query.trim()}”.`
+            : EMPTY[tab]}
         </p>
       ) : (
         <ul className="mt-3 flex flex-col gap-2.5 px-5">
@@ -67,16 +126,18 @@ function OrderCard({ order }: { order: RepOrder }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
 
-  function runStatus(fulfillmentStatus: "confirmed" | "fulfilled") {
+  function runStatus(patch: Parameters<typeof updateOrderStatus>[0]) {
     setError(null);
     // Fires on the tap, in the same frame as the button's own press
-    // feedback — waiting for the round trip would land the tick after
-    // the moment it is meant to confirm. Fulfilling is the one action
-    // here worth a haptic; confirming is a routine step along the way.
-    if (fulfillmentStatus === "fulfilled") haptic();
+    // feedback — waiting for the round trip would land the tick after the
+    // moment it is meant to confirm. Handing over and being paid are both
+    // worth a haptic; confirming is a routine step along the way.
+    if (patch.fulfillmentStatus === "fulfilled" || patch.paymentStatus === "paid") haptic();
     startTransition(async () => {
-      const result = await updateOrderStatus({ orderId: order.id, fulfillmentStatus });
+      const result = await updateOrderStatus(patch);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -85,7 +146,22 @@ function OrderCard({ order }: { order: RepOrder }) {
     });
   }
 
+  function confirmReject() {
+    setError(null);
+    startTransition(async () => {
+      const result = await rejectOrder({ orderId: order.id, reason });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setRejecting(false);
+      setReason("");
+      router.refresh();
+    });
+  }
+
   const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const unpaid = handedOverUnpaid(order);
 
   return (
     <li className="rounded-card border border-rule bg-card p-4">
@@ -98,6 +174,15 @@ function OrderCard({ order }: { order: RepOrder }) {
         </div>
         <span className="tnum shrink-0 font-display text-lead">${order.totalPrice.toFixed(2)}</span>
       </div>
+
+      {unpaid && (
+        // Deliberately ink, not a status colour: --fulfilled means fulfilled
+        // and --frasaco means Frasaco. Neither may be borrowed to mean "owes
+        // you money".
+        <p className="mt-2 inline-block rounded-control border border-ink px-1.5 py-0.5 text-micro uppercase text-ink">
+          Handed over · not paid
+        </p>
+      )}
 
       <ul className="mt-3 flex flex-wrap gap-1">
         {order.items.map((item, i) => (
@@ -114,30 +199,107 @@ function OrderCard({ order }: { order: RepOrder }) {
         ))}
       </ul>
 
-      {order.fulfillmentStatus === "fulfilled" ? (
-        <p className="mt-3 border-t border-hairline pt-3 text-center text-micro uppercase text-fulfilled">
-          Fulfilled
-        </p>
-      ) : (
-        <div className="mt-3 flex gap-2 border-t border-hairline pt-3">
-          {order.fulfillmentStatus === "pending" && (
+      {order.fulfillmentStatus === "rejected" ? (
+        <div className="mt-3 border-t border-hairline pt-3">
+          <p className="text-micro uppercase text-ink-faint">Rejected</p>
+          {order.rejectionReason && (
+            <p className="mt-1 text-small text-ink-muted">{order.rejectionReason}</p>
+          )}
+        </div>
+      ) : rejecting ? (
+        <div className="mt-3 border-t border-hairline pt-3">
+          <label className="text-micro uppercase text-ink-faint" htmlFor={`reason-${order.id}`}>
+            Why are you rejecting this?
+          </label>
+          <input
+            id={`reason-${order.id}`}
+            type="text"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            maxLength={200}
+            autoFocus
+            placeholder="Out of stock this week"
+            className="mt-1.5 min-h-11 w-full rounded-control border border-rule bg-card px-3 py-2 text-body text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none"
+          />
+          <p className="mt-1 text-caption text-ink-muted">The student sees this.</p>
+          <div className="mt-3 flex gap-2">
             <button
               type="button"
               disabled={pending}
-              onClick={() => runStatus("confirmed")}
-              className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small disabled:opacity-50"
+              onClick={() => {
+                setRejecting(false);
+                setReason("");
+                setError(null);
+              }}
+              className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small text-ink-muted disabled:opacity-50"
             >
-              Confirm
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={confirmReject}
+              className="pressable min-h-11 flex-[2] rounded-control bg-ink py-2.5 font-display text-small text-card disabled:opacity-50"
+            >
+              {pending ? "Rejecting…" : "Reject order"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-hairline pt-3">
+          {order.fulfillmentStatus === "pending" && (
+            <>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => setRejecting(true)}
+                className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small text-ink-muted disabled:opacity-50"
+              >
+                Reject
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => runStatus({ orderId: order.id, fulfillmentStatus: "confirmed" })}
+                className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small disabled:opacity-50"
+              >
+                Confirm
+              </button>
+            </>
+          )}
+
+          {order.fulfillmentStatus !== "fulfilled" && (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => runStatus({ orderId: order.id, fulfillmentStatus: "fulfilled" })}
+              className="pressable min-h-11 flex-1 rounded-control bg-ink py-2.5 font-display text-small text-card disabled:opacity-50"
+            >
+              Mark handed over
             </button>
           )}
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => runStatus("fulfilled")}
-            className="pressable min-h-11 flex-1 rounded-control bg-ink py-2.5 font-display text-small text-card disabled:opacity-50"
-          >
-            Mark fulfilled
-          </button>
+
+          {/* Paid is a separate fact from handed over, so it gets its own
+              control and can be set in either order. */}
+          {order.paymentStatus === "paid" ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => runStatus({ orderId: order.id, paymentStatus: "unpaid" })}
+              className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small text-ink-muted disabled:opacity-50"
+            >
+              Paid ✓ · undo
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => runStatus({ orderId: order.id, paymentStatus: "paid" })}
+              className="pressable min-h-11 flex-1 rounded-control border border-ink py-2.5 font-display text-small text-ink disabled:opacity-50"
+            >
+              Mark paid
+            </button>
+          )}
         </div>
       )}
 

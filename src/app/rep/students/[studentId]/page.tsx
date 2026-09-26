@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getRepContext, getStudentDetail } from "@/lib/rep/data";
+import { countsAsLive, getRepContext, getStudentDetail } from "@/lib/rep/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { RepBottomNav } from "../../_components/bottom-nav";
 
@@ -29,9 +29,7 @@ export default async function RepStudentDetailPage({
   const { profile, orders } = detail;
   if (!profile) notFound();
 
-  const totalSpent = orders
-    .filter((o) => o.fulfillmentStatus !== "cancelled")
-    .reduce((sum, o) => sum + o.totalPrice, 0);
+  const totalSpent = orders.filter(countsAsLive).reduce((sum, o) => sum + o.totalPrice, 0);
   const metaParts = [
     profile.university,
     profile.year_of_study ? `Year ${profile.year_of_study}` : null,

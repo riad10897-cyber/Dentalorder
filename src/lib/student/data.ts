@@ -120,6 +120,7 @@ export interface StudentOrderSummary {
   totalPrice: number;
   paymentStatus: string;
   fulfillmentStatus: string;
+  rejectionReason: string | null;
   createdAt: string;
   items: { toothNumber: number; toothType: ToothType; quantity: number }[];
 }
@@ -127,7 +128,7 @@ export interface StudentOrderSummary {
 // A cancelled order is money the student did not spend. Both the student's
 // own profile and the rep's student list used to count it.
 export function isSpend(order: { fulfillmentStatus: string }): boolean {
-  return order.fulfillmentStatus !== "cancelled";
+  return order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "rejected";
 }
 
 export async function listStudentOrders(userId: string): Promise<StudentOrderSummary[]> {
@@ -135,7 +136,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, created_at, order_items(tooth_number, tooth_type, quantity)",
+      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, order_items(tooth_number, tooth_type, quantity)",
     )
     .eq("student_id", userId)
     .eq("order_type", "tooth")
@@ -147,6 +148,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
     totalPrice: Number(order.total_price),
     paymentStatus: order.payment_status,
     fulfillmentStatus: order.fulfillment_status,
+    rejectionReason: order.rejection_reason,
     createdAt: order.created_at,
     items: (order.order_items ?? [])
       .filter((item) => item.tooth_number !== null && item.tooth_type !== null)

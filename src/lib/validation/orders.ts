@@ -20,7 +20,20 @@ export const fulfillmentStatusSchema = z.enum([
   "confirmed",
   "fulfilled",
   "cancelled",
+  "rejected",
 ]);
+
+// A rejection the student cannot act on is worse than none: "no" with no
+// reason just moves the question to WhatsApp. Short enough to type on a
+// phone between classes, long enough to be a sentence.
+export const rejectOrderSchema = z.object({
+  orderId: z.string().uuid(),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Say why, even briefly — the student sees this.")
+    .max(200, "Keep it under 200 characters."),
+});
 
 export const paymentStatusSchema = z.enum(["unpaid", "pending", "paid"]);
 

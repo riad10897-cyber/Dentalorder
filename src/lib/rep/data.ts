@@ -53,10 +53,27 @@ export interface RepOrder {
   totalPrice: number;
   paymentStatus: PaymentStatus;
   fulfillmentStatus: FulfillmentStatus;
+  rejectionReason: string | null;
   createdAt: string;
   studentId: string;
   studentName: string;
   items: RepOrderItem[];
+}
+
+// An order nobody is going to supply is not money owed and not teeth to
+// buy. Rejected and cancelled both drop out of every total and out of the
+// weekly shopping list.
+export function countsAsLive(order: { fulfillmentStatus: FulfillmentStatus }): boolean {
+  return order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "rejected";
+}
+
+// Handed the teeth over, still not paid. This is the one a supplier needs
+// on a Sunday night.
+export function isOutstanding(order: {
+  fulfillmentStatus: FulfillmentStatus;
+  paymentStatus: PaymentStatus;
+}): boolean {
+  return order.fulfillmentStatus === "fulfilled" && order.paymentStatus !== "paid";
 }
 
 function mapOrderRow(order: {
@@ -65,6 +82,7 @@ function mapOrderRow(order: {
   total_price: string;
   payment_status: PaymentStatus;
   fulfillment_status: FulfillmentStatus;
+  rejection_reason: string | null;
   created_at: string;
   student_id: string;
   profiles: { full_name: string } | null;
@@ -84,6 +102,7 @@ function mapOrderRow(order: {
     totalPrice: Number(order.total_price),
     paymentStatus: order.payment_status,
     fulfillmentStatus: order.fulfillment_status,
+    rejectionReason: order.rejection_reason,
     createdAt: order.created_at,
     studentId: order.student_id,
     studentName: order.profiles?.full_name ?? "Unknown student",
@@ -104,7 +123,7 @@ export async function listRepOrders(repId: string): Promise<RepOrder[]> {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, created_at, student_id, profiles(full_name), order_items(tooth_number, tooth_type, quantity, unit_price, line_total)",
+      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, student_id, profiles(full_name), order_items(tooth_number, tooth_type, quantity, unit_price, line_total)",
     )
     .eq("rep_id", repId)
     .eq("order_type", "tooth")
@@ -138,9 +157,9 @@ export async function listRepStudents(repId: string): Promise<RepStudent[]> {
       .select("student_id, total_price, week_number, fulfillment_status")
       .eq("rep_id", repId)
       .eq("order_type", "tooth")
-      // A cancelled order is not an order this student placed and not money
-      // they spent. Counting it inflated both figures on the rep's list.
-      .neq("fulfillment_status", "cancelled"),
+      // A cancelled or rejected order is not an order this student placed
+      // and not money they spent. Counting either inflated both figures.
+      .not("fulfillment_status", "in", "(cancelled,rejected)"),
   ]);
 
   const statsByStudent = new Map<string, { count: number; total: number; lastWeek: number | null }>();
@@ -186,7 +205,7 @@ export async function getStudentDetail(repId: string, studentId: string) {
     supabase
       .from("orders")
       .select(
-        "id, week_number, total_price, payment_status, fulfillment_status, created_at, student_id, profiles(full_name), order_items(tooth_number, tooth_type, quantity, unit_price, line_total)",
+        "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, student_id, profiles(full_name), order_items(tooth_number, tooth_type, quantity, unit_price, line_total)",
       )
       .eq("rep_id", repId)
       .eq("student_id", studentId)

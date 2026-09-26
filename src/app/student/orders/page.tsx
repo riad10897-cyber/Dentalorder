@@ -39,6 +39,7 @@ export default async function OrderHistoryPage() {
           {orders.map((order) => {
             const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
             const fulfilled = order.fulfillmentStatus === "fulfilled";
+            const rejected = order.fulfillmentStatus === "rejected";
             return (
               <li key={order.id} className="rounded-card border border-rule bg-card p-4">
                 <div className="flex items-baseline justify-between gap-3">
@@ -71,10 +72,20 @@ export default async function OrderHistoryPage() {
                   ))}
                 </ul>
 
+                {rejected && order.rejectionReason && (
+                  <p className="mt-3 border-l-2 border-ink bg-card-sunk py-2 pl-3 pr-2 text-small text-ink">
+                    {order.rejectionReason}
+                  </p>
+                )}
+
                 <div className="mt-3 flex items-center justify-between border-t border-hairline pt-3">
                   <span
                     className={`inline-block rounded-control px-1.5 py-0.5 text-micro uppercase ${
-                      fulfilled ? "bg-fulfilled text-card" : "bg-card-sunk text-ink-muted"
+                      fulfilled
+                        ? "bg-fulfilled text-card"
+                        : rejected
+                          ? "border border-ink text-ink"
+                          : "bg-card-sunk text-ink-muted"
                     }`}
                   >
                     {order.fulfillmentStatus}

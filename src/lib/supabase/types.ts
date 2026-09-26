@@ -5,7 +5,12 @@
 export type UserRole = "student" | "rep" | "supplier" | "admin";
 export type OrderType = "tooth" | "store";
 export type PaymentStatus = "unpaid" | "pending" | "paid";
-export type FulfillmentStatus = "pending" | "confirmed" | "fulfilled" | "cancelled";
+export type FulfillmentStatus =
+  | "pending"
+  | "confirmed"
+  | "fulfilled"
+  | "cancelled"
+  | "rejected";
 export type ToothType = "frasaco" | "copy_a";
 export type AccountStatus = "active" | "suspended" | "pending_approval";
 
@@ -282,6 +287,7 @@ export interface Database {
           notes: string | null;
           created_at: string;
           updated_at: string;
+          rejection_reason: string | null;
         };
         Insert: {
           id?: string;
@@ -300,6 +306,7 @@ export interface Database {
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
+          rejection_reason?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
         Relationships: [typeof REL_ORDERS_PROFILES, typeof REL_ORDERS_REPRESENTATIVES, typeof REL_ORDERS_SUPPLIERS, typeof REL_ORDER_ITEMS_ORDERS];

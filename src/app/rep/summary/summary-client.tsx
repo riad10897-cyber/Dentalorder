@@ -10,7 +10,14 @@ export function SummaryClient({ orders, initialWeek }: { orders: RepOrder[]; ini
   const [week, setWeek] = useState(initialWeek);
 
   const summary = useMemo(() => {
-    const weekOrders = orders.filter((o) => o.weekNumber === week);
+    // Rejected and cancelled orders are not teeth to buy. Leaving them in
+    // the batch is how a supplier ends up paying for stock nobody wanted.
+    const weekOrders = orders.filter(
+      (o) =>
+        o.weekNumber === week &&
+        o.fulfillmentStatus !== "rejected" &&
+        o.fulfillmentStatus !== "cancelled",
+    );
     // Keyed by tooth number AND type. Keying by number alone silently
     // merged a position ordered in both types into one row, which is
     // exactly the shopping list a rep would get wrong.
