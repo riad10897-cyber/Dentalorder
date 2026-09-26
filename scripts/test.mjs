@@ -8,11 +8,15 @@
 //
 // Finding no tests is an error. A test suite that silently runs nothing
 // is worse than one that fails.
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = "src";
+
+// A pass on the wrong major proves nothing — see scripts/check-node.mjs.
+const versionCheck = spawnSync(process.execPath, ["scripts/check-node.mjs"], { stdio: "inherit" });
+if (versionCheck.status !== 0) process.exit(versionCheck.status ?? 1);
 
 function findTests(dir) {
   const out = [];
