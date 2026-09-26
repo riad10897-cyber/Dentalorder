@@ -12,7 +12,7 @@ export type RouteDirection = "forward" | "back" | "lateral" | "none";
 // drill-in.
 export const TAB_SETS: readonly (readonly string[])[] = [
   ["/student", "/student/order", "/student/profile"],
-  ["/rep", "/rep/summary", "/rep/students", "/rep/settings"],
+  ["/supplier", "/supplier/summary", "/supplier/students", "/supplier/settings"],
 ];
 
 export function routeDirection(from: string | null, to: string): RouteDirection {

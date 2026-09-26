@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
-import { getStudentContext, listStudentOrders, listAvailableReps, isSpend } from "@/lib/student/data";
+import { getStudentContext, listStudentOrders, isSpend } from "@/lib/student/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
-import { RepPicker } from "../_components/rep-picker";
-import { RepCard } from "../_components/rep-card";
 import { signOut } from "@/app/actions/auth";
 
 export default async function StudentProfilePage() {
@@ -16,10 +14,6 @@ export default async function StudentProfilePage() {
   ]);
   if (!student) redirect("/sign-in");
 
-  // Fetched whether or not they already have a rep: the card offers a
-  // switch, so the list has to be there either way. It is the cached
-  // directory, so this is not a new query per visit.
-  const availableReps = await listAvailableReps();
   const counted = orders.filter(isSpend);
   // Teeth, not line items: three Frasaco 11s are three teeth, and one
   // line. items.length read as 1 and the stat is labelled "Teeth".
@@ -49,21 +43,6 @@ export default async function StudentProfilePage() {
         <StatCard value={String(orders.length)} label="Orders" />
         <StatCard value={String(totalTeeth)} label="Teeth" />
         <StatCard value={`$${totalSpent.toFixed(0)}`} label="Spent" />
-      </div>
-
-      <div className="mx-6 mt-4">
-        {student.repName && student.repId ? (
-          <RepCard
-            repName={student.repName}
-            frasacoPrice={student.frasacoPrice}
-            copyAPrice={student.copyAPrice}
-            currentRepId={student.repId}
-            reps={availableReps}
-            university={student.university}
-          />
-        ) : (
-          <RepPicker reps={availableReps} university={student.university} />
-        )}
       </div>
 
       <div className="px-6 pb-3 pt-6 text-xs font-semibold uppercase tracking-wider text-ink-muted">

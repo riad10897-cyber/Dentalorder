@@ -13,8 +13,8 @@ test("re-rendering the same path animates nothing", () => {
 test("drilling in is forward, coming back out is back", () => {
   assert.equal(routeDirection("/student/orders", "/student/orders/abc"), "forward");
   assert.equal(routeDirection("/student/orders/abc", "/student/orders"), "back");
-  assert.equal(routeDirection("/rep/students", "/rep/students/xyz"), "forward");
-  assert.equal(routeDirection("/rep/students/xyz", "/rep/students"), "back");
+  assert.equal(routeDirection("/supplier/students", "/supplier/students/xyz"), "forward");
+  assert.equal(routeDirection("/supplier/students/xyz", "/supplier/students"), "back");
 });
 
 test("bottom-nav tabs are lateral, not a descent", () => {
@@ -26,8 +26,8 @@ test("bottom-nav tabs are lateral, not a descent", () => {
   assert.equal(routeDirection("/student/profile", "/student/order"), "lateral");
 });
 
-test("every rep tab pairing is lateral", () => {
-  const tabs = ["/rep", "/rep/summary", "/rep/students", "/rep/settings"];
+test("every supplier tab pairing is lateral", () => {
+  const tabs = ["/supplier", "/supplier/summary", "/supplier/students", "/supplier/settings"];
   for (const from of tabs) {
     for (const to of tabs) {
       if (from === to) continue;
@@ -37,7 +37,7 @@ test("every rep tab pairing is lateral", () => {
 });
 
 test("unrelated paths are lateral rather than guessing a direction", () => {
-  assert.equal(routeDirection("/student", "/rep"), "lateral");
+  assert.equal(routeDirection("/student", "/supplier"), "lateral");
   assert.equal(routeDirection("/sign-in", "/sign-up"), "lateral");
 });
 

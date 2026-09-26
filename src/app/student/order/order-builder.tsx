@@ -12,7 +12,8 @@ import { useCountingMoney } from "@/lib/use-counting-money";
 import type { ToothType } from "@/lib/supabase/types";
 
 interface OrderBuilderProps {
-  repName: string | null;
+  supplierId: string;
+  supplierName: string;
   frasacoPrice: number;
   copyAPrice: number;
   initialWeek: number;
@@ -27,7 +28,8 @@ interface UndoState {
 const UNDO_TIMEOUT_MS = 7000;
 
 export function OrderBuilder({
-  repName,
+  supplierId,
+  supplierName,
   frasacoPrice,
   copyAPrice,
   initialWeek,
@@ -148,7 +150,7 @@ export function OrderBuilder({
   function handleConfirm() {
     setError(null);
     startTransition(async () => {
-      const result = await submitToothOrder({ weekNumber: week, items: itemInputs });
+      const result = await submitToothOrder({ supplierId, weekNumber: week, items: itemInputs });
       if (result.error) {
         setError(result.error);
         return;
@@ -263,7 +265,7 @@ export function OrderBuilder({
       {reviewOpen && (
         <ReviewSheet
           week={week}
-          repName={repName}
+          repName={supplierName}
           items={pricedItems}
           subtotal={subtotal}
           error={error}

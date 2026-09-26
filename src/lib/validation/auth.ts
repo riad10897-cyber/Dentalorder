@@ -12,14 +12,6 @@ const optionalYearOfStudy = z.preprocess(
   z.coerce.number().int().min(1).max(5).optional(),
 );
 
-// A student can sign up before their rep has joined the platform — they
-// pick a rep later instead. Same empty-string-to-undefined problem as
-// above: an unselected <select> still submits "".
-const optionalRepId = z.preprocess(
-  (v) => (v === "" ? undefined : v),
-  z.string().uuid("Choose your representative.").optional(),
-);
-
 export const signInSchema = z.object({
   email,
   password: z.string().min(1, "Enter your password."),
@@ -34,25 +26,18 @@ export const studentSignUpSchema = z.object({
   university: z.string().trim().min(1, "Select your university."),
   year_of_study: z.coerce.number().int().min(1).max(5),
   section: z.string().trim().optional(),
-  rep_id: optionalRepId,
 });
 
-export const repSignUpSchema = z.object({
-  role: z.literal("rep"),
-  email,
-  password,
-  full_name: fullName,
-  university: z.string().trim().min(1, "Select your university."),
-  year_of_study: optionalYearOfStudy,
-  section: z.string().trim().optional(),
-  whish_number: z.string().trim().optional(),
-});
-
+// A shop, signing up to sell to students. A student who also supplies is
+// not this: that account is a student with a suppliers row, and it is
+// created from the student side, not here.
 export const supplierSignUpSchema = z.object({
   role: z.literal("supplier"),
   email,
   password,
   full_name: fullName,
+  university: z.string().trim().optional(),
+  year_of_study: optionalYearOfStudy,
   business_name: z.string().trim().min(1, "Enter your business name."),
   contact_phone: z.string().trim().min(1, "Enter a contact phone number."),
   contact_email: z.string().trim().email().optional().or(z.literal("")),
@@ -61,9 +46,10 @@ export const supplierSignUpSchema = z.object({
 
 // No adminSignUpSchema: admin accounts are never created through the public
 // sign-up form. They're set manually in the database — see CLAUDE.md.
+// No repSignUpSchema either: the role is gone from the product. The
+// database still clamps anything unrecognised down to 'student'.
 export const signUpSchema = z.discriminatedUnion("role", [
   studentSignUpSchema,
-  repSignUpSchema,
   supplierSignUpSchema,
 ]);
 export type SignUpInput = z.infer<typeof signUpSchema>;

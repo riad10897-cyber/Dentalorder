@@ -1,40 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getStudentContext, getOrderDefaults, listAvailableReps } from "@/lib/student/data";
+import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
+import { getSupplierDirectory } from "@/lib/supplier/directory";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import { OrderBuilder } from "./order-builder";
-import { StudentBottomNav } from "../_components/bottom-nav";
-import { RepPicker } from "../_components/rep-picker";
+import { SupplierStep } from "./supplier-step";
 
 export default async function NewOrderPage() {
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
-  // Fetched together rather than one after the other: the order defaults
-  // only ever needed the user id.
-  const [student, orderDefaults] = await Promise.all([
+  const [student, orderDefaults, suppliers] = await Promise.all([
     getStudentContext(userId),
     getOrderDefaults(userId),
+    getSupplierDirectory(),
   ]);
   if (!student) redirect("/sign-in");
 
-  if (!student.repId) {
-    const availableReps = await listAvailableReps();
-    return (
-      <main className="mx-auto min-h-dvh max-w-md px-5 pb-28 pt-5">
-        <Header name={student.fullName} section={student.section} university={student.university} />
-        <p className="mt-8 text-center text-small text-ink-muted">
-          You&apos;ll need a representative before you can order teeth.
-        </p>
-        <div className="mt-4">
-          <RepPicker reps={availableReps} university={student.university} />
-        </div>
-        <StudentBottomNav />
-      </main>
-    );
-  }
-
-  const { nextWeek, lastToothType } = orderDefaults;
+  // A supplier can also be a student, and ordering from yourself is
+  // refused by the database anyway — so they are not offered.
+  const choices = suppliers.filter((s) => s.id !== userId);
 
   // No bottom nav on this screen: the pinned order footer occupies that
   // space, and stacking both leaves too little chart at 375px. The back
@@ -44,12 +28,12 @@ export default async function NewOrderPage() {
       <div className="px-5 pt-5">
         <Header name={student.fullName} section={student.section} university={student.university} />
       </div>
-      <OrderBuilder
-        repName={student.repName}
-        frasacoPrice={student.frasacoPrice}
-        copyAPrice={student.copyAPrice}
-        initialWeek={nextWeek}
-        initialToothType={lastToothType}
+      <SupplierStep
+        suppliers={choices}
+        university={student.university}
+        initialWeek={orderDefaults.nextWeek}
+        initialToothType={orderDefaults.lastToothType}
+        lastSupplierId={orderDefaults.lastSupplierId}
       />
     </main>
   );

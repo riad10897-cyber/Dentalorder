@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { RepOrder } from "@/lib/rep/data";
+import type { SupplierOrder } from "@/lib/supplier/data";
 import { TOOTH_NAMES } from "@/lib/teeth/fdi";
 
 type ToothType = "frasaco" | "copy_a";
 
-export function SummaryClient({ orders, initialWeek }: { orders: RepOrder[]; initialWeek: number }) {
+export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]; initialWeek: number }) {
   const [week, setWeek] = useState(initialWeek);
 
   const summary = useMemo(() => {

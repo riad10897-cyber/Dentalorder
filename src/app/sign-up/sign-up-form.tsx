@@ -2,45 +2,33 @@
 
 import { useActionState, useState } from "react";
 import { signUp, type FormState } from "@/app/actions/auth";
-import { RepList } from "@/app/_components/rep-list";
 import { OTHER_UNIVERSITY, UNIVERSITIES } from "@/lib/universities";
 
-import type { DirectoryRep } from "@/lib/reps/directory";
 
-type Role = "student" | "rep" | "supplier";
+type Role = "student" | "supplier";
 
+// Two account types, not three. A student who also sells teeth is a
+// student account with a supplier profile attached — not a third kind of
+// sign-up — so it is not offered here.
 const ROLES: { value: Role; label: string }[] = [
   { value: "student", label: "Student" },
-  { value: "rep", label: "Representative" },
-  { value: "supplier", label: "Supplier" },
+  { value: "supplier", label: "Shop / supplier" },
 ];
 
 const initialState: FormState = { error: null, fieldErrors: {} };
 
-export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
+export function SignUpForm() {
   const [role, setRole] = useState<Role>("student");
-  const [university, setUniversity] = useState("");
-  const [repId, setRepId] = useState("");
-  const [repError, setRepError] = useState<string | null>(null);
+  const [, setUniversity] = useState("");
   const [state, formAction, pending] = useActionState(signUp, initialState);
 
-  // rep_id rides in a hidden input, and the browser does not validate
-  // hidden inputs, so the `required` the old <select> carried has to be
-  // re-created here or picking a rep would quietly become optional.
-  const needsRep = role === "student" && reps.length > 0;
 
   return (
     <form
       action={formAction}
-      onSubmit={(event) => {
-        if (needsRep && !repId) {
-          event.preventDefault();
-          setRepError("Choose your representative.");
-        }
-      }}
       className="flex flex-col gap-4"
     >
-      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Account type">
+      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Account type">
         {ROLES.map((r) => (
           <button
             key={r.value}
@@ -90,52 +78,6 @@ export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
           <Field label="Section (optional)" name="section" error={state.fieldErrors.section}>
             <input name="section" type="text" className={inputClass} />
           </Field>
-          {reps.length > 0 ? (
-            // Not a <Field>: that wraps its children in a <label>, and a
-            // label around a radiogroup reads the whole list out as one
-            // control.
-            <div className="flex flex-col gap-1 text-sm text-ink-muted">
-              Your representative
-              <RepList
-                reps={reps}
-                university={university || null}
-                value={repId}
-                onChange={(id) => {
-                  setRepId(id);
-                  setRepError(null);
-                }}
-              />
-              <input type="hidden" name="rep_id" value={repId} />
-              {(repError ?? state.fieldErrors.rep_id) && (
-                <span className="text-xs text-ink" role="alert">
-                  {repError ?? state.fieldErrors.rep_id}
-                </span>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-sm border border-dashed border-rule bg-card p-3 text-sm text-ink-muted">
-              <p>
-                No representative has joined yet. That&apos;s fine — create your account now and
-                pick your rep from your profile once they&apos;re on Dentora.
-              </p>
-              <input type="hidden" name="rep_id" value="" />
-            </div>
-          )}
-        </>
-      )}
-
-      {role === "rep" && (
-        <>
-          <UniversityField error={state.fieldErrors.university} />
-          <Field label="Year of study (optional)" name="year_of_study" error={state.fieldErrors.year_of_study}>
-            <input name="year_of_study" type="number" min={1} max={5} className={inputClass} />
-          </Field>
-          <Field label="Section (optional)" name="section" error={state.fieldErrors.section}>
-            <input name="section" type="text" className={inputClass} />
-          </Field>
-          <Field label="Whish number (optional)" name="whish_number" error={state.fieldErrors.whish_number}>
-            <input name="whish_number" type="text" className={inputClass} />
-          </Field>
         </>
       )}
 
@@ -144,6 +86,11 @@ export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
           <Field label="Business name" name="business_name" error={state.fieldErrors.business_name}>
             <input name="business_name" type="text" required className={inputClass} />
           </Field>
+          <UniversityField
+            error={state.fieldErrors.university}
+            optional
+            label="Closest faculty (optional)"
+          />
           <Field label="Contact phone" name="contact_phone" error={state.fieldErrors.contact_phone}>
             <input name="contact_phone" type="tel" required className={inputClass} />
           </Field>
@@ -154,7 +101,8 @@ export function SignUpForm({ reps }: { reps: DirectoryRep[] }) {
             <textarea name="description" rows={3} className={inputClass} />
           </Field>
           <p className="text-xs text-ink-muted">
-            Your account will be reviewed by an admin before you can list products.
+            We check every supplier by hand before students can order from you.
+            You can sign in and set your prices straight away.
           </p>
         </>
       )}
@@ -178,9 +126,14 @@ const inputClass =
 function UniversityField({
   error,
   onChange,
+  optional = false,
+  label = "University",
 }: {
   error?: string;
   onChange?: (university: string) => void;
+  /** A shop may not sit at one faculty, so it may leave this blank. */
+  optional?: boolean;
+  label?: string;
 }) {
   const [choice, setChoice] = useState("");
   const isOther = choice === OTHER_UNIVERSITY;
@@ -200,18 +153,18 @@ function UniversityField({
   }
 
   return (
-    <Field label="University" name="university" error={error}>
+    <Field label={label} name="university" error={error}>
       <select
         // Unnamed on purpose: the hidden input below is the single source
         // of what gets submitted. `required` still gates the form.
-        required
+        required={!optional}
         aria-label="University"
         value={choice}
         onChange={(event) => update(event.target.value, typed)}
         className={inputClass}
       >
-        <option value="" disabled>
-          Select your university
+        <option value="" disabled={!optional}>
+          {optional ? "No particular faculty" : "Select your university"}
         </option>
         {UNIVERSITIES.map((university) => (
           <option key={university.value} value={university.value}>
@@ -224,7 +177,7 @@ function UniversityField({
       {isOther && (
         <input
           type="text"
-          required
+          required={!optional}
           autoFocus
           aria-label="University name"
           placeholder="Type your university"

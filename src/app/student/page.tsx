@@ -115,39 +115,6 @@ export default async function StudentHomePage() {
         </ul>
       )}
 
-      <h2 className="px-5 pb-2 pt-7 text-micro uppercase text-ink-faint">You order from</h2>
-      <section className="mx-5 rounded-card border border-rule bg-card p-4">
-        {student.repName ? (
-          <>
-            <p className="font-display text-body">{student.repName}</p>
-            <dl className="mt-3 flex gap-6">
-              <div>
-                <dt className="flex items-center gap-1.5 text-caption text-ink-muted">
-                  <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-frasaco" />
-                  Frasaco
-                </dt>
-                <dd className="tnum mt-0.5 font-display text-body">
-                  ${student.frasacoPrice.toFixed(2)}
-                </dd>
-              </div>
-              <div>
-                <dt className="flex items-center gap-1.5 text-caption text-ink-muted">
-                  <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-copy-a" />
-                  Copy A
-                </dt>
-                <dd className="tnum mt-0.5 font-display text-body">
-                  ${student.copyAPrice.toFixed(2)}
-                </dd>
-              </div>
-            </dl>
-          </>
-        ) : (
-          <p className="text-small text-ink-muted">
-            No representative yet. Pick one from your profile to start ordering.
-          </p>
-        )}
-      </section>
-
       <StudentBottomNav />
     </main>
   );

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { countsAsLive, getRepContext, getStudentDetail } from "@/lib/rep/data";
+import { countsAsLive, getSupplierContext, getStudentDetail } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import { RepBottomNav } from "../../_components/bottom-nav";
+import { SupplierBottomNav } from "../../_components/bottom-nav";
 
 const STATUS_STYLE: Record<string, string> = {
   pending: "bg-warning/10 text-ink-muted",
@@ -11,7 +11,7 @@ const STATUS_STYLE: Record<string, string> = {
   cancelled: "bg-card-sunk text-ink-muted",
 };
 
-export default async function RepStudentDetailPage({
+export default async function SupplierStudentDetailPage({
   params,
 }: {
   params: Promise<{ studentId: string }>;
@@ -21,7 +21,7 @@ export default async function RepStudentDetailPage({
   if (!userId) redirect("/sign-in");
 
   const [rep, detail] = await Promise.all([
-    getRepContext(userId),
+    getSupplierContext(userId),
     getStudentDetail(userId, studentId),
   ]);
   if (!rep) redirect("/sign-in");
@@ -42,7 +42,7 @@ export default async function RepStudentDetailPage({
     <main className="mx-auto min-h-dvh max-w-md pb-28">
       <div className="flex items-center gap-4 px-6 pt-5">
         <Link
-          href="/rep/students"
+          href="/supplier/students"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-rule bg-card"
           aria-label="Back"
         >
@@ -105,7 +105,7 @@ export default async function RepStudentDetailPage({
         </div>
       )}
 
-      <RepBottomNav />
+      <SupplierBottomNav />
     </main>
   );
 }

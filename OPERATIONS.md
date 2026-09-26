@@ -6,23 +6,74 @@ If you ever feel unsure about a step, stop and ask before clicking — most thin
 
 ---
 
-## 1. Onboarding a new rep
+## 1. Approving a new supplier — the one job only you can do
 
-Reps sign themselves up — you don't create their account for them.
+Suppliers sign themselves up. **Nobody can order from them until you approve
+them by hand.** There is no admin screen for this, so it is a query you run in
+Supabase. Until you run it they see a screen telling them they are waiting for
+you, and students do not see them in the market at all.
 
-1. Tell the new rep to go to the site and sign up as **Representative**. They pick their own name, university, and set up their account.
-2. They collect their subscription fee from you (or you invoice them) **offline** — cash, Whish, bank transfer. The app has no payment step for this.
-3. Once they've paid, go into Supabase and mark them as paid:
-   - Open the [Supabase dashboard](https://supabase.com/dashboard) → your project.
-   - Left sidebar → **Table Editor**.
-   - Open the **representatives** table.
-   - Find their row (search by their name in the `display_name` column).
-   - Click into the `subscription_paid_until` cell for that row and set it to the date their subscription runs out (e.g. one year from today).
-   - Save.
+**Step 1 — see who is waiting.**
 
-That's it — nothing else needs to be created by hand. Students find this rep automatically in the sign-up list once they've registered.
+Supabase dashboard → **SQL Editor** (left sidebar) → **New query**. Paste this
+and press Run:
 
-**If a rep's subscription lapses:** clear or leave `subscription_paid_until` in the past — the spec treats an expired rep as read-only, but note that this isn't enforced in the app yet (Phase 4). For now, an expired rep can still work normally; treat the date as a reminder for yourself, not an automatic lock.
+```sql
+select s.id,
+       s.display_name,
+       s.kind,
+       s.university,
+       s.contact_phone,
+       p.full_name,
+       u.email,
+       s.created_at
+from public.suppliers s
+join public.profiles p on p.id = s.id
+join auth.users    u on u.id = s.id
+where s.status = 'pending_approval'
+order by s.created_at;
+```
+
+That is read-only. It lists everyone waiting, with the email they signed up
+with so you can check they are who they say they are.
+
+**Step 2 — approve one of them.**
+
+Copy the person's email from the list above into this query, then Run:
+
+```sql
+update public.suppliers
+set status = 'active'
+where id = (select id from auth.users where email = 'them@example.com')
+returning id, display_name, status;
+```
+
+The `returning` line means Supabase prints the row it changed. **If it prints
+nothing, nothing was approved** — the email did not match. Check for a typo and
+run it again.
+
+Approving takes effect within a minute for students (the market list is cached
+for that long); for the supplier themselves it is immediate on their next
+screen.
+
+**To un-approve someone** — they stopped supplying, or you approved the wrong
+person — the same query with `'suspended'` instead of `'active'`. Their past
+orders are untouched; they simply stop appearing in the market and cannot take
+new orders.
+
+```sql
+update public.suppliers
+set status = 'suspended'
+where id = (select id from auth.users where email = 'them@example.com')
+returning id, display_name, status;
+```
+
+The three states are `pending_approval`, `active` and `suspended`. Nothing
+else is valid — the database will reject a typo rather than silently accept it.
+
+**On the subscription fee:** you still collect it offline — cash, Whish, bank
+transfer. The app has no payment step for it. Approval is the lever: don't set
+someone `active` until they've paid you.
 
 ---
 
@@ -58,22 +109,30 @@ When a student messages you confused about an order, do this:
 
    You can search by name (fill in part of their name between the `%` signs) instead of email if that's easier — it matches partial names.
 4. Click **Run** (or press Cmd/Ctrl+Enter).
-5. You'll see every order that student has placed: which week, the total, whether it's paid, and whether the rep has confirmed/fulfilled it.
+5. You'll see every order that student has placed: which week, the total, whether it's paid, and whether the supplier has confirmed/fulfilled it.
 
 This is read-only — running this query can't change or break anything, so don't worry about clicking Run.
 
 ---
 
-## 4. Changing a rep's prices for them
+## 4. Changing a supplier's prices for them
 
-Reps can do this themselves under Settings in the app. If one asks you to do it instead:
+Suppliers do this themselves under Settings in the app. If one asks you to do
+it instead, SQL Editor → New query, with their email and the new prices:
 
-1. Supabase dashboard → **Table Editor** → **representatives** table.
-2. Find their row.
-3. Edit `frasaco_price` and/or `copy_a_price` directly (just the number, e.g. `2.50`).
-4. Save.
+```sql
+update public.suppliers
+set frasaco_price = 2.50,
+    copy_a_price  = 1.20
+where id = (select id from auth.users where email = 'them@example.com')
+returning display_name, frasaco_price, copy_a_price;
+```
 
-This only affects **future** orders. Every order already placed keeps the price it was charged at — that's a hard rule in the system, not just a setting, so you can't accidentally change a past order's total this way even if you tried.
+Again: if it prints nothing, nothing changed.
+
+This only affects **future** orders. Every order already placed keeps the price
+it was charged at — that's a hard rule in the system, not just a setting, so
+you can't accidentally change a past order's total this way even if you tried.
 
 ---
 
@@ -98,13 +157,13 @@ This only affects **future** orders. Every order already placed keeps the price 
 
 ## 6. The test Supabase project (one-time setup)
 
-There is one rule in DentalOrder that everything else rests on: **a rep
+There is one rule in DentalOrder that everything else rests on: **a supplier
 changing their prices must never change what a past order cost.** A student
-who ordered at $2.50 owes $2.50, forever, even if the rep moves to $3.00
+who ordered at $2.50 owes $2.50, forever, even if the supplier moves to $3.00
 tomorrow.
 
 That rule lives in the database, not in the app code, so no ordinary test can
-check it. Instead, a GitHub Action signs up a fake rep and a fake student,
+check it. Instead, a GitHub Action signs up a fake supplier and a fake student,
 places a real order, changes the price, and checks the old order did not move.
 If it ever does move, the build goes red.
 
@@ -166,4 +225,4 @@ check for this yet.
 
 - **Free tier also caps database size, bandwidth, and monthly active users.** These limits are generous for a few hundred students placing weekly orders, but they do exist and Supabase's exact numbers change over time — check the current limits on Supabase's own pricing page if the app ever feels slow or starts rejecting sign-ins, since hitting a cap is a likely cause. The fix is upgrading the Supabase plan, not a code change.
 
-- **No payment processing in the app.** All money — rep subscriptions, student payments to reps — happens outside the app (cash, Whish, bank transfer). The app only tracks who owes what and who's paid; it never moves money.
+- **No payment processing in the app.** All money — supplier subscriptions, student payments to suppliers — happens outside the app (cash, Whish, bank transfer). The app only tracks who owes what and who's paid; it never moves money.

@@ -16,7 +16,7 @@ export default async function OrderConfirmedPage({
   const supabase = await createClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, week_number, total_price, order_items(quantity), representatives(display_name)")
+    .select("id, week_number, total_price, order_items(quantity), suppliers(display_name)")
     .eq("id", orderId)
     .eq("order_type", "tooth")
     .single();
@@ -25,7 +25,7 @@ export default async function OrderConfirmedPage({
 
   const toothCount = (order.order_items ?? []).reduce((sum, item) => sum + item.quantity, 0);
   const total = Number(order.total_price);
-  const repName = order.representatives?.display_name ?? "your rep";
+  const supplierName = order.suppliers?.display_name ?? "your supplier";
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-10 pt-14">
@@ -35,7 +35,7 @@ export default async function OrderConfirmedPage({
           Order placed
         </h1>
         <p className="confirm-stagger mt-1 text-body text-ink-muted" style={stagger(1)}>
-          {repName} has your week <span className="tnum">{order.week_number}</span> order.
+          {supplierName} has your week <span className="tnum">{order.week_number}</span> order.
         </p>
       </div>
 

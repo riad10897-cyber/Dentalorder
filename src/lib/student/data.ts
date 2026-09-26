@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { getRepDirectory } from "@/lib/reps/directory";
+
 import type { ToothType } from "@/lib/supabase/types";
 
 export interface StudentContext {
@@ -9,28 +9,6 @@ export interface StudentContext {
   university: string | null;
   yearOfStudy: number | null;
   section: string | null;
-  repId: string | null;
-  repName: string | null;
-  frasacoPrice: number;
-  copyAPrice: number;
-}
-
-const DEFAULT_FRASACO_PRICE = 2.5;
-const DEFAULT_COPY_A_PRICE = 1.2;
-
-export interface AvailableRep {
-  id: string;
-  displayName: string;
-  university: string | null;
-  section: string | null;
-  frasacoPrice: number;
-  copyAPrice: number;
-}
-
-// Same public list the sign-up picker uses, so it shares that cache
-// rather than paying for the query again.
-export async function listAvailableReps(): Promise<AvailableRep[]> {
-  return getRepDirectory();
 }
 
 export async function getStudentContext(
@@ -41,46 +19,35 @@ export async function getStudentContext(
 ): Promise<StudentContext | null> {
   const supabase = await createClient();
 
-  const [{ data: profile }, { data: studentRep }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, university, year_of_study, section")
-      .eq("id", userId)
-      .single(),
-    supabase
-      .from("student_reps")
-      .select("rep_id, representatives(display_name, frasaco_price, copy_a_price)")
-      .eq("student_id", userId)
-      .maybeSingle(),
-  ]);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, university, year_of_study, section")
+    .eq("id", userId)
+    .single();
 
   if (!profile) return null;
 
-  const rep = studentRep?.representatives ?? null;
-
   return {
     userId,
-    fullName: profile?.full_name ?? "",
-    university: profile?.university ?? null,
-    yearOfStudy: profile?.year_of_study ?? null,
-    section: profile?.section ?? null,
-    repId: studentRep?.rep_id ?? null,
-    repName: rep?.display_name ?? null,
-    frasacoPrice: rep ? Number(rep.frasaco_price) : DEFAULT_FRASACO_PRICE,
-    copyAPrice: rep ? Number(rep.copy_a_price) : DEFAULT_COPY_A_PRICE,
+    fullName: profile.full_name ?? "",
+    university: profile.university ?? null,
+    yearOfStudy: profile.year_of_study ?? null,
+    section: profile.section ?? null,
   };
 }
 
 export interface OrderDefaults {
   nextWeek: number;
   lastToothType: ToothType;
+  /** Who they ordered from last, so the market can put them first. */
+  lastSupplierId: string | null;
 }
 
 export async function getOrderDefaults(userId: string): Promise<OrderDefaults> {
   const supabase = await createClient();
   const { data: orders } = await supabase
     .from("orders")
-    .select("week_number, created_at, order_items(tooth_type, quantity)")
+    .select("week_number, created_at, supplier_id, order_items(tooth_type, quantity)")
     .eq("student_id", userId)
     .eq("order_type", "tooth")
     .order("created_at", { ascending: false });
@@ -111,7 +78,7 @@ export async function getOrderDefaults(userId: string): Promise<OrderDefaults> {
   }
   const lastToothType: ToothType = byType.copy_a > byType.frasaco ? "copy_a" : "frasaco";
 
-  return { nextWeek, lastToothType };
+  return { nextWeek, lastToothType, lastSupplierId: lastOrder?.supplier_id ?? null };
 }
 
 export interface StudentOrderSummary {
@@ -121,6 +88,8 @@ export interface StudentOrderSummary {
   paymentStatus: string;
   fulfillmentStatus: string;
   rejectionReason: string | null;
+  supplierId: string;
+  supplierName: string;
   createdAt: string;
   items: { toothNumber: number; toothType: ToothType; quantity: number }[];
 }
@@ -136,7 +105,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, order_items(tooth_number, tooth_type, quantity)",
+      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, supplier_id, suppliers(display_name), order_items(tooth_number, tooth_type, quantity)",
     )
     .eq("student_id", userId)
     .eq("order_type", "tooth")
@@ -149,6 +118,8 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
     paymentStatus: order.payment_status,
     fulfillmentStatus: order.fulfillment_status,
     rejectionReason: order.rejection_reason,
+    supplierId: order.supplier_id!,
+    supplierName: order.suppliers?.display_name ?? "Unknown supplier",
     createdAt: order.created_at,
     items: (order.order_items ?? [])
       .filter((item) => item.tooth_number !== null && item.tooth_type !== null)

@@ -85,7 +85,7 @@ export async function rejectOrder(input: {
   return { ok: true };
 }
 
-export async function updateRepPrices(input: {
+export async function updateSupplierPrices(input: {
   frasacoPrice: number;
   copyAPrice: number;
 }): Promise<ActionResult> {
@@ -99,7 +99,7 @@ export async function updateRepPrices(input: {
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from("representatives")
+    .from("suppliers")
     .update({
       frasaco_price: parsed.data.frasacoPrice.toFixed(2),
       copy_a_price: parsed.data.copyAPrice.toFixed(2),

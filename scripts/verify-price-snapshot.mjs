@@ -1,7 +1,7 @@
 // The rule CLAUDE.md puts above all the others: "A price change must never
 // alter a past order's total."
 //
-// It lives in SQL — submit_tooth_order copies the rep's price onto every
+// It lives in SQL — submit_tooth_order copies the supplier's price onto every
 // line at insert, and a trigger blocks any later edit to the money fields.
 // None of that is reachable from a unit test, so until now it was proven
 // only by someone running a probe by hand. This runs in CI and fails the
@@ -62,19 +62,26 @@ async function clientFor(email) {
 const money = (v) => Number(v).toFixed(2);
 
 try {
-  const rep = await mkUser("rep", { role: "rep", full_name: "Snapshot Rep", university: "BAU" });
+  const supplier = await mkUser("supplier", {
+    role: "supplier", full_name: "Snapshot Supplier", university: "BAU",
+  });
   const student = await mkUser("student", {
     role: "student", full_name: "Snapshot Student", university: "BAU", year_of_study: 3,
   });
-  await admin.from("representatives").update({ frasaco_price: 2.5, copy_a_price: 1.2 }).eq("id", rep.id);
-  await admin.from("student_reps").upsert({ student_id: student.id, rep_id: rep.id });
+  // A supplier is only orderable once approved, and there is no binding
+  // table any more — the student names the supplier on the order itself.
+  await admin
+    .from("suppliers")
+    .update({ frasaco_price: 2.5, copy_a_price: 1.2, status: "active" })
+    .eq("id", supplier.id);
 
   const sc = await clientFor(student.email);
-  const rc = await clientFor(rep.email);
+  const supplierClient = await clientFor(supplier.email);
 
   // 2 x Frasaco @2.50 + 1 x Copy A @1.20 + 3 x Frasaco @2.50 = 13.70.
   // Both types on tooth 11 on purpose: the line that has broken twice.
   const { data: orderId, error: rpcError } = await sc.rpc("submit_tooth_order", {
+    p_supplier_id: supplier.id,
     p_week_number: 5,
     p_items: [
       { tooth_number: 11, tooth_type: "frasaco", quantity: 2 },
@@ -95,7 +102,7 @@ try {
 
   const before = await readOrder();
   check(
-    "the order totals what the rep's prices said at the time",
+    "the order totals what the supplier's prices said at the time",
     money(before.subtotal) === "13.70" && money(before.total_price) === "13.70",
     `subtotal ${money(before.subtotal)}, total ${money(before.total_price)}`,
   );
@@ -106,15 +113,15 @@ try {
   );
 
   // The event the rule exists for.
-  const { error: priceError } = await rc
-    .from("representatives")
+  const { error: priceError } = await supplierClient
+    .from("suppliers")
     .update({ frasaco_price: 9.99, copy_a_price: 7.77 })
-    .eq("id", rep.id);
-  if (priceError) throw new Error(`the rep could not change their prices: ${priceError.message}`);
+    .eq("id", supplier.id);
+  if (priceError) throw new Error(`the supplier could not change their prices: ${priceError.message}`);
   const { data: repNow } = await admin
-    .from("representatives").select("frasaco_price, copy_a_price").eq("id", rep.id).single();
+    .from("suppliers").select("frasaco_price, copy_a_price").eq("id", supplier.id).single();
   check(
-    "the rep's new prices really did take effect",
+    "the supplier's new prices really did take effect",
     money(repNow.frasaco_price) === "9.99" && money(repNow.copy_a_price) === "7.77",
     `now ${money(repNow.frasaco_price)} / ${money(repNow.copy_a_price)}`,
     // If this ever fails the test below proves nothing, so it is checked first.
@@ -141,7 +148,7 @@ try {
   // A new order at the new prices, to show the snapshot is a snapshot and
   // not the prices being frozen everywhere.
   const { data: laterId } = await sc.rpc("submit_tooth_order", {
-    p_week_number: 6, p_items: [{ tooth_number: 11, tooth_type: "frasaco", quantity: 2 }],
+    p_supplier_id: supplier.id, p_week_number: 6, p_items: [{ tooth_number: 11, tooth_type: "frasaco", quantity: 2 }],
   });
   const { data: later } = await admin.from("orders").select("subtotal").eq("id", laterId).single();
   check(
@@ -151,15 +158,15 @@ try {
   );
 
   // Nothing may rewrite the money on an order after the fact — not the
-  // student, not the rep who owns it, not the secret key.
+  // student, not the supplier who owns it, not the secret key.
   const { error: studentEdit } = await sc.from("orders").update({ total_price: 0.01 }).eq("id", orderId);
-  const { error: repEdit } = await rc.from("orders").update({ total_price: 0.01 }).eq("id", orderId);
+  const { error: repEdit } = await supplierClient.from("orders").update({ total_price: 0.01 }).eq("id", orderId);
   const { error: adminEdit } = await admin.from("orders").update({ total_price: 0.01 }).eq("id", orderId);
   const final = await readOrder();
   check(
     "no role can rewrite the total on an existing order",
     money(final.total_price) === "13.70",
-    `student ${studentEdit ? "blocked" : "no error"}, rep ${repEdit ? "blocked" : "no error"}, ` +
+    `student ${studentEdit ? "blocked" : "no error"}, supplier ${repEdit ? "blocked" : "no error"}, ` +
       `secret key ${adminEdit ? "blocked" : "no error"}; persisted ${money(final.total_price)}`,
   );
 
@@ -182,7 +189,6 @@ try {
     await admin.from("order_items").delete().eq("order_id", o);
     await admin.from("orders").delete().eq("id", o);
   }
-  await admin.from("student_reps").delete().in("student_id", ids);
   for (const id of [...ids].reverse()) await admin.auth.admin.deleteUser(id).catch(() => {});
   console.log("\ntest accounts cleaned up");
 }

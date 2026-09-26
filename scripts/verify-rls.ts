@@ -75,7 +75,7 @@ async function signInAs(email: string): Promise<SupabaseClient<Database>> {
 }
 
 async function cleanup() {
-  // Orders/order_items first (orders.student_id, .rep_id and .supplier_id
+  // Orders/order_items first (orders.student_id and .supplier_id
   // are all ON DELETE RESTRICT, so a leftover order blocks user deletion).
   // Delete by tracked id, and defensively by owning user too, in case a
   // check that was supposed to be denied wasn't (leaking an extra row).
@@ -84,14 +84,14 @@ async function cleanup() {
     if (error) console.error(`cleanup: could not delete test orders: ${error.message}`);
   }
   if (createdUserIds.length > 0) {
-    for (const column of ["student_id", "rep_id", "supplier_id"] as const) {
+    for (const column of ["student_id", "supplier_id"] as const) {
       const { error } = await admin.from("orders").delete().in(column, createdUserIds);
       if (error) console.error(`cleanup: could not delete orders by ${column}: ${error.message}`);
     }
   }
-  // Delete users in reverse creation order: students (whose student_reps
-  // row is ON DELETE CASCADE) before the reps they point to (student_reps.rep_id
-  // is ON DELETE RESTRICT, so a rep can't go while a student still references it).
+  // Delete users in reverse creation order. There is no binding table any
+  // more, so the only thing holding a supplier down is their orders — and
+  // those went above.
   for (const id of [...createdUserIds].reverse()) {
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) console.error(`cleanup: could not delete user ${id}: ${error.message}`);
@@ -102,20 +102,23 @@ async function main() {
   console.log(`\nDentalOrder RLS verification — run ${RUN_ID}\n`);
 
   // ── Fixtures ──
-  const repAEmail = `rls-rep-a-${RUN_ID}@test.dentalorder.dev`;
-  const repBEmail = `rls-rep-b-${RUN_ID}@test.dentalorder.dev`;
+  // Two student sellers and one shop. Reps are gone: a student who sells
+  // teeth and a shop that sells products are both rows in `suppliers`,
+  // which is exactly why "can A read B's orders" has to be re-asked.
+  const sellerAEmail = `rls-seller-a-${RUN_ID}@test.dentalorder.dev`;
+  const sellerBEmail = `rls-seller-b-${RUN_ID}@test.dentalorder.dev`;
   const supplierAEmail = `rls-supplier-a-${RUN_ID}@test.dentalorder.dev`;
   const studentAEmail = `rls-student-a-${RUN_ID}@test.dentalorder.dev`;
   const studentBEmail = `rls-student-b-${RUN_ID}@test.dentalorder.dev`;
 
-  const repAId = await createUser(repAEmail, {
-    role: "rep",
-    full_name: "RLS Rep A",
+  const sellerAId = await createUser(sellerAEmail, {
+    role: "supplier",
+    full_name: "RLS Seller A",
     university: "BAU",
   });
-  await createUser(repBEmail, {
-    role: "rep",
-    full_name: "RLS Rep B",
+  await createUser(sellerBEmail, {
+    role: "supplier",
+    full_name: "RLS Seller B",
     university: "BAU",
   });
   const supplierAId = await createUser(supplierAEmail, {
@@ -128,23 +131,21 @@ async function main() {
     role: "student",
     full_name: "RLS Student A",
     university: "BAU",
-    rep_id: repAId,
   });
   await createUser(studentBEmail, {
     role: "student",
     full_name: "RLS Student B",
     university: "BAU",
-    rep_id: repAId,
   });
 
-  // Seed a tooth order (student A -> rep A) and a store order (student A -> supplier A)
+  // Seed a tooth order (student A -> supplier A) and a store order (student A -> supplier A)
   // directly with the service-role client, bypassing RLS, so we have real rows to attack.
   const { data: toothOrder, error: toothOrderErr } = await admin
     .from("orders")
     .insert({
       order_type: "tooth",
       student_id: studentAId,
-      rep_id: repAId,
+      supplier_id: sellerAId,
       week_number: 1,
       subtotal: "10.00",
       total_price: "10.00",
@@ -173,6 +174,7 @@ async function main() {
   }
 
   await admin.from("suppliers").update({ status: "active" }).eq("id", supplierAId);
+  await admin.from("suppliers").update({ status: "active" }).eq("id", sellerAId);
 
   const { data: storeOrder, error: storeOrderErr } = await admin
     .from("orders")
@@ -193,17 +195,17 @@ async function main() {
   createdOrderIds.push(storeOrder.id);
 
   // ── Sign in as each role ──
-  const repA = await signInAs(repAEmail);
-  const repB = await signInAs(repBEmail);
+  const sellerA = await signInAs(sellerAEmail);
+  const sellerB = await signInAs(sellerBEmail);
   const supplierA = await signInAs(supplierAEmail);
   const studentA = await signInAs(studentAEmail);
   const studentB = await signInAs(studentBEmail);
 
   // Sanity check: the rightful owner CAN see their own order.
   {
-    const { data } = await repA.from("orders").select("id").eq("id", toothOrder.id);
+    const { data } = await sellerA.from("orders").select("id").eq("id", toothOrder.id);
     record(
-      "sanity: rep A can read their own tooth order",
+      "sanity: seller A can read their own tooth order",
       (data?.length ?? 0) === 1,
       `expected 1 row, got ${data?.length ?? 0}`,
     );
@@ -217,17 +219,19 @@ async function main() {
     );
   }
 
-  // 1. A rep cannot read another rep's orders through the API.
+  // 1. A supplier cannot read another supplier's orders through the API.
   {
-    const { data } = await repB.from("orders").select("id").eq("id", toothOrder.id);
+    const { data } = await sellerB.from("orders").select("id").eq("id", toothOrder.id);
     record(
-      "rep B cannot read rep A's tooth order",
+      "seller B cannot read seller A's tooth order",
       (data?.length ?? 0) === 0,
       `expected 0 rows, got ${data?.length ?? 0}`,
     );
   }
 
-  // 2. A supplier cannot read tooth orders.
+  // 2. A shop supplier cannot read tooth orders. Supplier A has a store
+  //    order with this same student, so being their supplier for one thing
+  //    must not open the other.
   {
     const { data } = await supplierA.from("orders").select("id").eq("id", toothOrder.id);
     record(
@@ -275,7 +279,7 @@ async function main() {
   // changes. So the only reliable check is the row's actual state
   // afterwards, read back with the service-role client.
   {
-    const { error } = await repA
+    const { error } = await sellerA
       .from("orders")
       .update({ total_price: "999.00" })
       .eq("id", toothOrder.id);
@@ -286,7 +290,7 @@ async function main() {
       .single();
     const blocked = error !== null || recheck?.total_price === toothOrder.total_price;
     record(
-      "rep A (order owner) cannot change total_price on an existing tooth order",
+      "seller A (order owner) cannot change total_price on an existing tooth order",
       blocked,
       error
         ? `blocked: ${error.message}`
@@ -313,7 +317,7 @@ async function main() {
     );
   }
   {
-    const { error } = await repA
+    const { error } = await sellerA
       .from("order_items")
       .update({ unit_price: "0.01" })
       .eq("id", toothItem.id);
@@ -324,7 +328,7 @@ async function main() {
       .single();
     const blocked = error !== null || recheck?.unit_price === toothItem.unit_price;
     record(
-      "rep A cannot change unit_price on an existing order item",
+      "seller A cannot change unit_price on an existing order item",
       blocked,
       error
         ? `blocked: ${error.message}`
@@ -354,12 +358,33 @@ async function main() {
     );
   }
 
+  // Bonus: one supplier cannot reprice another. Prices are the whole
+  //   money model, and they now live on a table every supplier can write
+  //   their own row of — so the row filter is what stops seller B from
+  //   setting seller A's Frasaco price to a cent.
+  {
+    await sellerB.from("suppliers").update({ frasaco_price: "0.01" }).eq("id", sellerAId);
+    const { data } = await admin
+      .from("suppliers")
+      .select("frasaco_price")
+      .eq("id", sellerAId)
+      .single();
+    // Asserting the stored price, not the status code: PostgREST reports a
+    // row filter as a successful update of zero rows, so an error-shaped
+    // check here would pass while the price moved.
+    record(
+      "seller B cannot change seller A's prices",
+      Number(data?.frasaco_price) !== 0.01,
+      `seller A's frasaco_price is now ${data?.frasaco_price}`,
+    );
+  }
+
   // Bonus: a student cannot place an order on another student's behalf.
   {
     const { error } = await studentB.from("orders").insert({
       order_type: "tooth",
       student_id: studentAId,
-      rep_id: repAId,
+      supplier_id: sellerAId,
       week_number: 2,
       subtotal: "5.00",
       total_price: "5.00",

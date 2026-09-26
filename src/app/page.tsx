@@ -1,27 +1,13 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { homeForUser } from "@/lib/supabase/home";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import type { UserRole } from "@/lib/supabase/types";
 
-const ROLE_HOME: Record<UserRole, string> = {
-  student: "/student",
-  rep: "/rep",
-  supplier: "/supplier",
-  admin: "/admin",
-};
 
 export default async function LandingPage() {
   const userId = await getVerifiedUserId();
 
   if (userId) {
-    const supabase = await createClient();
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    redirect(profile ? ROLE_HOME[profile.role] : "/sign-in");
+    redirect(await homeForUser(userId));
   }
 
   return (

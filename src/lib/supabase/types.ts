@@ -13,6 +13,7 @@ export type FulfillmentStatus =
   | "rejected";
 export type ToothType = "frasaco" | "copy_a";
 export type AccountStatus = "active" | "suspended" | "pending_approval";
+export type SupplierKind = "student_supplier" | "shop";
 
 export interface SubmitToothOrderItem {
   tooth_number: number;
@@ -35,27 +36,6 @@ export interface SubmitToothOrderItem {
 /* eslint-disable @typescript-eslint/no-unused-vars -- each REL_* constant is
    read only through `typeof` in the Relationships tuples below; that's a type
    position, not a value read, so the linter can't see the usage. */
-const REL_REPRESENTATIVES_PROFILES = {
-  foreignKeyName: "representatives_id_fkey" as const,
-  columns: ["id"],
-  isOneToOne: true as const,
-  referencedRelation: "profiles" as const,
-  referencedColumns: ["id"],
-};
-const REL_STUDENT_REPS_PROFILES = {
-  foreignKeyName: "student_reps_student_id_fkey" as const,
-  columns: ["student_id"],
-  isOneToOne: true as const,
-  referencedRelation: "profiles" as const,
-  referencedColumns: ["id"],
-};
-const REL_STUDENT_REPS_REPRESENTATIVES = {
-  foreignKeyName: "student_reps_rep_id_fkey" as const,
-  columns: ["rep_id"],
-  isOneToOne: false as const,
-  referencedRelation: "representatives" as const,
-  referencedColumns: ["id"],
-};
 const REL_SUPPLIERS_PROFILES = {
   foreignKeyName: "suppliers_id_fkey" as const,
   columns: ["id"],
@@ -82,13 +62,6 @@ const REL_ORDERS_PROFILES = {
   columns: ["student_id"],
   isOneToOne: false as const,
   referencedRelation: "profiles" as const,
-  referencedColumns: ["id"],
-};
-const REL_ORDERS_REPRESENTATIVES = {
-  foreignKeyName: "orders_rep_id_fkey" as const,
-  columns: ["rep_id"],
-  isOneToOne: false as const,
-  referencedRelation: "representatives" as const,
   referencedColumns: ["id"],
 };
 const REL_ORDERS_SUPPLIERS = {
@@ -147,57 +120,21 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
-        Relationships: [typeof REL_REPRESENTATIVES_PROFILES, typeof REL_STUDENT_REPS_PROFILES, typeof REL_SUPPLIERS_PROFILES, typeof REL_ORDERS_PROFILES];
-      };
-      representatives: {
-        Row: {
-          id: string;
-          display_name: string;
-          university: string;
-          year_of_study: number | null;
-          section: string | null;
-          frasaco_price: string;
-          copy_a_price: string;
-          whish_number: string | null;
-          subscription_paid_until: string | null;
-          price_updated_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id: string;
-          display_name: string;
-          university: string;
-          year_of_study?: number | null;
-          section?: string | null;
-          frasaco_price?: string;
-          copy_a_price?: string;
-          whish_number?: string | null;
-          subscription_paid_until?: string | null;
-          price_updated_at?: string | null;
-          created_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["representatives"]["Insert"]>;
-        Relationships: [typeof REL_REPRESENTATIVES_PROFILES, typeof REL_STUDENT_REPS_REPRESENTATIVES, typeof REL_ORDERS_REPRESENTATIVES];
-      };
-      student_reps: {
-        Row: {
-          student_id: string;
-          rep_id: string;
-          assigned_at: string;
-        };
-        Insert: {
-          student_id: string;
-          rep_id: string;
-          assigned_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["student_reps"]["Insert"]>;
-        Relationships: [typeof REL_STUDENT_REPS_PROFILES, typeof REL_STUDENT_REPS_REPRESENTATIVES];
+        Relationships: [typeof REL_SUPPLIERS_PROFILES, typeof REL_ORDERS_PROFILES];
       };
       suppliers: {
         Row: {
           id: string;
-          business_name: string;
-          contact_phone: string;
+          kind: SupplierKind;
+          display_name: string;
+          university: string | null;
+          frasaco_price: string;
+          copy_a_price: string;
+          whish_number: string | null;
+          price_updated_at: string | null;
+          subscription_paid_until: string | null;
+          business_name: string | null;
+          contact_phone: string | null;
           contact_email: string | null;
           logo_url: string | null;
           description: string | null;
@@ -208,8 +145,16 @@ export interface Database {
         };
         Insert: {
           id: string;
-          business_name: string;
-          contact_phone: string;
+          kind?: SupplierKind;
+          display_name: string;
+          university?: string | null;
+          frasaco_price?: string;
+          copy_a_price?: string;
+          whish_number?: string | null;
+          price_updated_at?: string | null;
+          subscription_paid_until?: string | null;
+          business_name?: string | null;
+          contact_phone: string | null;
           contact_email?: string | null;
           logo_url?: string | null;
           description?: string | null;
@@ -274,7 +219,6 @@ export interface Database {
           id: string;
           order_type: OrderType;
           student_id: string;
-          rep_id: string | null;
           supplier_id: string | null;
           week_number: number | null;
           subtotal: string;
@@ -293,7 +237,6 @@ export interface Database {
           id?: string;
           order_type: OrderType;
           student_id: string;
-          rep_id?: string | null;
           supplier_id?: string | null;
           week_number?: number | null;
           subtotal?: string;
@@ -309,7 +252,7 @@ export interface Database {
           rejection_reason?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
-        Relationships: [typeof REL_ORDERS_PROFILES, typeof REL_ORDERS_REPRESENTATIVES, typeof REL_ORDERS_SUPPLIERS, typeof REL_ORDER_ITEMS_ORDERS];
+        Relationships: [typeof REL_ORDERS_PROFILES, typeof REL_ORDERS_SUPPLIERS, typeof REL_ORDER_ITEMS_ORDERS];
       };
       order_items: {
         Row: {
@@ -367,14 +310,14 @@ export interface Database {
       };
     };
     Views: {
-      // The sanctioned public window onto representatives. Four columns:
-      // no prices, no whish_number, no subscription state.
-      rep_directory: {
+      // The sanctioned public window onto suppliers. The market a student
+      // chooses between: no whish_number, no subscription state.
+      supplier_directory: {
         Row: {
           id: string;
           display_name: string;
+          kind: SupplierKind;
           university: string | null;
-          section: string | null;
           frasaco_price: string;
           copy_a_price: string;
         };
@@ -394,7 +337,7 @@ export interface Database {
         Returns: boolean;
       };
       submit_tooth_order: {
-        Args: { p_week_number: number; p_items: SubmitToothOrderItem[] };
+        Args: { p_supplier_id: string; p_week_number: number; p_items: SubmitToothOrderItem[] };
         Returns: string;
       };
     };

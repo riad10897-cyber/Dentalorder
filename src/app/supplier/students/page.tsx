@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getRepContext, listRepStudents } from "@/lib/rep/data";
+import { getSupplierContext, listSupplierStudents } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import { RepBottomNav } from "../_components/bottom-nav";
+import { SupplierBottomNav } from "../_components/bottom-nav";
 
 const AVATAR_COLORS = [
   { bg: "bg-ink/12", text: "text-ink" },
@@ -28,13 +28,13 @@ function initials(name: string) {
   );
 }
 
-export default async function RepStudentsPage() {
+export default async function SupplierStudentsPage() {
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
   const [rep, students] = await Promise.all([
-    getRepContext(userId),
-    listRepStudents(userId),
+    getSupplierContext(userId),
+    listSupplierStudents(userId),
   ]);
   if (!rep) redirect("/sign-in");
 
@@ -47,7 +47,7 @@ export default async function RepStudentsPage() {
 
       {students.length === 0 ? (
         <div className="mx-6 mt-8 rounded-card border border-dashed border-rule p-6 text-center text-sm text-ink-muted">
-          No students have picked you as their rep yet.
+          No student has ordered from you yet.
         </div>
       ) : (
         <div className="mt-5 flex flex-col gap-2 px-6">
@@ -56,7 +56,7 @@ export default async function RepStudentsPage() {
             return (
               <Link
                 key={student.studentId}
-                href={`/rep/students/${student.studentId}`}
+                href={`/supplier/students/${student.studentId}`}
                 className="flex items-center gap-3 rounded-lg border border-rule bg-card px-3.5 py-3"
               >
                 <div
@@ -82,7 +82,7 @@ export default async function RepStudentsPage() {
         </div>
       )}
 
-      <RepBottomNav />
+      <SupplierBottomNav />
     </main>
   );
 }

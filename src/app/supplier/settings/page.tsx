@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
-import { getRepContext } from "@/lib/rep/data";
+import { getSupplierContext } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import { RepBottomNav } from "../_components/bottom-nav";
+import { SupplierBottomNav } from "../_components/bottom-nav";
 import { PricingForm } from "./pricing-form";
 import { signOut } from "@/app/actions/auth";
 
 export default async function RepSettingsPage() {
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
-  const rep = await getRepContext(userId);
+  const rep = await getSupplierContext(userId);
   if (!rep) redirect("/sign-in");
 
   return (
@@ -38,7 +38,7 @@ export default async function RepSettingsPage() {
         </button>
       </form>
 
-      <RepBottomNav />
+      <SupplierBottomNav />
     </main>
   );
 }

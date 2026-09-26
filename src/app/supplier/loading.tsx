@@ -1,6 +1,6 @@
-import { RepBottomNav } from "./_components/bottom-nav";
+import { SupplierBottomNav } from "./_components/bottom-nav";
 
-export default function RepOrdersLoading() {
+export default function SupplierOrdersLoading() {
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
       <header className="px-5 pt-6">
@@ -37,7 +37,7 @@ export default function RepOrdersLoading() {
         ))}
       </div>
 
-      <RepBottomNav />
+      <SupplierBottomNav />
     </main>
   );
 }

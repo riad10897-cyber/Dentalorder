@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateRepPrices } from "../_actions/orders";
+import { updateSupplierPrices } from "../_actions/orders";
 
 export function PricingForm({
   frasacoPrice,
@@ -20,7 +20,7 @@ export function PricingForm({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateRepPrices({
+      const result = await updateSupplierPrices({
         frasacoPrice: Number(frasaco),
         copyAPrice: Number(copyA),
       });

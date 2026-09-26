@@ -4,22 +4,12 @@ import { redirect } from "next/navigation";
 import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { signInSchema, signUpSchema } from "@/lib/validation/auth";
-import type { UserRole } from "@/lib/supabase/types";
-import { REP_DIRECTORY_TAG } from "@/lib/reps/directory";
+import { homeForUser } from "@/lib/supabase/home";
+import { SUPPLIER_DIRECTORY_TAG } from "@/lib/supplier/directory";
 
 export type FormState = {
   error: string | null;
   fieldErrors: Record<string, string>;
-};
-
-// Keyed by the full UserRole (not just the sign-up roles) because sign-in
-// also has to route an existing admin account, even though admins can't
-// sign up through this form.
-const ROLE_HOME: Record<UserRole, string> = {
-  student: "/student",
-  rep: "/rep",
-  supplier: "/supplier",
-  admin: "/admin",
 };
 
 function firstFieldErrors(issues: { path: PropertyKey[]; message: string }[]) {
@@ -60,10 +50,12 @@ export async function signUp(
     return { error: error.message, fieldErrors: {} };
   }
 
-  // A new rep changes the public directory every student picks from, so
-  // drop that cache rather than leaving them invisible until it expires.
-  if (role === "rep") {
-    revalidateTag(REP_DIRECTORY_TAG);
+  // A new supplier changes the market every student picks from, so drop
+  // that cache rather than leaving them invisible until it expires. They
+  // only appear once approved, but the tag is cheap and the approval may
+  // land before the ceiling does.
+  if (role === "supplier") {
+    revalidateTag(SUPPLIER_DIRECTORY_TAG);
   }
 
   if (!data.session) {
@@ -71,7 +63,9 @@ export async function signUp(
     redirect("/check-email");
   }
 
-  redirect(ROLE_HOME[role]);
+  // A brand-new supplier has a suppliers row by now (the sign-up trigger
+  // writes it), so the same routing rule serves both roles.
+  redirect(await homeForUser(data.user!.id));
 }
 
 export async function signIn(
@@ -95,13 +89,7 @@ export async function signIn(
     return { error: "Incorrect email or password.", fieldErrors: {} };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  redirect(profile ? ROLE_HOME[profile.role] : "/");
+  redirect(await homeForUser(data.user.id));
 }
 
 export async function signOut() {

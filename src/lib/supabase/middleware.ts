@@ -1,15 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database, UserRole } from "./types";
+import type { Database } from "./types";
 
-const ROLE_HOME: Record<UserRole, string> = {
-  student: "/student",
-  rep: "/rep",
-  supplier: "/supplier",
-  admin: "/admin",
-};
-
-const PROTECTED_PREFIXES = ["/student", "/rep", "/supplier", "/admin"];
+const PROTECTED_PREFIXES = ["/student", "/supplier", "/admin"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -56,22 +49,38 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (isProtected && userId) {
-    // Role still comes from the profiles table, not from the JWT's
-    // user_metadata: metadata is writable by the user themselves, so
-    // routing on it would let anyone put themselves in another role's
-    // section. RLS would still hold, but the redirect would be wrong.
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
+    // Supplying is a row in suppliers, not a role — that is what lets one
+    // account be both a student and a supplier. So routing asks two
+    // questions rather than one, in parallel.
+    const [{ data: profile }, { data: supplier }] = await Promise.all([
+      // Role still comes from the profiles table, not from the JWT's
+      // user_metadata: metadata is writable by the user themselves, so
+      // routing on it would let anyone put themselves in another role's
+      // section. RLS would still hold, but the redirect would be wrong.
+      supabase.from("profiles").select("role").eq("id", userId).single(),
+      supabase.from("suppliers").select("id").eq("id", userId).maybeSingle(),
+    ]);
 
     const role = profile?.role;
-    const home = role ? ROLE_HOME[role] : "/sign-in";
-
-    if (!role || !path.startsWith(home)) {
+    if (!role) {
       const url = request.nextUrl.clone();
-      url.pathname = home;
+      url.pathname = "/sign-in";
+      return NextResponse.redirect(url);
+    }
+
+    const supplies = Boolean(supplier);
+    const allowed =
+      path.startsWith("/admin") ? role === "admin"
+      : path.startsWith("/supplier") ? supplies
+      : path.startsWith("/student") ? true
+      : false;
+
+    if (!allowed) {
+      const url = request.nextUrl.clone();
+      // A pending supplier still lands on the supplier screens — the
+      // dashboard tells them they are pending. Sending them to /student
+      // instead would hide the one screen that explains the wait.
+      url.pathname = role === "admin" ? "/admin" : supplies ? "/supplier" : "/student";
       return NextResponse.redirect(url);
     }
   }

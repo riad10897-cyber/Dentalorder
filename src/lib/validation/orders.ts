@@ -8,6 +8,7 @@ const toothItemSchema = z.object({
 });
 
 export const submitToothOrderSchema = z.object({
+  supplierId: z.string().uuid("Choose a supplier."),
   weekNumber: z.number().int().min(1).max(17),
   // 64 is every line the chart can produce: 32 FDI positions in two types.
   // The database enforces the same ceiling — this just fails faster.

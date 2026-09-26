@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { getRepContext, listRepOrders } from "@/lib/rep/data";
+import { getSupplierContext, listSupplierOrders } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import { RepBottomNav } from "../_components/bottom-nav";
+import { SupplierBottomNav } from "../_components/bottom-nav";
 import { SummaryClient } from "./summary-client";
 
 export default async function RepSummaryPage() {
@@ -9,8 +9,8 @@ export default async function RepSummaryPage() {
   if (!userId) redirect("/sign-in");
 
   const [rep, orders] = await Promise.all([
-    getRepContext(userId),
-    listRepOrders(userId),
+    getSupplierContext(userId),
+    listSupplierOrders(userId),
   ]);
   if (!rep) redirect("/sign-in");
   const currentWeek = orders.reduce((max, o) => Math.max(max, o.weekNumber ?? 0), 0) || 1;
@@ -24,7 +24,7 @@ export default async function RepSummaryPage() {
 
       <SummaryClient orders={orders} initialWeek={currentWeek} />
 
-      <RepBottomNav />
+      <SupplierBottomNav />
     </main>
   );
 }

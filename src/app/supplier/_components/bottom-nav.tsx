@@ -5,14 +5,14 @@ import { usePathname } from "next/navigation";
 
 const ITEMS = [
   {
-    href: "/rep",
+    href: "/supplier",
     label: "Orders",
     icon: (
       <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
     ),
   },
   {
-    href: "/rep/summary",
+    href: "/supplier/summary",
     label: "Summary",
     icon: (
       <>
@@ -23,7 +23,7 @@ const ITEMS = [
     ),
   },
   {
-    href: "/rep/students",
+    href: "/supplier/students",
     label: "Students",
     icon: (
       <>
@@ -34,7 +34,7 @@ const ITEMS = [
     ),
   },
   {
-    href: "/rep/settings",
+    href: "/supplier/settings",
     label: "Settings",
     icon: (
       <>
@@ -45,7 +45,7 @@ const ITEMS = [
   },
 ];
 
-export function RepBottomNav() {
+export function SupplierBottomNav() {
   const pathname = usePathname();
 
   return (
@@ -53,7 +53,7 @@ export function RepBottomNav() {
     // backdrop-filter: a blur layer fights the flat printed-paper design.
     <nav className="scroll-edge fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-md items-center justify-around border-t border-rule bg-paper pb-6 pt-2">
       {ITEMS.map((item) => {
-        const active = item.href === "/rep" ? pathname === "/rep" : pathname.startsWith(item.href);
+        const active = item.href === "/supplier" ? pathname === "/supplier" : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}

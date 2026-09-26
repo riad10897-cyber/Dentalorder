@@ -6,11 +6,12 @@ import type { SubmitToothOrderItem, ToothType } from "@/lib/supabase/types";
 
 export type SubmitResult = { orderId: string; error?: undefined } | { orderId?: undefined; error: string };
 
-// The client only ever sends teeth/type/quantity. Pricing and the total are
+// The client sends a supplier, teeth, type and quantity — never a price. Pricing and the total are
 // computed inside submit_tooth_order (a SECURITY DEFINER function) from the
-// rep's current prices — this action can't lie about money even if it
+// supplier's current prices — this action can't lie about money even if it
 // wanted to, because it never sends any.
 export async function submitToothOrder(input: {
+  supplierId: string;
   weekNumber: number;
   items: { toothNumber: number; toothType: ToothType; quantity: number }[];
 }): Promise<SubmitResult> {
@@ -27,6 +28,7 @@ export async function submitToothOrder(input: {
   }));
 
   const { data, error } = await supabase.rpc("submit_tooth_order", {
+    p_supplier_id: parsed.data.supplierId,
     p_week_number: parsed.data.weekNumber,
     p_items: items,
   });
@@ -35,14 +37,14 @@ export async function submitToothOrder(input: {
   return { orderId: data };
 }
 
-// "One tap" reorder: re-quotes the same teeth at the rep's current prices
+// "One tap" reorder: re-quotes the same teeth at the supplier's current prices
 // (not the old snapshot — this is a new order) for next week.
 export async function reorderOrder(orderId: string): Promise<SubmitResult> {
   const supabase = await createClient();
 
   const { data: oldOrder, error: fetchError } = await supabase
     .from("orders")
-    .select("week_number, order_items(tooth_number, tooth_type, quantity)")
+    .select("week_number, supplier_id, order_items(tooth_number, tooth_type, quantity)")
     .eq("id", orderId)
     .eq("order_type", "tooth")
     .single();
@@ -65,7 +67,12 @@ export async function reorderOrder(orderId: string): Promise<SubmitResult> {
 
   const nextWeek = Math.min((oldOrder.week_number ?? 0) + 1, 17);
 
+  if (!oldOrder.supplier_id) {
+    return { error: "That order has no supplier to reorder from." };
+  }
+
   const { data, error } = await supabase.rpc("submit_tooth_order", {
+    p_supplier_id: oldOrder.supplier_id,
     p_week_number: nextWeek,
     p_items: items,
   });

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 // type-only: keeps the server-only data module out of this client bundle
-import type { RepOrder } from "@/lib/rep/data";
+import type { SupplierOrder } from "@/lib/supplier/data";
 import { rejectOrder, updateOrderStatus } from "./_actions/orders";
 import { haptic } from "@/lib/haptics";
 
@@ -22,11 +22,11 @@ const EMPTY: Record<Tab, string> = {
   rejected: "You haven't rejected any orders.",
 };
 
-function handedOverUnpaid(order: RepOrder): boolean {
+function handedOverUnpaid(order: SupplierOrder): boolean {
   return order.fulfillmentStatus === "fulfilled" && order.paymentStatus !== "paid";
 }
 
-export function OrdersClient({ orders }: { orders: RepOrder[] }) {
+export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
   const [tab, setTab] = useState<Tab>("pending");
   const [query, setQuery] = useState("");
 
@@ -122,7 +122,7 @@ export function OrdersClient({ orders }: { orders: RepOrder[] }) {
   );
 }
 
-function OrderCard({ order }: { order: RepOrder }) {
+function OrderCard({ order }: { order: SupplierOrder }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
