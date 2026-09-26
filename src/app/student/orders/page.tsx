@@ -1,9 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStudentContext, listStudentOrders } from "@/lib/student/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { ReorderButton } from "./reorder-button";
+
+// Placed, not yet done with. A cancelled or rejected order has nothing
+// left to wait for, so it reads as history rather than as in flight.
+const IN_FLIGHT = new Set(["pending", "confirmed"]);
 
 export default async function OrderHistoryPage() {
   const userId = await getVerifiedUserId();
@@ -15,20 +18,16 @@ export default async function OrderHistoryPage() {
   ]);
   if (!student) redirect("/sign-in");
 
+  // Anything still in flight goes first — those are the ones a student
+  // opens this tab to check on. Settled orders keep their newest-first
+  // order underneath, so history still reads as history.
+  const inFlight = orders.filter((o) => IN_FLIGHT.has(o.fulfillmentStatus));
+  const settled = orders.filter((o) => !IN_FLIGHT.has(o.fulfillmentStatus));
+
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <div className="flex items-center gap-3 px-5 pt-5">
-        <Link
-          href="/student"
-          className="pressable -ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-control"
-          aria-label="Back"
-        >
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        <h1 className="font-display text-title">Order history</h1>
-      </div>
+      {/* A tab, not a page reached from somewhere — so no back arrow. */}
+      <h1 className="px-5 pt-6 font-display text-display">Orders</h1>
 
       {orders.length === 0 ? (
         <p className="mx-5 mt-8 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
@@ -36,12 +35,25 @@ export default async function OrderHistoryPage() {
         </p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2.5 px-5">
-          {orders.map((order) => {
+          {[...inFlight, ...settled].map((order) => {
             const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
             const fulfilled = order.fulfillmentStatus === "fulfilled";
             const rejected = order.fulfillmentStatus === "rejected";
+            const first = order.id === [...inFlight, ...settled][0]?.id;
+            const startsSettled = settled.length > 0 && order.id === settled[0]?.id;
             return (
-              <li key={order.id} className="rounded-card border border-rule bg-card p-4">
+              <li key={order.id} className="contents">
+                {first && inFlight.length > 0 && (
+                  <h2 className="px-0.5 pb-0.5 pt-1 text-micro uppercase text-ink-faint">
+                    In flight
+                  </h2>
+                )}
+                {startsSettled && inFlight.length > 0 && (
+                  <h2 className="px-0.5 pb-0.5 pt-4 text-micro uppercase text-ink-faint">
+                    Finished
+                  </h2>
+                )}
+                <div className="rounded-card border border-rule bg-card p-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <div>
                     <h2 className="font-display text-body">
@@ -91,6 +103,7 @@ export default async function OrderHistoryPage() {
                     {order.fulfillmentStatus}
                   </span>
                   <ReorderButton orderId={order.id} />
+                </div>
                 </div>
               </li>
             );

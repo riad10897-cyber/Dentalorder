@@ -36,7 +36,9 @@ export function OrderBuilder({
   initialToothType,
 }: OrderBuilderProps) {
   const router = useRouter();
-  const [week, setWeek] = useState(initialWeek);
+  // Fixed for the life of the screen: the week comes from the calendar,
+  // not from a control.
+  const [week] = useState(initialWeek);
   const [selections, setSelections] = useState<ToothSelections>({});
   const [sheetTooth, setSheetTooth] = useState<number | null>(null);
   const [sheetFrasacoQty, setSheetFrasacoQty] = useState(0);
@@ -167,26 +169,12 @@ export function OrderBuilder({
 
   return (
     <>
-      <div
-        className="flex gap-1.5 overflow-x-auto px-5 pb-1 pt-4"
-        style={{ scrollbarWidth: "none" }}
-      >
-        {Array.from({ length: 17 }, (_, i) => i + 1).map((w) => (
-          <button
-            key={w}
-            type="button"
-            onClick={() => setWeek(w)}
-            aria-pressed={w === week}
-            className={`pressable tnum min-h-9 shrink-0 rounded-control border px-3 py-1.5 font-display text-small ${
-              w === week
-                ? "border-ink bg-ink text-card"
-                : "border-rule bg-card text-ink-muted"
-            }`}
-          >
-            Wk {w}
-          </button>
-        ))}
-      </div>
+      {/* Not a selector. Seventeen buttons asked a question nobody was
+          asking: an order is for the week you are in. This just lets them
+          keep count. */}
+      <p className="px-5 pb-1 pt-4 text-caption text-ink-muted">
+        Week <span className="tnum">{week}</span> of <span className="tnum">17</span>
+      </p>
 
       <div className="mt-3">
         <DentalChart

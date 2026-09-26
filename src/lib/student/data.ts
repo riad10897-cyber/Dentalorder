@@ -6,8 +6,11 @@ import type { ToothType } from "@/lib/supabase/types";
 export interface StudentContext {
   userId: string;
   fullName: string;
+  /** How a supplier reaches them about a handover. */
+  phone: string | null;
   university: string | null;
   yearOfStudy: number | null;
+  /** No longer collected at sign-up; still read for accounts that have one. */
   section: string | null;
 }
 
@@ -21,7 +24,7 @@ export async function getStudentContext(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, university, year_of_study, section")
+    .select("full_name, phone, university, year_of_study, section")
     .eq("id", userId)
     .single();
 
@@ -30,6 +33,7 @@ export async function getStudentContext(
   return {
     userId,
     fullName: profile.full_name ?? "",
+    phone: profile.phone ?? null,
     university: profile.university ?? null,
     yearOfStudy: profile.year_of_study ?? null,
     section: profile.section ?? null,

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Three tabs. Home is the market — there is no separate "Order" tab,
+// because choosing who you buy from is the first step of ordering.
 const ITEMS = [
   {
     href: "/student",
@@ -13,13 +15,12 @@ const ITEMS = [
     extra: <polyline points="9 22 9 12 15 12 15 22" />,
   },
   {
-    href: "/student/order",
-    label: "Order",
+    href: "/student/orders",
+    label: "Orders",
     icon: (
       <>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="16" />
-        <line x1="8" y1="12" x2="16" y2="12" />
+        <path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z" />
+        <path d="M14 2v6h6M9 13h6M9 17h4" />
       </>
     ),
   },

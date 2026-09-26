@@ -71,3 +71,13 @@ export const signUpSchema = z.discriminatedUnion("role", [
   supplierSignUpSchema,
 ]);
 export type SignUpInput = z.infer<typeof signUpSchema>;
+
+// What a student may change about themselves. Deliberately not a partial of
+// the sign-up schema: role, email and password are not editable here, and
+// leaving them out of the shape is what keeps them that way.
+export const updateStudentProfileSchema = z.object({
+  full_name: fullName,
+  phone,
+  university: z.string().trim().min(1, "Select your university."),
+  year_of_study: z.coerce.number().int().min(1, "Select your year.").max(5),
+});

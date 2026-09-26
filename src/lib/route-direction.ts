@@ -7,11 +7,13 @@ export type RouteDirection = "forward" | "back" | "lateral" | "none";
 
 // Taken from the two bottom navs. These are peers in the information
 // architecture even though they sit at different URL depths: /student is a
-// tab root and /student/order is a sibling tab, not somewhere deeper.
+// tab root and /student/orders is a sibling tab, not somewhere deeper.
+// /student/order is not a tab — it is the chart, reached by tapping a
+// supplier on Home, so moving to it is a drill-in.
 // If a tab is added to a nav and not here, moving to it animates as a
 // drill-in.
 export const TAB_SETS: readonly (readonly string[])[] = [
-  ["/student", "/student/order", "/student/profile"],
+  ["/student", "/student/orders", "/student/profile"],
   ["/supplier", "/supplier/summary", "/supplier/students", "/supplier/settings"],
 ];
 

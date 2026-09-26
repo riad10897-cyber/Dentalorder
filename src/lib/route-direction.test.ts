@@ -18,12 +18,19 @@ test("drilling in is forward, coming back out is back", () => {
 });
 
 test("bottom-nav tabs are lateral, not a descent", () => {
-  // /student/order sits one segment deeper than /student but is a sibling
+  // /student/orders sits one segment deeper than /student but is a sibling
   // tab. Treating it as a drill-in was the bug this test exists to catch.
-  assert.equal(routeDirection("/student", "/student/order"), "lateral");
-  assert.equal(routeDirection("/student/order", "/student"), "lateral");
+  assert.equal(routeDirection("/student", "/student/orders"), "lateral");
+  assert.equal(routeDirection("/student/orders", "/student"), "lateral");
   assert.equal(routeDirection("/student", "/student/profile"), "lateral");
-  assert.equal(routeDirection("/student/profile", "/student/order"), "lateral");
+  assert.equal(routeDirection("/student/profile", "/student/orders"), "lateral");
+});
+
+test("opening a supplier's chart is a drill-in, not a tab change", () => {
+  // /student/order is the chart, reached by tapping a supplier on Home.
+  // It is not one of the three tabs, so it should move like going deeper.
+  assert.equal(routeDirection("/student", "/student/order"), "forward");
+  assert.equal(routeDirection("/student/order", "/student"), "back");
 });
 
 test("every supplier tab pairing is lateral", () => {
