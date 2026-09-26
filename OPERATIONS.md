@@ -183,9 +183,14 @@ the production secret key must never sit in GitHub. So this runs against a
 ### Put the schema in it
 
 5. Open the new project → **SQL Editor** → **New query**.
-6. Run the migration files from `supabase/migrations/` **in filename order**,
-   one at a time, oldest first. Paste one, press **Run**, wait for "Success",
-   then the next. The order matters — each one builds on the last.
+6. Open `supabase/schema-full.sql`, copy the whole file, paste it in, press
+   **Run** — once. That one file is every migration in order, and it has
+   been tested top to bottom on an empty database. You should see "Success"
+   and a few grey "notice" lines, which are expected.
+
+   (The separate files in `supabase/migrations/` are for a project that
+   already has data. Do not use them here — and do not use `schema-full.sql`
+   on production, which already has the schema.)
 7. Go to **Authentication → Providers → Email** and turn **Confirm email**
    **off**, same as production. The test signs accounts in immediately and
    cannot click a confirmation link.

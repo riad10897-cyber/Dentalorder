@@ -6,6 +6,21 @@
 -- file. Paste the whole thing into the Supabase SQL Editor and press Run
 -- once.
 --
+-- Verified on an empty PostgreSQL 16 carrying only what a new Supabase
+-- project already has (the auth schema, auth.uid(), the anon /
+-- authenticated / service_role roles): it runs top to bottom in a single
+-- transaction with no errors. The four "policy ... does not exist,
+-- skipping" notices are `drop policy if exists` doing its job.
+--
+-- It also creates the trigger on auth.users, so sign-up works the moment
+-- the run finishes — there is nothing to wire up afterwards.
+--
+-- One oddity worth knowing: a fresh project ends up with an empty table
+-- called representatives_archived_20260109. The restructure renamed the
+-- old representatives table rather than dropping it, so that the
+-- originals would still be there if the migration got something wrong.
+-- On a new project it never held anything and can be ignored.
+--
 -- THIS IS FOR AN EMPTY PROJECT ONLY. It runs `create type` and
 -- `create table` without guards, so against a project that already has
 -- the schema it stops on the first object that exists and leaves the
