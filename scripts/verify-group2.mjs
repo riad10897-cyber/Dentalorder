@@ -124,10 +124,16 @@ try {
     const NOBODY = "00000000-0000-0000-0000-000000000000";
     const patch = await rest("PATCH", `rep_directory?id=eq.${NOBODY}`, null, { display_name: "probe" });
     const del = await rest("DELETE", `rep_directory?id=eq.${NOBODY}`, null);
+    // Assert the outcome, not a status number. PostgREST answers 401 when
+    // the caller has no JWT at all and 403 when it has one and is still
+    // refused, so pinning this to 403 made a closed hole look open. What
+    // matters is that the write did not happen: 2xx is the failure.
+    const refused = (r) => r.status >= 400 && r.body?.code === "42501";
     check(
       "nobody can write through the rep directory view",
-      patch.status === 403 && del.status === 403,
-      `PATCH ${patch.status}, DELETE ${del.status} (204 means the privilege is there)`,
+      refused(patch) && refused(del),
+      `PATCH ${patch.status}, DELETE ${del.status} — ${patch.body?.message ?? "no message"}` +
+        ` (a 2xx here means the privilege is back)`,
     );
     const { data: repsStillThere } = await admin.from("representatives").select("id");
     check("and the reps are all still present", (repsStillThere ?? []).length > 0, `${(repsStillThere ?? []).length} rep(s)`);
