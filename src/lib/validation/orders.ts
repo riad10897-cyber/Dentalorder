@@ -13,6 +13,9 @@ export const submitToothOrderSchema = z.object({
   // 64 is every line the chart can produce: 32 FDI positions in two types.
   // The database enforces the same ceiling — this just fails faster.
   items: z.array(toothItemSchema).min(1, "Add at least one tooth.").max(64),
+  // What the screen showed. The database refuses the order if the real
+  // total differs, so the student is never charged a figure they did not see.
+  expectedTotal: z.number().nonnegative().max(100000),
 });
 export type SubmitToothOrderInput = z.infer<typeof submitToothOrderSchema>;
 

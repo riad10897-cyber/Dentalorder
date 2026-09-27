@@ -162,37 +162,26 @@ export function OrderBuilder({
 
   function handleConfirm() {
     setError(null);
-    if (edit) {
-      startTransition(async () => {
-        const result = await editToothOrder({
-          orderId: edit.orderId,
-          items: itemInputs,
-          expectedTotal: subtotal,
-        });
-        if (result.kind === "pricesChanged") {
-          // The supplier moved their prices while this sheet was open.
-          // Nothing was saved. Reload the prices from the server — the
-          // total and the notice both recompute from them — and let the
-          // student confirm again, having now seen the real number.
-          setError(
-            `Prices changed while you were editing. The total is now $${result.newTotal.toFixed(2)}. Check it and save again.`,
-          );
-          router.refresh();
-          return;
-        }
-        if (result.kind === "error") {
-          setError(result.message);
-          return;
-        }
-        haptic();
-        router.push(`/student/order/confirmed/${result.orderId}?edited=1`);
-      });
-      return;
-    }
     startTransition(async () => {
-      const result = await submitToothOrder({ supplierId, weekNumber: week, items: itemInputs });
-      if (result.error) {
-        setError(result.error);
+      // Both paths send the total on this screen. The database charges
+      // exactly that, or refuses and says what the total is now.
+      const result = edit
+        ? await editToothOrder({ orderId: edit.orderId, items: itemInputs, expectedTotal: subtotal })
+        : await submitToothOrder({ supplierId, weekNumber: week, items: itemInputs, expectedTotal: subtotal });
+
+      if (result.kind === "pricesChanged") {
+        // The supplier moved their prices while this screen was open.
+        // Nothing was saved. Reload the prices from the server — the
+        // chart, the total and the edit notice all recompute from them —
+        // and let the student confirm again, having seen the real number.
+        setError(
+          `Prices changed while you were ${edit ? "editing" : "ordering"}. The total is now $${result.newTotal.toFixed(2)}, not $${subtotal.toFixed(2)}. Check it and ${edit ? "save" : "place the order"} again.`,
+        );
+        router.refresh();
+        return;
+      }
+      if (result.kind === "error") {
+        setError(result.message);
         return;
       }
       // Success is only knowable once the order is written, so this is
@@ -201,7 +190,7 @@ export function OrderBuilder({
       // than on the confirmation screen after it has hydrated, which
       // would land the tick noticeably late.
       haptic();
-      router.push(`/student/order/confirmed/${result.orderId}`);
+      router.push(`/student/order/confirmed/${result.orderId}${edit ? "?edited=1" : ""}`);
     });
   }
 

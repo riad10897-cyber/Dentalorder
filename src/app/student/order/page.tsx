@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
-import { getSupplierDirectory } from "@/lib/supplier/directory";
+import { getSupplierFresh } from "@/lib/supplier/directory";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { OrderBuilder } from "./order-builder";
 
@@ -20,16 +20,20 @@ export default async function NewOrderPage({
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
-  const [{ supplier: supplierId }, student, orderDefaults, suppliers] = await Promise.all([
-    searchParams,
+  const { supplier: supplierId } = await searchParams;
+  if (!supplierId) redirect("/student");
+
+  // Prices read now, not from the cached market list: they are what the
+  // chart totals up and what the database will be asked to confirm. From
+  // a cache, a refused order would reload the same stale price and be
+  // refused again.
+  const [student, orderDefaults, supplier] = await Promise.all([
     getStudentContext(userId),
     getOrderDefaults(userId),
-    getSupplierDirectory(),
+    getSupplierFresh(supplierId),
   ]);
   if (!student) redirect("/sign-in");
-
-  const supplier = suppliers.find((s) => s.id === supplierId && s.id !== userId);
-  if (!supplier) redirect("/student");
+  if (!supplier || supplier.id === userId) redirect("/student");
 
   // No bottom nav on this screen: the pinned order footer occupies that
   // space, and stacking both leaves too little chart at 375px. The back

@@ -114,7 +114,7 @@ export default async function OrderHistoryPage() {
                         Edit
                       </Link>
                     )}
-                    <ReorderButton orderId={order.id} />
+                    <ReorderButton orderId={order.id} shownTotal={order.totalPrice} />
                   </span>
                 </div>
                 </div>

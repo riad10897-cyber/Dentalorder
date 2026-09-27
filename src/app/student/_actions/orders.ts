@@ -4,7 +4,24 @@ import { createClient } from "@/lib/supabase/server";
 import { editToothOrderSchema, submitToothOrderSchema } from "@/lib/validation/orders";
 import type { SubmitToothOrderItem, ToothType } from "@/lib/supabase/types";
 
-export type SubmitResult = { orderId: string; error?: undefined } | { orderId?: undefined; error: string };
+export type SubmitResult =
+  | { kind: "placed"; orderId: string }
+  // The supplier's prices are not the ones the student was shown. Nothing
+  // was written; they are told the new total and asked to confirm it.
+  | { kind: "pricesChanged"; newTotal: number }
+  | { kind: "error"; message: string };
+
+// Rounded to cents so float noise like 19.980000000000004 never reads as a
+// price change. The database compares it as numeric.
+function toCents(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function pricesChanged(error: { code?: string; details?: string | null }): number | null {
+  if (error.code !== "DT001") return null;
+  const n = Number(error.details);
+  return Number.isFinite(n) ? n : null;
+}
 
 // The client sends a supplier, teeth, type and quantity — never a price. Pricing and the total are
 // computed inside submit_tooth_order (a SECURITY DEFINER function) from the
@@ -14,10 +31,11 @@ export async function submitToothOrder(input: {
   supplierId: string;
   weekNumber: number;
   items: { toothNumber: number; toothType: ToothType; quantity: number }[];
+  expectedTotal: number;
 }): Promise<SubmitResult> {
   const parsed = submitToothOrderSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "That order isn't valid." };
+    return { kind: "error", message: parsed.error.issues[0]?.message ?? "That order isn't valid." };
   }
 
   const supabase = await createClient();
@@ -31,10 +49,15 @@ export async function submitToothOrder(input: {
     p_supplier_id: parsed.data.supplierId,
     p_week_number: parsed.data.weekNumber,
     p_items: items,
+    p_expected_total: toCents(parsed.data.expectedTotal),
   });
 
-  if (error) return { error: error.message };
-  return { orderId: data };
+  if (error) {
+    const newTotal = pricesChanged(error);
+    if (newTotal !== null) return { kind: "pricesChanged", newTotal };
+    return { kind: "error", message: error.message };
+  }
+  return { kind: "placed", orderId: data };
 }
 
 export type EditResult =
@@ -70,16 +93,12 @@ export async function editToothOrder(input: {
       tooth_type: item.toothType,
       quantity: item.quantity,
     })),
-    // Rounded to cents so a float like 19.980000000000004 never reads as
-    // a price change. The database compares it as numeric.
-    p_expected_total: Math.round(parsed.data.expectedTotal * 100) / 100,
+    p_expected_total: toCents(parsed.data.expectedTotal),
   });
 
   if (error) {
-    if (error.code === "DT001") {
-      const newTotal = Number(error.details);
-      if (Number.isFinite(newTotal)) return { kind: "pricesChanged", newTotal };
-    }
+    const newTotal = pricesChanged(error);
+    if (newTotal !== null) return { kind: "pricesChanged", newTotal };
     return { kind: "error", message: error.message };
   }
   return { kind: "saved", orderId: data };
@@ -87,7 +106,15 @@ export async function editToothOrder(input: {
 
 // "One tap" reorder: re-quotes the same teeth at the supplier's current prices
 // (not the old snapshot — this is a new order) for next week.
-export async function reorderOrder(orderId: string): Promise<SubmitResult> {
+//
+// expectedTotal is the figure on the card the button sits on — the old
+// order's total, unless the student has already been told the new one. If
+// prices moved since, the database refuses and the button says so, rather
+// than charging a number the card never showed.
+export async function reorderOrder(orderId: string, expectedTotal: number): Promise<SubmitResult> {
+  if (!Number.isFinite(expectedTotal) || expectedTotal < 0) {
+    return { kind: "error", message: "That total isn't valid." };
+  }
   const supabase = await createClient();
 
   const { data: oldOrder, error: fetchError } = await supabase
@@ -98,7 +125,7 @@ export async function reorderOrder(orderId: string): Promise<SubmitResult> {
     .single();
 
   if (fetchError || !oldOrder) {
-    return { error: "That order couldn't be found." };
+    return { kind: "error", message: "That order couldn't be found." };
   }
 
   const items: SubmitToothOrderItem[] = (oldOrder.order_items ?? [])
@@ -110,21 +137,26 @@ export async function reorderOrder(orderId: string): Promise<SubmitResult> {
     }));
 
   if (items.length === 0) {
-    return { error: "That order has no teeth to reorder." };
+    return { kind: "error", message: "That order has no teeth to reorder." };
   }
 
   const nextWeek = Math.min((oldOrder.week_number ?? 0) + 1, 17);
 
   if (!oldOrder.supplier_id) {
-    return { error: "That order has no supplier to reorder from." };
+    return { kind: "error", message: "That order has no supplier to reorder from." };
   }
 
   const { data, error } = await supabase.rpc("submit_tooth_order", {
     p_supplier_id: oldOrder.supplier_id,
     p_week_number: nextWeek,
     p_items: items,
+    p_expected_total: toCents(expectedTotal),
   });
 
-  if (error) return { error: error.message };
-  return { orderId: data };
+  if (error) {
+    const newTotal = pricesChanged(error);
+    if (newTotal !== null) return { kind: "pricesChanged", newTotal };
+    return { kind: "error", message: error.message };
+  }
+  return { kind: "placed", orderId: data };
 }

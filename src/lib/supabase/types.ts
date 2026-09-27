@@ -342,7 +342,13 @@ export interface Database {
         Returns: boolean;
       };
       submit_tooth_order: {
-        Args: { p_supplier_id: string; p_week_number: number; p_items: SubmitToothOrderItem[] };
+        Args: {
+          p_supplier_id: string;
+          p_week_number: number;
+          p_items: SubmitToothOrderItem[];
+          /** The total the student was shown. Refused with DT001 if the real one differs. */
+          p_expected_total?: number | null;
+        };
         Returns: string;
       };
       edit_pending_order: {
