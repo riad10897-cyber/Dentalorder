@@ -5,6 +5,7 @@ import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { ReorderButton } from "./reorder-button";
 import { CancelOrderButton } from "./cancel-order-button";
+import { OrderStatus } from "./order-status";
 
 // Placed, not yet done with. A cancelled or rejected order has nothing
 // left to wait for, so it reads as history rather than as in flight.
@@ -39,7 +40,6 @@ export default async function OrderHistoryPage() {
         <ul className="mt-4 flex flex-col gap-2.5 px-5">
           {[...inFlight, ...settled].map((order) => {
             const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
-            const fulfilled = order.fulfillmentStatus === "fulfilled";
             const rejected = order.fulfillmentStatus === "rejected";
             const first = order.id === [...inFlight, ...settled][0]?.id;
             const startsSettled = settled.length > 0 && order.id === settled[0]?.id;
@@ -93,17 +93,7 @@ export default async function OrderHistoryPage() {
                 )}
 
                 <div className="mt-3 flex items-center justify-between border-t border-hairline pt-3">
-                  <span
-                    className={`inline-block rounded-control px-1.5 py-0.5 text-micro uppercase ${
-                      fulfilled
-                        ? "bg-fulfilled text-card"
-                        : rejected
-                          ? "border border-ink text-ink"
-                          : "bg-card-sunk text-ink-muted"
-                    }`}
-                  >
-                    {order.fulfillmentStatus}
-                  </span>
+                  <OrderStatus status={order.fulfillmentStatus} supplierName={order.supplierName} />
                   <span className="flex items-center gap-1">
                     {/* Only while the supplier has not acted on it. The
                         database checks again, under a lock, when it saves. */}
