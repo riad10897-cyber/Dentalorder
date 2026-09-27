@@ -4,6 +4,7 @@ import { getStudentContext, listStudentOrders } from "@/lib/student/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { ReorderButton } from "./reorder-button";
+import { CancelOrderButton } from "./cancel-order-button";
 
 // Placed, not yet done with. A cancelled or rejected order has nothing
 // left to wait for, so it reads as history rather than as in flight.
@@ -117,6 +118,14 @@ export default async function OrderHistoryPage() {
                     <ReorderButton orderId={order.id} shownTotal={order.totalPrice} />
                   </span>
                 </div>
+                {/* Its own line, so the confirmation has room to say what
+                    cancelling means. Pending only; the database checks
+                    again, under a lock, when it runs. */}
+                {order.fulfillmentStatus === "pending" && (
+                  <div className="mt-1 flex justify-end">
+                    <CancelOrderButton orderId={order.id} label="Cancel order" />
+                  </div>
+                )}
                 </div>
               </li>
             );

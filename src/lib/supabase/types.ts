@@ -236,6 +236,8 @@ export interface Database {
           rejection_reason: string | null;
           /** Set when a student edited this pending order: the order that took its place. */
           replaced_by: string | null;
+          /** Set when the student cancelled it while pending. Frozen from then on. */
+          cancelled_at: string | null;
         };
         Insert: {
           id?: string;
@@ -255,6 +257,7 @@ export interface Database {
           updated_at?: string;
           rejection_reason?: string | null;
           replaced_by?: string | null;
+          cancelled_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
         Relationships: [typeof REL_ORDERS_PROFILES, typeof REL_ORDERS_SUPPLIERS, typeof REL_ORDER_ITEMS_ORDERS];
@@ -350,6 +353,10 @@ export interface Database {
           p_expected_total?: number | null;
         };
         Returns: string;
+      };
+      cancel_pending_order: {
+        Args: { p_order_id: string };
+        Returns: undefined;
       };
       edit_pending_order: {
         Args: { p_order_id: string; p_items: SubmitToothOrderItem[]; p_expected_total: number | null };

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { DentalChart, toothSelectionKey, type ToothSelections } from "./dental-chart";
 import { ToothSheet } from "./tooth-sheet";
 import { ReviewSheet } from "./review-sheet";
+import { CancelOrderButton } from "@/app/student/orders/cancel-order-button";
 import { editToothOrder, submitToothOrder } from "@/app/student/_actions/orders";
 import type { PriceMove } from "@/lib/orders/price-change";
 import { priceToothOrder } from "@/lib/orders/tooth-pricing";
@@ -231,6 +232,17 @@ export function OrderBuilder({
           </div>
         )}
 
+        {/* Editing, with every tooth taken off: there is nothing to review,
+            and what the student means is "I don't want this order". Offer
+            exactly that, rather than a Review button that does nothing. */}
+        {edit && itemInputs.length === 0 ? (
+          <CancelOrderButton
+            orderId={edit.orderId}
+            label="Cancel this order"
+            onCancelled={() => router.push("/student/orders")}
+            className="pressable min-h-11 w-full rounded-control border border-ink bg-card py-3 font-display text-body text-ink"
+          />
+        ) : (
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-micro uppercase text-ink-faint">Order total</div>
@@ -256,6 +268,7 @@ export function OrderBuilder({
             Review
           </button>
         </div>
+        )}
       </div>
 
       {sheetTooth !== null && (

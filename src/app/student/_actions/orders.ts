@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { editToothOrderSchema, submitToothOrderSchema } from "@/lib/validation/orders";
 import type { SubmitToothOrderItem, ToothType } from "@/lib/supabase/types";
@@ -102,6 +104,22 @@ export async function editToothOrder(input: {
     return { kind: "error", message: error.message };
   }
   return { kind: "saved", orderId: data };
+}
+
+/**
+ * Withdraw a pending order. Nothing is deleted: it is marked cancelled and
+ * kept. Who may, and when, is decided by cancel_pending_order — own order
+ * only, pending only — so this only validates the id and reports back.
+ */
+export async function cancelOrder(orderId: string): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!z.string().uuid().safeParse(orderId).success) {
+    return { ok: false, message: "That order isn't valid." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_pending_order", { p_order_id: orderId });
+  if (error) return { ok: false, message: error.message };
+  revalidatePath("/student/orders");
+  return { ok: true };
 }
 
 // "One tap" reorder: re-quotes the same teeth at the supplier's current prices
