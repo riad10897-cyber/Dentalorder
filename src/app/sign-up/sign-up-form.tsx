@@ -4,15 +4,9 @@ import { useActionState, useRef, useState } from "react";
 import { signUp, type FormState } from "@/app/actions/auth";
 import { OTHER_UNIVERSITY, UNIVERSITIES } from "@/lib/universities";
 
-type Role = "student" | "supplier";
-
-// Two account types, not three. A student who also sells teeth is a student
-// account with a supplier profile attached, set up by hand — so there is no
-// third button here, and no self-serve way into an approval queue.
-const ROLES: { value: Role; label: string }[] = [
-  { value: "student", label: "Student" },
-  { value: "supplier", label: "Shop / supplier" },
-];
+// Student accounts only. Nobody chooses to be a supplier here: the owner
+// turns a student's account into a supplier by hand (OPERATIONS.md §1), and
+// the database refuses a supplier sign-up even if one is sent directly.
 
 const initialState: FormState = { error: null, fieldErrors: {} };
 
@@ -25,7 +19,6 @@ const initialState: FormState = { error: null, fieldErrors: {} };
  * browser's own password manager from seeing a complete form.
  */
 export function SignUpForm() {
-  const [role, setRole] = useState<Role>("student");
   const [step, setStep] = useState<1 | 2>(1);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [phone, setPhone] = useState("");
@@ -86,25 +79,7 @@ export function SignUpForm() {
 
       {/* Hidden, not unmounted: see the note on the component. */}
       <div className={step === 1 ? "flex flex-col gap-4" : "hidden"}>
-        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Account type">
-          {ROLES.map((r) => (
-            <button
-              key={r.value}
-              type="button"
-              role="radio"
-              aria-checked={role === r.value}
-              onClick={() => setRole(r.value)}
-              className={`pressable min-h-11 rounded-control border px-3 py-2 text-small font-medium ${
-                role === r.value
-                  ? "border-ink bg-ink/10 text-ink"
-                  : "border-rule bg-card text-ink-muted"
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-        <input type="hidden" name="role" value={role} />
+        <input type="hidden" name="role" value="student" />
 
         <Field label="Full name" error={err("full_name")}>
           <input name="full_name" type="text" autoComplete="name" required className={inputClass} />
@@ -117,11 +92,7 @@ export function SignUpForm() {
         <Field
           label="Phone number"
           error={err("phone")}
-          hint={
-            role === "student"
-              ? "Your supplier needs a way to reach you about your order."
-              : "Students will use this to reach you about their orders."
-          }
+          hint="Your supplier needs a way to reach you about your order."
         >
           <input
             name="phone"
@@ -134,8 +105,6 @@ export function SignUpForm() {
             className={inputClass}
           />
         </Field>
-        {/* The sign-up trigger reads contact_phone when it writes a shop's row. */}
-        {role === "supplier" && <input type="hidden" name="contact_phone" value={phone} />}
 
         <Field label="Password" error={err("password")}>
           <input
@@ -158,45 +127,24 @@ export function SignUpForm() {
       </div>
 
       <div className={step === 2 ? "flex flex-col gap-4" : "hidden"}>
-        {role === "student" ? (
-          <>
-            <UniversityField error={err("university")} />
-            <Field label="Year of study" error={err("year_of_study")}>
-              <select
-                name="year_of_study"
-                required={step === 2}
-                className={inputClass}
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Select year
-                </option>
-                {[1, 2, 3, 4, 5].map((y) => (
-                  <option key={y} value={y}>
-                    Year {y}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </>
-        ) : (
-          <>
-            <Field label="Business name" error={err("business_name")}>
-              <input name="business_name" type="text" required={step === 2} className={inputClass} />
-            </Field>
-            <UniversityField error={err("university")} optional label="Closest faculty (optional)" />
-            <Field label="Contact email (optional)" error={err("contact_email")}>
-              <input name="contact_email" type="email" className={inputClass} />
-            </Field>
-            <Field label="Description (optional)" error={err("description")}>
-              <textarea name="description" rows={3} className={inputClass} />
-            </Field>
-            <p className="text-caption text-ink-muted">
-              We check every supplier by hand before students can order from you. You can sign in
-              and set your prices straight away.
-            </p>
-          </>
-        )}
+        <UniversityField error={err("university")} />
+        <Field label="Year of study" error={err("year_of_study")}>
+          <select
+            name="year_of_study"
+            required={step === 2}
+            className={inputClass}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Select year
+            </option>
+            {[1, 2, 3, 4, 5].map((y) => (
+              <option key={y} value={y}>
+                Year {y}
+              </option>
+            ))}
+          </select>
+        </Field>
 
         {state.error && <p className="text-small text-ink">{state.error}</p>}
 
@@ -237,16 +185,7 @@ function StepDots({ step }: { step: 1 | 2 }) {
 const inputClass =
   "min-h-11 w-full rounded-control border border-rule bg-card px-3 py-2 text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none";
 
-function UniversityField({
-  error,
-  optional = false,
-  label = "University",
-}: {
-  error?: string;
-  /** A shop may not sit at one faculty, so it may leave this blank. */
-  optional?: boolean;
-  label?: string;
-}) {
+function UniversityField({ error }: { error?: string }) {
   const [choice, setChoice] = useState("");
   const [typed, setTyped] = useState("");
   const isOther = choice === OTHER_UNIVERSITY;
@@ -256,18 +195,18 @@ function UniversityField({
   const submitted = isOther ? typed : choice;
 
   return (
-    <Field label={label} error={error}>
+    <Field label="University" error={error}>
       <select
         // Unnamed on purpose: the hidden input below is the single source
         // of what gets submitted.
-        required={!optional}
-        aria-label={label}
+        required
+        aria-label="University"
         value={choice}
         onChange={(event) => setChoice(event.target.value)}
         className={inputClass}
       >
-        <option value="" disabled={!optional}>
-          {optional ? "No particular faculty" : "Select your university"}
+        <option value="" disabled>
+          Select your university
         </option>
         {UNIVERSITIES.map((university) => (
           <option key={university.value} value={university.value}>
@@ -280,7 +219,7 @@ function UniversityField({
       {isOther && (
         <input
           type="text"
-          required={!optional}
+          required
           autoFocus
           aria-label="University name"
           placeholder="Type your university"

@@ -62,9 +62,17 @@ async function clientFor(email) {
 const money = (v) => Number(v).toFixed(2);
 
 try {
+  // Sign-up only ever makes students, so a supplier is a student account
+  // plus a suppliers row — exactly how the owner makes one by hand.
   const supplier = await mkUser("supplier", {
-    role: "supplier", full_name: "Snapshot Supplier", university: "BAU",
+    role: "student", full_name: "Snapshot Supplier", university: "BAU",
   });
+  {
+    const { error } = await admin.from("suppliers").insert({
+      id: supplier.id, kind: "student_supplier", display_name: "Snapshot Supplier", university: "BAU",
+    });
+    if (error) throw new Error(`could not make the test supplier: ${error.message}`);
+  }
   const student = await mkUser("student", {
     role: "student", full_name: "Snapshot Student", university: "BAU", year_of_study: 3,
   });

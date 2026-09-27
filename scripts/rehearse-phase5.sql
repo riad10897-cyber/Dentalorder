@@ -10,6 +10,10 @@ insert into auth.users (email, raw_user_meta_data) values
  ('shop@x.com','{"role":"supplier","full_name":"Shop","business_name":"Shop","contact_phone":"1"}'::jsonb),
  ('a@x.com','{"role":"student","full_name":"Student A","university":"BAU"}'::jsonb),
  ('b@x.com','{"role":"student","full_name":"Student B","university":"BAU"}'::jsonb);
+-- Sign-up makes students only; a supplier is a row added by hand.
+insert into public.suppliers (id, kind, display_name, business_name, contact_phone)
+select id, 'shop', 'Shop', 'Shop', '1' from auth.users where email = 'shop@x.com'
+on conflict (id) do nothing;
 update public.suppliers set status='active';
 create table t.v(k text primary key, v text);
 grant all on t.v to authenticated;

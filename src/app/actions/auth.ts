@@ -1,11 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { signInSchema, signUpSchema } from "@/lib/validation/auth";
 import { homeForUser } from "@/lib/supabase/home";
-import { SUPPLIER_DIRECTORY_TAG } from "@/lib/supplier/directory";
 
 export type FormState = {
   error: string | null;
@@ -50,21 +48,11 @@ export async function signUp(
     return { error: error.message, fieldErrors: {} };
   }
 
-  // A new supplier changes the market every student picks from, so drop
-  // that cache rather than leaving them invisible until it expires. They
-  // only appear once approved, but the tag is cheap and the approval may
-  // land before the ceiling does.
-  if (role === "supplier") {
-    revalidateTag(SUPPLIER_DIRECTORY_TAG);
-  }
-
   if (!data.session) {
     // Email confirmation is required — no session yet, nothing to route to.
     redirect("/check-email");
   }
 
-  // A brand-new supplier has a suppliers row by now (the sign-up trigger
-  // writes it), so the same routing rule serves both roles.
   redirect(await homeForUser(data.user!.id));
 }
 

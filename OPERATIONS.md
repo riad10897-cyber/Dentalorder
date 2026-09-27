@@ -6,62 +6,47 @@ If you ever feel unsure about a step, stop and ask before clicking — most thin
 
 ---
 
-## 1. Approving a new supplier — the one job only you can do
+## 1. Making someone a supplier — the one job only you can do
 
-Suppliers sign themselves up. **Nobody can order from them until you approve
-them by hand.** There is no admin screen for this, so it is a query you run in
-Supabase. Until you run it they see a screen telling them they are waiting for
-you, and students do not see them in the market at all.
+Nobody can sign up as a supplier. Every sign-up is a student account, and
+the database enforces that, not just the form. You decide who sells, and you
+turn their account into a supplier by hand.
 
-**Step 1 — see who is waiting.**
+**Step 1 — they sign up as a student**, the normal way, in the app.
 
-Supabase dashboard → **SQL Editor** (left sidebar) → **New query**. Paste this
-and press Run:
-
-```sql
-select s.id,
-       s.display_name,
-       s.kind,
-       s.university,
-       s.contact_phone,
-       p.full_name,
-       u.email,
-       s.created_at
-from public.suppliers s
-join public.profiles p on p.id = s.id
-join auth.users    u on u.id = s.id
-where s.status = 'pending_approval'
-order by s.created_at;
-```
-
-That is read-only. It lists everyone waiting, with the email they signed up
-with so you can check they are who they say they are.
-
-**Step 2 — approve one of them.**
-
-Copy the person's email from the list above into this query, then Run:
+**Step 2 — you make them a supplier.** Supabase dashboard → **SQL Editor** →
+**New query**. Fill in three things — their email, the name students will
+see in the market, and their faculty — then press **Run**:
 
 ```sql
-update public.suppliers
-set status = 'active'
-where id = (select id from auth.users where email = 'them@example.com')
-returning id, display_name, status;
+insert into public.suppliers (id, kind, display_name, university, status)
+select id, 'student_supplier', 'Name students will see', 'BAU', 'active'
+from auth.users
+where email = 'them@example.com'
+returning id, display_name, kind, status;
 ```
 
-The `returning` line means Supabase prints the row it changed. **If it prints
-nothing, nothing was approved** — the email did not match. Check for a typo and
-run it again.
+The `returning` line means Supabase prints the row it created. **If it prints
+nothing, nothing was created** — the email did not match. Check for a typo
+and run it again.
 
-Approving takes **up to five minutes** to show for students. The market list
-is cached that long, and a change you make in the SQL Editor cannot tell the
-app to drop the cache — only something done inside the app can. For the
-supplier themselves it is immediate on their next screen, so if you are on
-the phone with them, they will see it before their customers do.
+**If it says `duplicate key`**, that person is already a supplier. Nothing
+changed.
 
-**To un-approve someone** — they stopped supplying, or you approved the wrong
-person — the same query with `'suspended'` instead of `'active'`. Their past
-orders are untouched; they simply stop appearing in the market and cannot take
-new orders.
+For a shop rather than a student who sells, change `'student_supplier'` to
+`'shop'`. For a supplier who serves every faculty, change `'BAU'` to `null`
+(no quotes).
+
+They start at $2.50 Frasaco and $1.20 Copy A. They set their own prices in
+the app under Settings, and should do that before telling their class.
+
+They appear in the market within five minutes (the market list is cached
+that long). The next time they open the app they land on the supplier
+screens.
+
+**To stop someone supplying** — they graduated, or stopped selling — set them
+to `suspended`. Their past orders are untouched; they disappear from the
+market and cannot take new orders.
 
 ```sql
 update public.suppliers
@@ -70,12 +55,12 @@ where id = (select id from auth.users where email = 'them@example.com')
 returning id, display_name, status;
 ```
 
-The three states are `pending_approval`, `active` and `suspended`. Nothing
-else is valid — the database will reject a typo rather than silently accept it.
+To let them sell again, the same query with `'active'`. Again: if it prints
+nothing, nothing changed.
 
-**On the subscription fee:** you still collect it offline — cash, Whish, bank
-transfer. The app has no payment step for it. Approval is the lever: don't set
-someone `active` until they've paid you.
+**On the subscription fee:** you collect it offline — cash, Whish, bank
+transfer. The app has no payment step for it. Making someone a supplier is
+the lever: don't run step 2 until they've paid you.
 
 ---
 
