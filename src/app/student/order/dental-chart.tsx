@@ -1,16 +1,11 @@
 "use client";
 
 import { CHART_ROWS } from "@/lib/teeth/fdi";
-import type { ToothType } from "@/lib/supabase/types";
+import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
 
-// Keyed by tooth number + type (not tooth number alone) so a student can
-// order both Frasaco and Copy A for the same FDI position in one order.
-export type ToothSelectionKey = `${number}:${ToothType}`;
-export type ToothSelections = Record<ToothSelectionKey, { toothType: ToothType; quantity: number }>;
-
-export function toothSelectionKey(toothNumber: number, toothType: ToothType): ToothSelectionKey {
-  return `${toothNumber}:${toothType}`;
-}
+// Re-exported so existing client imports keep working.
+export { toothSelectionKey };
+export type { ToothSelectionKey, ToothSelections } from "@/lib/teeth/selection";
 
 interface DentalChartProps {
   selections: ToothSelections;

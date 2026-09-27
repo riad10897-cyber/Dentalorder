@@ -6,10 +6,14 @@ import { ConfirmIcon } from "./confirm-icon";
 
 export default async function OrderConfirmedPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orderId: string }>;
+  searchParams: Promise<{ edited?: string }>;
 }) {
-  const { orderId } = await params;
+  const [{ orderId }, { edited }] = await Promise.all([params, searchParams]);
+  // Only a label: the order shown is whatever orderId is, either way.
+  const wasEdit = edited === "1";
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
@@ -32,10 +36,19 @@ export default async function OrderConfirmedPage({
       <div className="flex flex-col items-center text-center">
         <ConfirmIcon />
         <h1 className="confirm-stagger font-display text-display" style={stagger(0)}>
-          Order placed
+          {wasEdit ? "Order updated" : "Order placed"}
         </h1>
         <p className="confirm-stagger mt-1 text-body text-ink-muted" style={stagger(1)}>
-          {supplierName} has your week <span className="tnum">{order.week_number}</span> order.
+          {wasEdit ? (
+            <>
+              {supplierName} now has your changed week{" "}
+              <span className="tnum">{order.week_number}</span> order.
+            </>
+          ) : (
+            <>
+              {supplierName} has your week <span className="tnum">{order.week_number}</span> order.
+            </>
+          )}
         </p>
       </div>
 

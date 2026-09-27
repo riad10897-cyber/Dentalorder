@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStudentContext, listStudentOrders } from "@/lib/student/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
@@ -102,7 +103,19 @@ export default async function OrderHistoryPage() {
                   >
                     {order.fulfillmentStatus}
                   </span>
-                  <ReorderButton orderId={order.id} />
+                  <span className="flex items-center gap-1">
+                    {/* Only while the supplier has not acted on it. The
+                        database checks again, under a lock, when it saves. */}
+                    {order.fulfillmentStatus === "pending" && (
+                      <Link
+                        href={`/student/order/edit/${order.id}`}
+                        className="pressable flex min-h-11 items-center rounded-control px-3 font-display text-small text-ink underline underline-offset-2"
+                      >
+                        Edit
+                      </Link>
+                    )}
+                    <ReorderButton orderId={order.id} />
+                  </span>
                 </div>
                 </div>
               </li>

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { DentalChart, toothSelectionKey, type ToothSelections } from "./dental-chart";
 import { ToothSheet } from "./tooth-sheet";
 import { ReviewSheet } from "./review-sheet";
-import { submitToothOrder } from "@/app/student/_actions/orders";
+import { editToothOrder, submitToothOrder } from "@/app/student/_actions/orders";
+import type { PriceMove } from "@/lib/orders/price-change";
 import { priceToothOrder } from "@/lib/orders/tooth-pricing";
 import { haptic } from "@/lib/haptics";
 import { useCountingMoney } from "@/lib/use-counting-money";
@@ -18,6 +19,15 @@ interface OrderBuilderProps {
   copyAPrice: number;
   initialWeek: number;
   initialToothType: ToothType;
+  /** Present when this screen is editing a pending order rather than placing a new one. */
+  edit?: {
+    orderId: string;
+    /** What the order came to when it was placed. */
+    originalTotal: number;
+    /** Empty when the supplier's prices have not moved since. */
+    priceMoves: PriceMove[];
+    initialSelections: ToothSelections;
+  };
 }
 
 interface UndoState {
@@ -34,12 +44,13 @@ export function OrderBuilder({
   copyAPrice,
   initialWeek,
   initialToothType,
+  edit,
 }: OrderBuilderProps) {
   const router = useRouter();
   // Fixed for the life of the screen: the week comes from the calendar,
   // not from a control.
   const [week] = useState(initialWeek);
-  const [selections, setSelections] = useState<ToothSelections>({});
+  const [selections, setSelections] = useState<ToothSelections>(edit?.initialSelections ?? {});
   const [sheetTooth, setSheetTooth] = useState<number | null>(null);
   const [sheetFrasacoQty, setSheetFrasacoQty] = useState(0);
   const [sheetCopyQty, setSheetCopyQty] = useState(0);
@@ -151,6 +162,33 @@ export function OrderBuilder({
 
   function handleConfirm() {
     setError(null);
+    if (edit) {
+      startTransition(async () => {
+        const result = await editToothOrder({
+          orderId: edit.orderId,
+          items: itemInputs,
+          expectedTotal: subtotal,
+        });
+        if (result.kind === "pricesChanged") {
+          // The supplier moved their prices while this sheet was open.
+          // Nothing was saved. Reload the prices from the server — the
+          // total and the notice both recompute from them — and let the
+          // student confirm again, having now seen the real number.
+          setError(
+            `Prices changed while you were editing. The total is now $${result.newTotal.toFixed(2)}. Check it and save again.`,
+          );
+          router.refresh();
+          return;
+        }
+        if (result.kind === "error") {
+          setError(result.message);
+          return;
+        }
+        haptic();
+        router.push(`/student/order/confirmed/${result.orderId}?edited=1`);
+      });
+      return;
+    }
     startTransition(async () => {
       const result = await submitToothOrder({ supplierId, weekNumber: week, items: itemInputs });
       if (result.error) {
@@ -258,6 +296,12 @@ export function OrderBuilder({
           subtotal={subtotal}
           error={error}
           pending={pending}
+          mode={edit ? "edit" : "new"}
+          priceNotice={
+            edit && edit.priceMoves.length > 0
+              ? { moves: edit.priceMoves, was: edit.originalTotal, now: subtotal }
+              : null
+          }
           onClose={() => setReviewOpen(false)}
           onConfirm={handleConfirm}
         />

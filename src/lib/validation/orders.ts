@@ -16,6 +16,16 @@ export const submitToothOrderSchema = z.object({
 });
 export type SubmitToothOrderInput = z.infer<typeof submitToothOrderSchema>;
 
+// Editing names the order, not a supplier or a week: both are read from
+// the order being replaced, inside the database, and never taken from
+// the request. expectedTotal is what the student was shown on the review
+// screen — the database refuses the edit if the real total differs.
+export const editToothOrderSchema = z.object({
+  orderId: z.string().uuid(),
+  items: z.array(toothItemSchema).min(1, "Add at least one tooth.").max(64),
+  expectedTotal: z.number().nonnegative().max(100000),
+});
+
 export const fulfillmentStatusSchema = z.enum([
   "pending",
   "confirmed",

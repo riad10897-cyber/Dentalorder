@@ -134,3 +134,47 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
       })),
   }));
 }
+
+export interface EditableOrder {
+  id: string;
+  weekNumber: number;
+  supplierId: string;
+  totalPrice: number;
+  lines: { toothNumber: number; toothType: ToothType; quantity: number; unitPrice: number }[];
+}
+
+/**
+ * A pending tooth order of this student's, with what each line was bought
+ * at — or null if there is no such order, it is someone else's, or it is
+ * past editing. RLS already hides other students' orders and replaced
+ * ones; the pending check here only decides whether to offer the screen.
+ * The database makes the same decision again, under a lock, when the edit
+ * is actually saved.
+ */
+export async function getEditableOrder(userId: string, orderId: string): Promise<EditableOrder | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("orders")
+    .select("id, week_number, supplier_id, total_price, fulfillment_status, order_type, order_items(tooth_number, tooth_type, quantity, unit_price)")
+    .eq("id", orderId)
+    .eq("student_id", userId)
+    .maybeSingle();
+
+  if (!data || data.order_type !== "tooth" || data.fulfillment_status !== "pending") return null;
+  if (data.week_number === null || data.supplier_id === null) return null;
+
+  return {
+    id: data.id,
+    weekNumber: data.week_number,
+    supplierId: data.supplier_id,
+    totalPrice: Number(data.total_price),
+    lines: (data.order_items ?? [])
+      .filter((item) => item.tooth_number !== null && item.tooth_type !== null)
+      .map((item) => ({
+        toothNumber: item.tooth_number!,
+        toothType: item.tooth_type!,
+        quantity: item.quantity,
+        unitPrice: Number(item.unit_price),
+      })),
+  };
+}

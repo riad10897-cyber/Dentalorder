@@ -44,11 +44,42 @@ export const getSupplierDirectory = unstable_cache(
   fetchSupplierDirectory,
   ["supplier-directory"],
   {
-    // Sign-up calls revalidateTag. Approval happens by hand in SQL and
-    // cannot, so this ceiling is what actually bounds how long an
-    // approved supplier stays invisible to students.
-    // only matters if that is missed.
+    // Sign-up and a supplier's own price change call revalidateTag.
+    // Approval and any price set by hand in SQL cannot, so this ceiling is
+    // what bounds how stale the list can be after one of those. Anything
+    // that commits money reads getSupplierFresh instead.
     tags: [SUPPLIER_DIRECTORY_TAG],
     revalidate: 300,
   },
 );
+
+/**
+ * One supplier's listing, read now rather than from the cached list.
+ *
+ * For screens that commit money — editing an order compares the order's
+ * prices against these, and the database refuses the save if the student
+ * was shown a different total. Read from a cache that can be minutes
+ * behind, that refusal would repeat on every retry.
+ */
+export async function getSupplierFresh(supplierId: string): Promise<DirectorySupplier | null> {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+  const { data } = await supabase
+    .from("supplier_directory")
+    .select("id, display_name, kind, university, frasaco_price, copy_a_price")
+    .eq("id", supplierId)
+    .maybeSingle();
+
+  if (!data) return null;
+  return {
+    id: data.id,
+    displayName: data.display_name,
+    kind: data.kind,
+    university: data.university,
+    frasacoPrice: Number(data.frasaco_price),
+    copyAPrice: Number(data.copy_a_price),
+  };
+}

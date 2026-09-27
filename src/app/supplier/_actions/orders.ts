@@ -1,7 +1,9 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
+import { SUPPLIER_DIRECTORY_TAG } from "@/lib/supplier/directory";
 import {
   rejectOrderSchema,
   updateOrderStatusSchema,
@@ -108,5 +110,10 @@ export async function updateSupplierPrices(input: {
     .eq("id", userId);
 
   if (error) return { ok: false, error: error.message };
+
+  // The market and the chart read prices from a cached list. Without this
+  // they kept showing the old price for up to five minutes while the
+  // database charged the new one — a student saw $2.50 and paid $3.00.
+  revalidateTag(SUPPLIER_DIRECTORY_TAG);
   return { ok: true };
 }

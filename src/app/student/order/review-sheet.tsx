@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { priceToothOrder } from "@/lib/orders/tooth-pricing";
+import type { PriceMove } from "@/lib/orders/price-change";
 
 export function ReviewSheet({
   week,
@@ -10,6 +11,8 @@ export function ReviewSheet({
   subtotal,
   error,
   pending,
+  mode = "new",
+  priceNotice = null,
   onClose,
   onConfirm,
 }: {
@@ -19,6 +22,9 @@ export function ReviewSheet({
   subtotal: number;
   error: string | null;
   pending: boolean;
+  mode?: "new" | "edit";
+  /** Shown only when editing and the supplier's prices moved since the order. */
+  priceNotice?: { moves: PriceMove[]; was: number; now: number } | null;
   onClose: () => void;
   onConfirm: () => void;
 }) {
@@ -56,7 +62,7 @@ export function ReviewSheet({
       >
         <div className="shrink-0 px-5 pb-3 pt-3">
           <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-rule" />
-          <div className="font-display text-title">Review order</div>
+          <div className="font-display text-title">{mode === "edit" ? "Review changes" : "Review order"}</div>
           <div className="text-small text-ink-muted">
             Week {week}
             {repName ? ` · to ${repName}` : ""}
@@ -98,6 +104,29 @@ export function ReviewSheet({
           </span>
         </div>
 
+        {/* Said before the button, never after it. A total that moves
+            without a reason given is how a student ends up feeling cheated;
+            when the prices have not moved, this says nothing at all. */}
+        {priceNotice && (
+          <div
+            className="mx-5 mt-3 shrink-0 rounded-control border border-ink bg-card-sunk px-3 py-2.5"
+            role="status"
+          >
+            <p className="font-display text-body text-ink">Prices changed since you ordered.</p>
+            <p className="tnum mt-0.5 text-small text-ink">
+              Was ${priceNotice.was.toFixed(2)}, now ${priceNotice.now.toFixed(2)}.
+            </p>
+            <p className="tnum mt-1 text-caption text-ink-muted">
+              {priceNotice.moves
+                .map(
+                  (m) =>
+                    `${m.toothType === "frasaco" ? "Frasaco" : "Copy A"} $${m.was.toFixed(2)} → $${m.now.toFixed(2)}`,
+                )
+                .join(" · ")}
+            </p>
+          </div>
+        )}
+
         {error && (
           <p
             className="mx-5 mt-3 shrink-0 border-l-2 border-ink bg-card-sunk py-2 pl-3 pr-2 text-small text-ink"
@@ -122,7 +151,13 @@ export function ReviewSheet({
             disabled={pending}
             className="pressable min-h-11 flex-[2] rounded-control bg-ink py-3 font-display text-body text-card disabled:opacity-50"
           >
-            {pending ? "Placing…" : "Place order"}
+            {mode === "edit"
+              ? pending
+                ? "Saving…"
+                : "Save changes"
+              : pending
+                ? "Placing…"
+                : "Place order"}
           </button>
         </div>
       </div>
