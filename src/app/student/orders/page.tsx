@@ -6,6 +6,7 @@ import { StudentBottomNav } from "../_components/bottom-nav";
 import { ReorderButton } from "./reorder-button";
 import { CancelOrderButton } from "./cancel-order-button";
 import { OrderStatus } from "./order-status";
+import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
 
 // Placed, not yet done with. A cancelled or rejected order has nothing
 // left to wait for, so it reads as history rather than as in flight.
@@ -40,6 +41,7 @@ export default async function OrderHistoryPage() {
         <ul className="mt-4 flex flex-col gap-2.5 px-5">
           {[...inFlight, ...settled].map((order) => {
             const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
+            const extrasCount = order.extras.reduce((sum, extra) => sum + extra.quantity, 0);
             const rejected = order.fulfillmentStatus === "rejected";
             const first = order.id === [...inFlight, ...settled][0]?.id;
             const startsSettled = settled.length > 0 && order.id === settled[0]?.id;
@@ -62,7 +64,7 @@ export default async function OrderHistoryPage() {
                       Week <span className="tnum">{order.weekNumber}</span>
                     </h2>
                     <p className="tnum font-display text-caption text-ink-muted">
-                      {formatDate(order.createdAt)} · {teeth} {teeth === 1 ? "tooth" : "teeth"}
+                      {formatDate(order.createdAt)} · {describeLines(teeth, extrasCount)}
                     </p>
                   </div>
                   <span className="tnum font-display text-lead">
@@ -85,6 +87,8 @@ export default async function OrderHistoryPage() {
                     </li>
                   ))}
                 </ul>
+
+                <ExtrasLines extras={order.extras} />
 
                 {rejected && order.rejectionReason && (
                   <p className="mt-3 border-l-2 border-ink bg-card-sunk py-2 pl-3 pr-2 text-small text-ink">

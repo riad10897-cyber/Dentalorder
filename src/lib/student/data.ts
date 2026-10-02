@@ -95,7 +95,10 @@ export interface StudentOrderSummary {
   supplierId: string;
   supplierName: string;
   createdAt: string;
+  /** Tooth lines. */
   items: { toothNumber: number; toothType: ToothType; quantity: number }[];
+  /** Product lines, as ordered: snapshotted name, unit and price. */
+  extras: { productId: string; name: string; unit: string | null; quantity: number; lineTotal: number }[];
 }
 
 // A cancelled order is money the student did not spend. Both the student's
@@ -109,7 +112,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, supplier_id, suppliers(display_name), order_items(tooth_number, tooth_type, quantity)",
+      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, supplier_id, suppliers(display_name), order_items(tooth_number, tooth_type, product_id, product_name, product_unit, quantity, line_total)",
     )
     .eq("student_id", userId)
     .eq("order_type", "tooth")
@@ -132,6 +135,16 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
         toothType: item.tooth_type!,
         quantity: item.quantity,
       })),
+    extras: (order.order_items ?? [])
+      .filter((item) => item.product_id !== null)
+      .map((item) => ({
+        productId: item.product_id!,
+        name: item.product_name ?? "Product",
+        unit: item.product_unit,
+        quantity: item.quantity,
+        lineTotal: Number(item.line_total),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
   }));
 }
 
@@ -141,6 +154,8 @@ export interface EditableOrder {
   supplierId: string;
   totalPrice: number;
   lines: { toothNumber: number; toothType: ToothType; quantity: number; unitPrice: number }[];
+  /** Product lines, with what each was bought at. */
+  extras: { productId: string; name: string; quantity: number; unitPrice: number }[];
 }
 
 /**
@@ -155,7 +170,7 @@ export async function getEditableOrder(userId: string, orderId: string): Promise
   const supabase = await createClient();
   const { data } = await supabase
     .from("orders")
-    .select("id, week_number, supplier_id, total_price, fulfillment_status, order_type, order_items(tooth_number, tooth_type, quantity, unit_price)")
+    .select("id, week_number, supplier_id, total_price, fulfillment_status, order_type, order_items(tooth_number, tooth_type, product_id, product_name, quantity, unit_price)")
     .eq("id", orderId)
     .eq("student_id", userId)
     .maybeSingle();
@@ -173,6 +188,14 @@ export async function getEditableOrder(userId: string, orderId: string): Promise
       .map((item) => ({
         toothNumber: item.tooth_number!,
         toothType: item.tooth_type!,
+        quantity: item.quantity,
+        unitPrice: Number(item.unit_price),
+      })),
+    extras: (data.order_items ?? [])
+      .filter((item) => item.product_id !== null)
+      .map((item) => ({
+        productId: item.product_id!,
+        name: item.product_name ?? "Product",
         quantity: item.quantity,
         unitPrice: Number(item.unit_price),
       })),

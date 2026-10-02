@@ -27,9 +27,18 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
       copy_a: { quantity: 0, total: 0 },
     };
     const students = new Set<string>();
+    // Products keyed by product, not by name: a product renamed mid-week is
+    // still one thing to pack. The label is the name on the first line.
+    const extras = new Map<string, { name: string; unit: string | null; quantity: number; total: number }>();
 
     for (const order of weekOrders) {
       students.add(order.studentId);
+      for (const extra of order.extras) {
+        const existing = extras.get(extra.productId) ?? { name: extra.name, unit: extra.unit, quantity: 0, total: 0 };
+        existing.quantity += extra.quantity;
+        existing.total += extra.lineTotal;
+        extras.set(extra.productId, existing);
+      }
       for (const item of order.items) {
         const key = `${item.toothNumber}:${item.toothType}`;
         const existing = totals.get(key) ?? {
@@ -50,11 +59,18 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
         .filter((row) => row.toothType === type)
         .sort((a, b) => a.toothNumber - b.toothNumber);
 
+    const extraRows = Array.from(extras.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const extrasTotal = extraRows.reduce((sum, row) => sum + row.total, 0);
+    const extrasQuantity = extraRows.reduce((sum, row) => sum + row.quantity, 0);
+
     return {
       frasacoRows: rows("frasaco"),
       copyARows: rows("copy_a"),
       perType,
-      grandTotal: perType.frasaco.total + perType.copy_a.total,
+      extraRows,
+      extrasTotal,
+      extrasQuantity,
+      grandTotal: perType.frasaco.total + perType.copy_a.total + extrasTotal,
       totalTeeth: perType.frasaco.quantity + perType.copy_a.quantity,
       studentCount: students.size,
     };
@@ -78,7 +94,7 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
         ))}
       </div>
 
-      {summary.totalTeeth === 0 ? (
+      {summary.totalTeeth === 0 && summary.extrasQuantity === 0 ? (
         <p className="mx-5 mt-5 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
           No orders for week {week} yet.
         </p>
@@ -88,7 +104,14 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
             <span className="tnum font-display">{summary.studentCount}</span>{" "}
             {summary.studentCount === 1 ? "student" : "students"} ·{" "}
             <span className="tnum font-display">{summary.totalTeeth}</span>{" "}
-            {summary.totalTeeth === 1 ? "tooth" : "teeth"} to buy
+            {summary.totalTeeth === 1 ? "tooth" : "teeth"}
+            {summary.extrasQuantity > 0 && (
+              <>
+                {" "}· <span className="tnum font-display">{summary.extrasQuantity}</span>{" "}
+                {summary.extrasQuantity === 1 ? "extra" : "extras"}
+              </>
+            )}{" "}
+            to buy
           </p>
 
           {summary.frasacoRows.length > 0 && (
@@ -108,6 +131,33 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
               quantity={summary.perType.copy_a.quantity}
               total={summary.perType.copy_a.total}
             />
+          )}
+
+          {summary.extraRows.length > 0 && (
+            <section className="mx-5 mt-3 overflow-hidden rounded-card border border-rule bg-card">
+              <h2 className="border-b border-rule px-4 py-3 font-display text-body">Extras</h2>
+              <ul>
+                {summary.extraRows.map((row) => (
+                  <li
+                    key={row.name + (row.unit ?? "")}
+                    className="flex items-baseline justify-between gap-3 border-b border-hairline px-4 py-2.5 last:border-none"
+                  >
+                    <span className="min-w-0 truncate">
+                      <span className="font-display text-body">{row.name}</span>
+                      {row.unit && <span className="ml-2 text-caption text-ink-muted">{row.unit}</span>}
+                    </span>
+                    <span className="tnum shrink-0 font-display text-body">×{row.quantity}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-baseline justify-between border-t border-rule bg-card-sunk px-4 py-2.5">
+                <span className="text-small text-ink-muted">
+                  <span className="tnum font-display">{summary.extrasQuantity}</span>{" "}
+                  {summary.extrasQuantity === 1 ? "extra" : "extras"}
+                </span>
+                <span className="tnum font-display text-body">${summary.extrasTotal.toFixed(2)}</span>
+              </div>
+            </section>
           )}
 
           <div className="mx-5 mt-3 flex items-center justify-between rounded-card bg-ink px-4 py-4">

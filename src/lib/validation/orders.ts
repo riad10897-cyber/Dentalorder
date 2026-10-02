@@ -7,16 +7,32 @@ const toothItemSchema = z.object({
   quantity: z.number().int().min(1).max(10),
 });
 
+// An extra is an id and a quantity — nothing else is accepted, so there is
+// no field a crafted request could put a price in. .strict() refuses one
+// that tries.
+const extraItemSchema = z
+  .object({
+    productId: z.string().uuid(),
+    quantity: z.number().int().min(1).max(10),
+  })
+  .strict();
+
+// Teeth, extras, or both — but at least one line, and within what the
+// database accepts (64 tooth lines + extras, 100 in all).
+const linesSchema = {
+  items: z.array(toothItemSchema).max(64),
+  extras: z.array(extraItemSchema).max(36).default([]),
+};
+const atLeastOneLine = (v: { items: unknown[]; extras: unknown[] }) => v.items.length + v.extras.length > 0;
+
 export const submitToothOrderSchema = z.object({
   supplierId: z.string().uuid("Choose a supplier."),
   weekNumber: z.number().int().min(1).max(17),
-  // 64 is every line the chart can produce: 32 FDI positions in two types.
-  // The database enforces the same ceiling — this just fails faster.
-  items: z.array(toothItemSchema).min(1, "Add at least one tooth.").max(64),
+  ...linesSchema,
   // What the screen showed. The database refuses the order if the real
   // total differs, so the student is never charged a figure they did not see.
   expectedTotal: z.number().nonnegative().max(100000),
-});
+}).refine(atLeastOneLine, "Add at least one tooth or extra.");
 export type SubmitToothOrderInput = z.infer<typeof submitToothOrderSchema>;
 
 // Editing names the order, not a supplier or a week: both are read from
@@ -25,9 +41,9 @@ export type SubmitToothOrderInput = z.infer<typeof submitToothOrderSchema>;
 // screen — the database refuses the edit if the real total differs.
 export const editToothOrderSchema = z.object({
   orderId: z.string().uuid(),
-  items: z.array(toothItemSchema).min(1, "Add at least one tooth.").max(64),
+  ...linesSchema,
   expectedTotal: z.number().nonnegative().max(100000),
-});
+}).refine(atLeastOneLine, "Add at least one tooth or extra.");
 
 export const fulfillmentStatusSchema = z.enum([
   "pending",

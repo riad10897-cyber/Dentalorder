@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { getEditableOrder, getOrderDefaults } from "@/lib/student/data";
 import { getSupplierFresh } from "@/lib/supplier/directory";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
-import { priceMovesSinceOrder } from "@/lib/orders/price-change";
+import { priceMovesSinceOrder, productChangesSinceOrder } from "@/lib/orders/price-change";
+import { listOrderableProducts } from "@/lib/products/data";
 import { OrderBuilder } from "../../order-builder";
 import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
 
@@ -35,7 +36,10 @@ export default async function EditOrderPage({
 
   // Fresh, not the cached market list: the notice and the total the
   // database checks against must both be today's prices.
-  const supplier = await getSupplierFresh(order.supplierId);
+  const [supplier, products] = await Promise.all([
+    getSupplierFresh(order.supplierId),
+    listOrderableProducts(order.supplierId),
+  ]);
   if (!supplier) {
     return (
       <main className="mx-auto min-h-dvh max-w-md px-5 pt-6">
@@ -54,6 +58,18 @@ export default async function EditOrderPage({
       toothType: line.toothType,
       quantity: line.quantity,
     };
+  }
+
+  // Extras: what the order had, against what the seller sells now. A
+  // product gone since is left off and named on the review screen.
+  const productChanges = productChangesSinceOrder(
+    order.extras,
+    products.map((p) => ({ productId: p.id, price: p.price })),
+  );
+  const availableIds = new Set(products.map((p) => p.id));
+  const initialExtras: Record<string, number> = {};
+  for (const extra of order.extras) {
+    if (availableIds.has(extra.productId)) initialExtras[extra.productId] = extra.quantity;
   }
 
   const priceMoves = priceMovesSinceOrder(order.lines, {
@@ -81,11 +97,21 @@ export default async function EditOrderPage({
         copyAPrice={supplier.copyAPrice}
         initialWeek={order.weekNumber}
         initialToothType={defaults.lastToothType}
+        extras={products.map((p) => ({
+          productId: p.id,
+          name: p.name,
+          unit: p.unit,
+          price: p.price,
+          category: p.category,
+        }))}
         edit={{
           orderId: order.id,
           originalTotal: order.totalPrice,
           priceMoves,
+          productMoves: productChanges.moves,
+          goneExtras: productChanges.gone,
           initialSelections,
+          initialExtras,
         }}
       />
     </main>

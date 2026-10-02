@@ -381,15 +381,30 @@ async function main() {
       if (error) throw new Error(`fixture setup failed (pending shop): ${error.message}`);
     }
     const pendingSupplier = await signInAs(pendingSupplierEmail);
+    // A valid category, so the only thing that can refuse this insert is
+    // the access rule. Without one the not-null category would refuse it
+    // first, and this check would pass for the wrong reason.
+    const { data: category } = await admin
+      .from("product_categories")
+      .select("id")
+      .eq("slug", "burs")
+      .single();
+    if (!category) throw new Error("fixture setup failed: no 'burs' category");
     const { error } = await pendingSupplier.from("products").insert({
       supplier_id: pendingSupplierId,
-      name: "Test gloves",
+      category_id: category.id,
+      name: `Pending gloves ${RUN_ID}`,
       price: "5.00",
     });
+    // The outcome, not the error: did a row land?
+    const { count } = await admin
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("name", `Pending gloves ${RUN_ID}`);
     record(
       "a pending_approval supplier cannot list products",
-      error !== null,
-      error ? `blocked: ${error.message}` : "insert succeeded — NOT blocked",
+      count === 0 && error?.code === "42501",
+      `${count} row(s) written; ${error ? `${error.code}: ${error.message}` : "no error"}`,
     );
   }
 
@@ -412,6 +427,36 @@ async function main() {
       Number(data?.frasaco_price) !== 0.01,
       `seller A's frasaco_price is now ${data?.frasaco_price}`,
     );
+  }
+
+  // Products: what a student can see, and what a signed-out visitor can.
+  //   Seller A lists one product switched off; a student must not see it,
+  //   and nobody signed out may read the table at all.
+  {
+    const { data: category } = await admin.from("product_categories").select("id").eq("slug", "materials").single();
+    if (!category) throw new Error("fixture setup failed: no 'materials' category");
+    const { data: hidden, error: hiddenErr } = await sellerA
+      .from("products")
+      .insert({ supplier_id: sellerAId, category_id: category.id, name: `Hidden ${RUN_ID}`, price: "5.00", is_active: false })
+      .select("id")
+      .single();
+    if (hiddenErr || !hidden) throw new Error(`fixture setup failed (hidden product): ${hiddenErr?.message}`);
+
+    const { data: studentSees } = await studentA.from("products").select("id").eq("id", hidden.id);
+    record(
+      "a student cannot read a switched-off product",
+      (studentSees?.length ?? 0) === 0,
+      `expected 0 rows, got ${studentSees?.length ?? 0}`,
+    );
+
+    const anon = createClient<Database>(url!, anonKey!, { auth: { persistSession: false } });
+    const { data: anonSees, error: anonErr } = await anon.from("products").select("id").limit(1);
+    record(
+      "a signed-out visitor cannot read products",
+      (anonSees?.length ?? 0) === 0 && anonErr?.code === "42501",
+      anonErr ? `${anonErr.code}: ${anonErr.message}` : `read ${anonSees?.length ?? 0} row(s)`,
+    );
+    await admin.from("products").delete().eq("id", hidden.id);
   }
 
   // Bonus: a student cannot place an order on another student's behalf.

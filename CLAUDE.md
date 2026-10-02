@@ -48,6 +48,8 @@ The spec has five phases in §13. **Build one phase, stop, and report.**
 
 Do not start the next phase without being told to. Phase 2 ends with real students using tooth ordering — that gate is deliberate and commercial, not technical.
 
+**Store gate — lifted for one slice only.** The owner has opened the store gate for "Extras from your seller": a seller lists a few products, and a student adds them to the weekly order they are already placing with that seller. One seller, one order, one pickup, one payment. That slice and nothing past it. The rest of the spec's Phase 3 Store stays gated — no carts across sellers, no shop browse page, no product images, no commission. Do not build any of it without being told to.
+
 At the end of every phase, state:
 - what was built
 - what was deliberately left out
@@ -149,5 +151,7 @@ whether the row exists. Three false signals in one week all came from this.
 - **Frasaco** is the genuine brand tooth (~$2.50). **Copy A** is the cheaper copy (~$1.20). Reps set their own prices.
 - Students order **weekly**, weeks 1–17 of the academic semester.
 - 286 orders in one semester from a single group. Only 4 of them mixed both tooth types — default the type selector to the student's last used type.
-- **Reps** handle teeth. **Suppliers** handle store products. They never see each other's orders.
-- The platform takes **no cut on tooth orders** and a **commission on store orders**. The student never sees a commission figure anywhere.
+- There are no reps. A **seller** (a row in `suppliers`) sells teeth and, since "Extras from your seller", a few products. A student picks a seller per order. Sellers never see each other's orders, nor each other's products beyond what any student sees.
+- A weekly order is `order_type = 'tooth'` even when it carries extras: "tooth" means "a weekly order from a seller". One order, one seller.
+- Product categories are a fixed list of five: Burs, Instruments, Materials, Gloves & masks, Equipment. Only an admin can change them.
+- The platform takes **no cut** — not on teeth, not on extras. Commission stays 0. The student never sees a commission figure anywhere.

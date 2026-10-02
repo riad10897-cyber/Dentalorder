@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
 import { getSupplierFresh } from "@/lib/supplier/directory";
+import { listOrderableProducts } from "@/lib/products/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { OrderBuilder } from "./order-builder";
 
@@ -27,10 +28,11 @@ export default async function NewOrderPage({
   // chart totals up and what the database will be asked to confirm. From
   // a cache, a refused order would reload the same stale price and be
   // refused again.
-  const [student, orderDefaults, supplier] = await Promise.all([
+  const [student, orderDefaults, supplier, products] = await Promise.all([
     getStudentContext(userId),
     getOrderDefaults(userId),
     getSupplierFresh(supplierId),
+    listOrderableProducts(supplierId),
   ]);
   if (!student) redirect("/sign-in");
   if (!supplier || supplier.id === userId) redirect("/student");
@@ -65,6 +67,13 @@ export default async function NewOrderPage({
         copyAPrice={supplier.copyAPrice}
         initialWeek={orderDefaults.nextWeek}
         initialToothType={orderDefaults.lastToothType}
+        extras={products.map((p) => ({
+          productId: p.id,
+          name: p.name,
+          unit: p.unit,
+          price: p.price,
+          category: p.category,
+        }))}
       />
     </main>
   );

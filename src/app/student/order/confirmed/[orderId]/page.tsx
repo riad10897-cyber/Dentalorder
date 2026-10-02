@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { ConfirmIcon } from "./confirm-icon";
+import { describeLines } from "@/app/_components/extras-lines";
 
 export default async function OrderConfirmedPage({
   params,
@@ -20,14 +21,17 @@ export default async function OrderConfirmedPage({
   const supabase = await createClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, week_number, total_price, order_items(quantity), suppliers(display_name)")
+    .select("id, week_number, total_price, order_items(quantity, product_id), suppliers(display_name)")
     .eq("id", orderId)
     .eq("order_type", "tooth")
     .single();
 
   if (!order) notFound();
 
-  const toothCount = (order.order_items ?? []).reduce((sum, item) => sum + item.quantity, 0);
+  // Teeth and extras counted apart: a box of gloves is not a tooth.
+  const lines = order.order_items ?? [];
+  const toothCount = lines.filter((l) => l.product_id === null).reduce((sum, l) => sum + l.quantity, 0);
+  const extrasCount = lines.filter((l) => l.product_id !== null).reduce((sum, l) => sum + l.quantity, 0);
   const total = Number(order.total_price);
   const supplierName = order.suppliers?.display_name ?? "your supplier";
 
@@ -59,7 +63,7 @@ export default async function OrderConfirmedPage({
         <p className="text-micro uppercase text-ink-faint">Total due</p>
         <p className="tnum mt-1 font-display text-figure">${total.toFixed(2)}</p>
         <p className="tnum mt-2 text-caption text-ink-muted">
-          {toothCount} {toothCount === 1 ? "tooth" : "teeth"} · week {order.week_number}
+          {describeLines(toothCount, extrasCount)} · week {order.week_number}
         </p>
       </section>
 

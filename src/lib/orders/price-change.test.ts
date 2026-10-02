@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { priceMovesSinceOrder } from "./price-change";
+import { priceMovesSinceOrder, productChangesSinceOrder } from "./price-change";
 
 const now = { frasacoPrice: 2.5, copyAPrice: 1.2 };
 
@@ -50,4 +50,39 @@ test("2.5 and 2.50 are the same price — compared in cents, not as floats", () 
   // and float noise from arithmetic is not a price change either
   const noisy = [{ toothType: "frasaco" as const, unitPrice: 0.1 + 0.2 }];
   assert.deepEqual(priceMovesSinceOrder(noisy, { frasacoPrice: 0.3, copyAPrice: 1.2 }), []);
+});
+
+
+test("extras: same prices, all still sold — nothing to say", () => {
+  assert.deepEqual(
+    productChangesSinceOrder([{ productId: "g", name: "Gloves", unitPrice: 6.5 }], [{ productId: "g", price: 6.5 }]),
+    { moves: [], gone: [] },
+  );
+});
+
+test("extras: a repriced product is reported with both figures", () => {
+  assert.deepEqual(
+    productChangesSinceOrder([{ productId: "g", name: "Gloves", unitPrice: 6.5 }], [{ productId: "g", price: 7.25 }]),
+    { moves: [{ name: "Gloves", was: 6.5, now: 7.25 }], gone: [] },
+  );
+});
+
+test("extras: a product no longer on sale is named as gone, not priced", () => {
+  assert.deepEqual(
+    productChangesSinceOrder(
+      [
+        { productId: "g", name: "Gloves", unitPrice: 6.5 },
+        { productId: "m", name: "Masks", unitPrice: 4 },
+      ],
+      [{ productId: "g", price: 6.5 }],
+    ),
+    { moves: [], gone: ["Masks"] },
+  );
+});
+
+test("extras: compared in cents, so 6.5 and 6.50 are one price", () => {
+  assert.deepEqual(
+    productChangesSinceOrder([{ productId: "g", name: "Gloves", unitPrice: Number("6.50") }], [{ productId: "g", price: 6.5 }]),
+    { moves: [], gone: [] },
+  );
 });

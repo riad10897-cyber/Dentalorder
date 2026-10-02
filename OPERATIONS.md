@@ -40,6 +40,12 @@ For a shop rather than a student who sells, change `'student_supplier'` to
 They start at $2.50 Frasaco and $1.20 Copy A. They set their own prices in
 the app under Settings, and should do that before telling their class.
 
+They can also list a few extras — gloves, burs, masks — under **Products**,
+in one of five fixed categories. Students see a seller's extras under the
+chart when ordering from them, and add them to the same weekly order. There
+is no commission on extras. A product that has ever been ordered can't be
+deleted, only switched off: past orders keep its name and price as they were.
+
 They appear in the market within five minutes (the market list is cached
 that long). The next time they open the app they land on the supplier
 screens.

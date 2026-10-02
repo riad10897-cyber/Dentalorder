@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { SupplierOrder } from "@/lib/supplier/data";
 import { rejectOrder, updateOrderStatus } from "./_actions/orders";
 import { haptic } from "@/lib/haptics";
+import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
 
 type Tab = "pending" | "confirmed" | "fulfilled" | "rejected";
 const TABS: { key: Tab; label: string }[] = [
@@ -51,7 +52,8 @@ export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
     return inTab.filter(
       (o) =>
         o.studentName.toLowerCase().includes(q) ||
-        o.items.some((item) => String(item.toothNumber).includes(q)),
+        o.items.some((item) => String(item.toothNumber).includes(q)) ||
+        o.extras.some((extra) => extra.name.toLowerCase().includes(q)),
     );
   }, [orders, tab, query]);
 
@@ -161,6 +163,7 @@ function OrderCard({ order }: { order: SupplierOrder }) {
   }
 
   const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const extrasCount = order.extras.reduce((sum, extra) => sum + extra.quantity, 0);
   const unpaid = handedOverUnpaid(order);
 
   return (
@@ -169,7 +172,7 @@ function OrderCard({ order }: { order: SupplierOrder }) {
         <div className="min-w-0">
           <h2 className="truncate font-display text-body">{order.studentName}</h2>
           <p className="tnum font-display text-caption text-ink-muted">
-            Week {order.weekNumber} · {teeth} {teeth === 1 ? "tooth" : "teeth"}
+            Week {order.weekNumber} · {describeLines(teeth, extrasCount)}
           </p>
         </div>
         <span className="tnum shrink-0 font-display text-lead">${order.totalPrice.toFixed(2)}</span>
@@ -198,6 +201,8 @@ function OrderCard({ order }: { order: SupplierOrder }) {
           </li>
         ))}
       </ul>
+
+      <ExtrasLines extras={order.extras} />
 
       {order.fulfillmentStatus === "rejected" ? (
         <div className="mt-3 border-t border-hairline pt-3">

@@ -7,8 +7,11 @@ import { ToothSheet } from "./tooth-sheet";
 import { ReviewSheet } from "./review-sheet";
 import { CancelOrderButton } from "@/app/student/orders/cancel-order-button";
 import { editToothOrder, submitToothOrder } from "@/app/student/_actions/orders";
-import type { PriceMove } from "@/lib/orders/price-change";
-import { priceToothOrder } from "@/lib/orders/tooth-pricing";
+import type { PriceMove, ProductPriceMove } from "@/lib/orders/price-change";
+import type { priceToothOrder } from "@/lib/orders/tooth-pricing";
+import { priceWeeklyOrder, type PricedExtra } from "@/lib/orders/order-pricing";
+import { ExtrasSection, type ExtraOption } from "./extras-section";
+import { describeLines } from "@/app/_components/extras-lines";
 import { haptic } from "@/lib/haptics";
 import { useCountingMoney } from "@/lib/use-counting-money";
 import type { ToothType } from "@/lib/supabase/types";
@@ -20,6 +23,8 @@ interface OrderBuilderProps {
   copyAPrice: number;
   initialWeek: number;
   initialToothType: ToothType;
+  /** The seller's in-stock products right now, priced. Empty hides the section. */
+  extras: ExtraOption[];
   /** Present when this screen is editing a pending order rather than placing a new one. */
   edit?: {
     orderId: string;
@@ -27,7 +32,12 @@ interface OrderBuilderProps {
     originalTotal: number;
     /** Empty when the supplier's prices have not moved since. */
     priceMoves: PriceMove[];
+    /** Extras on the order that are on sale at a different price now. */
+    productMoves: ProductPriceMove[];
+    /** Extras on the order the seller no longer has; left out, and said so. */
+    goneExtras: string[];
     initialSelections: ToothSelections;
+    initialExtras: Record<string, number>;
   };
 }
 
@@ -45,6 +55,7 @@ export function OrderBuilder({
   copyAPrice,
   initialWeek,
   initialToothType,
+  extras,
   edit,
 }: OrderBuilderProps) {
   const router = useRouter();
@@ -52,6 +63,7 @@ export function OrderBuilder({
   // not from a control.
   const [week] = useState(initialWeek);
   const [selections, setSelections] = useState<ToothSelections>(edit?.initialSelections ?? {});
+  const [extraQty, setExtraQty] = useState<Record<string, number>>(edit?.initialExtras ?? {});
   const [sheetTooth, setSheetTooth] = useState<number | null>(null);
   const [sheetFrasacoQty, setSheetFrasacoQty] = useState(0);
   const [sheetCopyQty, setSheetCopyQty] = useState(0);
@@ -91,13 +103,38 @@ export function OrderBuilder({
     [selections],
   );
 
-  const { items: pricedItems, subtotal } = useMemo(
-    () => priceToothOrder(itemInputs, prices),
-    [itemInputs, prices],
+  const extraInputs = useMemo(
+    () =>
+      Object.entries(extraQty)
+        .filter(([, quantity]) => quantity > 0)
+        .map(([productId, quantity]) => ({ productId, quantity })),
+    [extraQty],
   );
 
+  // Teeth and extras priced together, in cents, from the prices on this
+  // screen — which are the prices the database will use, read fresh.
+  const priced = useMemo(
+    () =>
+      priceWeeklyOrder(
+        itemInputs,
+        prices,
+        extraInputs,
+        extras.map((e) => ({ productId: e.productId, name: e.name, unit: e.unit, price: e.price })),
+      ),
+    [itemInputs, prices, extraInputs, extras],
+  );
+  const pricedItems = priced.teeth;
+  const pricedExtras = priced.extras;
+  const subtotal = priced.total;
+
   const totalTeeth = itemInputs.reduce((sum, item) => sum + item.quantity, 0);
+  const totalExtras = pricedExtras.reduce((sum, item) => sum + item.quantity, 0);
+  const hasLines = itemInputs.length + pricedExtras.length > 0;
   const totalRef = useCountingMoney(subtotal);
+
+  function setExtra(productId: string, quantity: number) {
+    setExtraQty((prev) => ({ ...prev, [productId]: Math.max(0, Math.min(10, quantity)) }));
+  }
 
   function openSheet(toothNumber: number) {
     const existingFrasaco = selections[toothSelectionKey(toothNumber, "frasaco")];
@@ -166,9 +203,13 @@ export function OrderBuilder({
     startTransition(async () => {
       // Both paths send the total on this screen. The database charges
       // exactly that, or refuses and says what the total is now.
+      // Only extras that are priced on this screen are sent: a pick for a
+      // product that has since gone would be refused, and was never in the
+      // total the student is agreeing to.
+      const extrasToSend = pricedExtras.map((e) => ({ productId: e.productId, quantity: e.quantity }));
       const result = edit
-        ? await editToothOrder({ orderId: edit.orderId, items: itemInputs, expectedTotal: subtotal })
-        : await submitToothOrder({ supplierId, weekNumber: week, items: itemInputs, expectedTotal: subtotal });
+        ? await editToothOrder({ orderId: edit.orderId, items: itemInputs, extras: extrasToSend, expectedTotal: subtotal })
+        : await submitToothOrder({ supplierId, weekNumber: week, items: itemInputs, extras: extrasToSend, expectedTotal: subtotal });
 
       if (result.kind === "pricesChanged") {
         // The supplier moved their prices while this screen was open.
@@ -178,6 +219,14 @@ export function OrderBuilder({
         setError(
           `Prices changed while you were ${edit ? "editing" : "ordering"}. The total is now $${result.newTotal.toFixed(2)}, not $${subtotal.toFixed(2)}. Check it and ${edit ? "save" : "place the order"} again.`,
         );
+        router.refresh();
+        return;
+      }
+      if (result.kind === "productGone") {
+        // An extra was switched off or ran out while this screen was open.
+        // Nothing was saved. Reload the seller's list — the gone product
+        // drops out of the section and the total — and say which.
+        setError(`${result.message}. It has been taken off this order — check the total and try again.`);
         router.refresh();
         return;
       }
@@ -213,7 +262,9 @@ export function OrderBuilder({
         />
       </div>
 
-      <InThisOrder items={pricedItems} />
+      <ExtrasSection supplierName={supplierName} options={extras} quantities={extraQty} onChange={setExtra} />
+
+      <InThisOrder items={pricedItems} extras={pricedExtras} />
 
       {/* Footer is pinned; this keeps the last card clear of it. */}
       <div className="h-32" />
@@ -235,7 +286,7 @@ export function OrderBuilder({
         {/* Editing, with every tooth taken off: there is nothing to review,
             and what the student means is "I don't want this order". Offer
             exactly that, rather than a Review button that does nothing. */}
-        {edit && itemInputs.length === 0 ? (
+        {edit && !hasLines ? (
           <CancelOrderButton
             orderId={edit.orderId}
             label="Cancel this order"
@@ -255,13 +306,13 @@ export function OrderBuilder({
                 ${subtotal.toFixed(2)}
               </span>
               <span className="tnum font-display text-caption text-ink-muted">
-                {totalTeeth} {totalTeeth === 1 ? "tooth" : "teeth"}
+                {describeLines(totalTeeth, totalExtras)}
               </span>
             </div>
           </div>
           <button
             type="button"
-            disabled={itemInputs.length === 0}
+            disabled={!hasLines}
             onClick={() => setReviewOpen(true)}
             className="pressable min-h-11 rounded-control bg-ink px-6 py-3 font-display text-body text-card disabled:opacity-30"
           >
@@ -295,15 +346,17 @@ export function OrderBuilder({
           week={week}
           repName={supplierName}
           items={pricedItems}
+          extras={pricedExtras}
           subtotal={subtotal}
           error={error}
           pending={pending}
           mode={edit ? "edit" : "new"}
           priceNotice={
-            edit && edit.priceMoves.length > 0
-              ? { moves: edit.priceMoves, was: edit.originalTotal, now: subtotal }
+            edit && (edit.priceMoves.length > 0 || edit.productMoves.length > 0)
+              ? { moves: edit.priceMoves, productMoves: edit.productMoves, was: edit.originalTotal, now: subtotal }
               : null
           }
+          goneNotice={edit && edit.goneExtras.length > 0 ? edit.goneExtras : null}
           onClose={() => setReviewOpen(false)}
           onConfirm={handleConfirm}
         />
@@ -312,13 +365,19 @@ export function OrderBuilder({
   );
 }
 
-function InThisOrder({ items }: { items: ReturnType<typeof priceToothOrder>["items"] }) {
+function InThisOrder({
+  items,
+  extras,
+}: {
+  items: ReturnType<typeof priceToothOrder>["items"];
+  extras: PricedExtra[];
+}) {
   return (
     <div className="mx-2 mt-3 rounded-card border border-rule bg-card">
       <div className="border-b border-hairline px-4 py-3 text-micro uppercase text-ink-faint">
         In this order
       </div>
-      {items.length === 0 ? (
+      {items.length === 0 && extras.length === 0 ? (
         <p className="px-4 py-5 text-center text-small text-ink-muted">
           Nothing yet. Tap a tooth above to add it.
         </p>
@@ -345,6 +404,21 @@ function InThisOrder({ items }: { items: ReturnType<typeof priceToothOrder>["ite
               <span className="flex items-baseline gap-3">
                 <span className="tnum font-display text-caption text-ink-muted">×{item.quantity}</span>
                 <span className="tnum font-display text-body">${item.lineTotal.toFixed(2)}</span>
+              </span>
+            </li>
+          ))}
+          {extras.map((extra) => (
+            <li
+              key={extra.productId}
+              className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-2.5 last:border-none"
+            >
+              <span className="min-w-0 truncate text-body">
+                {extra.name}
+                {extra.unit && <span className="text-caption text-ink-muted"> · {extra.unit}</span>}
+              </span>
+              <span className="flex shrink-0 items-baseline gap-3">
+                <span className="tnum font-display text-caption text-ink-muted">×{extra.quantity}</span>
+                <span className="tnum font-display text-body">${extra.lineTotal.toFixed(2)}</span>
               </span>
             </li>
           ))}

@@ -475,6 +475,8 @@ Student registration and rep selection. The SVG dental chart. Order builder with
 **Phase 3 — Store**
 Supplier registration and admin approval. Product CRUD with image upload. Store browse, search, product detail. Cart with per-supplier splitting. Checkout. Supplier order dashboard.
 
+*One slice of this is built ahead of the rest: "Extras from your seller" — a seller lists a few products (no images), and a student adds them to their weekly order with that same seller. One seller, one order, one pickup, one payment, no commission. Everything else in Phase 3 stays gated; see CLAUDE.md.*
+
 **Phase 4 — Admin & money**
 Admin dashboard. Commission rate management. Monthly statement generation. Platform metrics.
 

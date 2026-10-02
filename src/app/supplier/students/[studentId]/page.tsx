@@ -87,8 +87,10 @@ export default async function SupplierStudentDetailPage({
               </div>
               <div className="mt-1 flex items-center justify-between">
                 <span className="text-xs text-ink-muted">
-                  {order.items
-                    .map((i) => `#${i.toothNumber}`)
+                  {[
+                    ...order.items.map((i) => `#${i.toothNumber}`),
+                    ...order.extras.map((e) => e.name),
+                  ]
                     .slice(0, 6)
                     .join(", ")}
                 </span>

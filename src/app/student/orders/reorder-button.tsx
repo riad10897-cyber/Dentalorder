@@ -28,7 +28,7 @@ export function ReorderButton({ orderId, shownTotal }: { orderId: string; shownT
         setNewTotal(result.newTotal);
         return;
       }
-      if (result.kind === "error") {
+      if (result.kind === "error" || result.kind === "productGone") {
         setError(result.message);
         return;
       }

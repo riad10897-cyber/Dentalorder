@@ -188,6 +188,130 @@ try {
       `persisted ${money(item.unit_price)}`,
     );
   }
+
+  // ── Extras: products on the weekly order ───────────────────────────────
+  // The same rule, for products: the database prices every line, a later
+  // price change never moves a past order, and only this seller's
+  // switched-on, in-stock products can be ordered from them.
+  const catId = async (slug) => {
+    const { data, error } = await admin.from("product_categories").select("id").eq("slug", slug).single();
+    if (error || !data) throw new Error(`category '${slug}' missing — has the extras migration been applied to this project?`);
+    return data.id;
+  };
+  const sellerB = await mkUser("sellerb", { role: "student", full_name: "Snapshot Seller B" });
+  {
+    const { error } = await admin.from("suppliers").insert({
+      id: sellerB.id, kind: "student_supplier", display_name: "Snapshot Seller B", status: "active",
+    });
+    if (error) throw new Error(`could not make seller B: ${error.message}`);
+  }
+  // Seller A lists through RLS, as themselves — the way the app does.
+  const listAs = async (client, sellerId, fields) => {
+    const { data, error } = await client.from("products")
+      .insert({ supplier_id: sellerId, ...fields }).select("id").single();
+    if (error) throw new Error(`could not list ${fields.name}: ${error.message}`);
+    return data.id;
+  };
+  const gloves = await listAs(supplierClient, supplier.id, { category_id: await catId("gloves-masks"), name: "Snapshot gloves", unit: "box of 100", price: 6.5 });
+  const bur = await listAs(supplierClient, supplier.id, { category_id: await catId("burs"), name: "Snapshot bur", unit: "pack of 5", price: 3.1 });
+  const off = await listAs(supplierClient, supplier.id, { category_id: await catId("materials"), name: "Snapshot old composite", price: 9, is_active: false });
+  const oos = await listAs(supplierClient, supplier.id, { category_id: await catId("instruments"), name: "Snapshot mirror", price: 4, in_stock: false });
+  const sellerBClient = await clientFor(sellerB.email);
+  const bLamp = await listAs(sellerBClient, sellerB.id, { category_id: await catId("equipment"), name: "Snapshot B lamp", price: 20 });
+
+  const readLines = async (id) => (await admin.from("orders")
+    .select("total_price, order_items(product_id, product_name, product_unit, tooth_number, quantity, unit_price, line_total)")
+    .eq("id", id).single()).data;
+
+  // Mixed: 2 Frasaco 11 at today's 9.99 (19.98) + 2 gloves (13.00) + 1 bur (3.10) = 36.08
+  const { data: mixedId, error: mixedErr } = await sc.rpc("submit_tooth_order", {
+    p_supplier_id: supplier.id, p_week_number: 8,
+    p_items: [
+      { tooth_number: 11, tooth_type: "frasaco", quantity: 2 },
+      { product_id: gloves, quantity: 2 },
+      { product_id: bur, quantity: 1 },
+    ],
+    p_expected_total: 36.08,
+  });
+  if (mixedErr) throw new Error(`could not place the mixed order: ${mixedErr.message}`);
+  const mixed = await readLines(mixedId);
+  const glovesLine = mixed.order_items.find((i) => i.product_id === gloves);
+  check(
+    "a product line total equals quantity × the seller's price at submit",
+    money(glovesLine.unit_price) === "6.50" && money(glovesLine.line_total) === "13.00",
+    `2 × ${money(glovesLine.unit_price)} = ${money(glovesLine.line_total)}`,
+  );
+  check(
+    "mixed orders (teeth + extras) total correctly",
+    money(mixed.total_price) === "36.08" &&
+      money(mixed.order_items.reduce((n, i) => n + Number(i.line_total), 0)) === "36.08",
+    `total ${money(mixed.total_price)} across ${mixed.order_items.length} lines`,
+  );
+
+  // A crafted request: a price, a name and a line total sent with the item.
+  const { data: craftedId, error: craftedErr } = await sc.rpc("submit_tooth_order", {
+    p_supplier_id: supplier.id, p_week_number: 9,
+    p_items: [{ product_id: gloves, quantity: 3, unit_price: 0.01, price: 0.01, line_total: 0.03, product_name: "Free gloves" }],
+  });
+  if (craftedErr) throw new Error(`crafted order errored instead of being priced: ${craftedErr.message}`);
+  const crafted = await readLines(craftedId);
+  check(
+    "a crafted request with a fake price is ignored — the price comes from the database",
+    money(crafted.total_price) === "19.50" &&
+      money(crafted.order_items[0].unit_price) === "6.50" &&
+      crafted.order_items[0].product_name === "Snapshot gloves",
+    `charged ${money(crafted.total_price)} at ${money(crafted.order_items[0].unit_price)}, named "${crafted.order_items[0].product_name}"`,
+  );
+
+  // Refusals: assert nothing was written, not just that an error came back.
+  const countOrders = async () =>
+    (await admin.from("orders").select("*", { count: "exact", head: true }).eq("student_id", student.id)).count;
+  const ordersBefore = await countOrders();
+  const refusals = [];
+  for (const [label, productId] of [["another seller's product", bLamp], ["a switched-off product", off], ["an out-of-stock product", oos]]) {
+    const { error } = await sc.rpc("submit_tooth_order", {
+      p_supplier_id: supplier.id, p_week_number: 10, p_items: [{ product_id: productId, quantity: 1 }],
+    });
+    refusals.push(`${label}: ${error ? error.code : "ACCEPTED"}`);
+  }
+  check(
+    "ordering another seller's product, a switched-off product, or an out-of-stock product fails",
+    (await countOrders()) === ordersBefore && refusals.every((r) => r.endsWith("DT003")),
+    refusals.join("; "),
+  );
+
+  // The seller changes the price, the name and the unit.
+  await supplierClient.from("products").update({ price: 99, name: "Renamed gloves", unit: "box of 50" }).eq("id", gloves);
+  const { data: glovesNow } = await admin.from("products").select("price").eq("id", gloves).single();
+  const mixedAfter = await readLines(mixedId);
+  const glovesAfter = mixedAfter.order_items.find((i) => i.product_id === gloves);
+  check(
+    "changing a product's price does not change past orders",
+    money(glovesNow.price) === "99.00" &&
+      money(mixedAfter.total_price) === "36.08" &&
+      money(glovesAfter.unit_price) === "6.50" &&
+      glovesAfter.product_name === "Snapshot gloves" &&
+      glovesAfter.product_unit === "box of 100",
+    `product now ${money(glovesNow.price)}; past order ${money(mixedAfter.total_price)}, line ${money(glovesAfter.unit_price)} "${glovesAfter.product_name}" (${glovesAfter.product_unit})`,
+  );
+
+  // Seller B against seller A's products: read the hidden ones, edit any.
+  const { data: bSees } = await sellerBClient.from("products").select("id").in("id", [off, oos]);
+  await sellerBClient.from("products").update({ price: 0.01 }).eq("id", bur);
+  await sellerBClient.from("products").update({ is_active: true }).eq("id", off);
+  // The mirror has never been ordered, so nothing but the access rule can
+  // stop this delete. (The bur is on an order; the database would refuse
+  // deleting it for that reason alone, which would prove nothing here.)
+  await sellerBClient.from("products").delete().eq("id", oos);
+  const { data: burNow } = await admin.from("products").select("price").eq("id", bur).maybeSingle();
+  const { data: offNow } = await admin.from("products").select("is_active").eq("id", off).single();
+  const { data: oosNow } = await admin.from("products").select("id").eq("id", oos).maybeSingle();
+  check(
+    "a seller cannot read or edit another seller's products",
+    bSees.length === 0 && burNow && money(burNow.price) === "3.10" && offNow.is_active === false && oosNow !== null,
+    `seller B read ${bSees.length} of A's hidden products; A's bur ${burNow ? money(burNow.price) : "DELETED"}; ` +
+      `A's switched-off product is_active=${offNow.is_active}; A's never-ordered product ${oosNow ? "still there" : "DELETED"}`,
+  );
 } catch (err) {
   check("UNCAUGHT ERROR", false, err.message);
   console.log(err.stack);
@@ -197,6 +321,9 @@ try {
     await admin.from("order_items").delete().eq("order_id", o);
     await admin.from("orders").delete().eq("id", o);
   }
+  // Products before their sellers; sellers before their accounts.
+  await admin.from("products").delete().in("supplier_id", ids);
+  await admin.from("suppliers").delete().in("id", ids);
   for (const id of [...ids].reverse()) await admin.auth.admin.deleteUser(id).catch(() => {});
   console.log("\ntest accounts cleaned up");
 }

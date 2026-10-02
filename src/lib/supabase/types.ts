@@ -15,11 +15,11 @@ export type ToothType = "frasaco" | "copy_a";
 export type AccountStatus = "active" | "suspended" | "pending_approval";
 export type SupplierKind = "student_supplier" | "shop";
 
-export interface SubmitToothOrderItem {
-  tooth_number: number;
-  tooth_type: ToothType;
-  quantity: number;
-}
+// A line sent to submit_tooth_order: a tooth or one of the seller's
+// products. Never a price — the database reads every price itself.
+export type SubmitToothOrderItem =
+  | { tooth_number: number; tooth_type: ToothType; quantity: number }
+  | { product_id: string; quantity: number };
 
 // postgrest-js resolves embeds (e.g. `.from("orders").select("order_items(*)")`)
 // by matching a literal `referencedRelation` string inside the CURRENT
@@ -188,7 +188,7 @@ export interface Database {
         Row: {
           id: string;
           supplier_id: string;
-          category_id: string | null;
+          category_id: string;
           name: string;
           description: string | null;
           image_url: string | null;
@@ -196,13 +196,15 @@ export interface Database {
           unit: string | null;
           stock_qty: number | null;
           is_active: boolean;
+          /** Still sold, but none right now. Both this and is_active must be on for students to see it. */
+          in_stock: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           supplier_id: string;
-          category_id?: string | null;
+          category_id: string;
           name: string;
           description?: string | null;
           image_url?: string | null;
@@ -210,6 +212,7 @@ export interface Database {
           unit?: string | null;
           stock_qty?: number | null;
           is_active?: boolean;
+          in_stock?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -270,6 +273,8 @@ export interface Database {
           tooth_type: ToothType | null;
           product_id: string | null;
           product_name: string | null;
+          /** Snapshotted with the name and price: "box of 100" as it was when ordered. */
+          product_unit: string | null;
           quantity: number;
           unit_price: string;
           line_total: string;
@@ -281,6 +286,7 @@ export interface Database {
           tooth_type?: ToothType | null;
           product_id?: string | null;
           product_name?: string | null;
+          product_unit?: string | null;
           quantity: number;
           unit_price: string;
           line_total: string;

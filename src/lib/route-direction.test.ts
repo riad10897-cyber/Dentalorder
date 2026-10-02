@@ -34,7 +34,7 @@ test("opening a supplier's chart is a drill-in, not a tab change", () => {
 });
 
 test("every supplier tab pairing is lateral", () => {
-  const tabs = ["/supplier", "/supplier/summary", "/supplier/students", "/supplier/settings"];
+  const tabs = ["/supplier", "/supplier/summary", "/supplier/products", "/supplier/students", "/supplier/settings"];
   for (const from of tabs) {
     for (const to of tabs) {
       if (from === to) continue;

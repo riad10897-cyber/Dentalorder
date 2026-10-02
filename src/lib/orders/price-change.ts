@@ -33,3 +33,38 @@ export function priceMovesSinceOrder(
   }
   return moves;
 }
+
+export interface ProductPriceMove {
+  name: string;
+  was: number;
+  now: number;
+}
+
+/**
+ * The extras on an order being edited, against what the seller sells now.
+ *
+ * `moves` are products still on sale at a different price. `gone` are
+ * products on the original order the student can no longer have —
+ * switched off, out of stock, or removed. The edit screen leaves those out
+ * and says so, rather than carrying a line the database will refuse.
+ */
+export function productChangesSinceOrder(
+  originalExtras: { productId: string; name: string; unitPrice: number }[],
+  available: { productId: string; price: number }[],
+): { moves: ProductPriceMove[]; gone: string[] } {
+  const cents = (n: number) => Math.round(n * 100);
+  const byId = new Map(available.map((p) => [p.productId, p]));
+  const moves: ProductPriceMove[] = [];
+  const gone: string[] = [];
+  for (const line of originalExtras) {
+    const now = byId.get(line.productId);
+    if (!now) {
+      gone.push(line.name);
+      continue;
+    }
+    if (cents(now.price) !== cents(line.unitPrice)) {
+      moves.push({ name: line.name, was: line.unitPrice, now: now.price });
+    }
+  }
+  return { moves, gone };
+}
