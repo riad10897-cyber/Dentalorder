@@ -51,3 +51,20 @@ export const updateStudentProfileSchema = z.object({
   university: z.string().trim().min(1, "Select your university."),
   year_of_study: z.coerce.number().int().min(1, "Select your year.").max(5),
 });
+
+// Changing a password asks for the current one: a phone left unlocked on a
+// lab bench should not be enough to lock its owner out of their account.
+export const changePasswordSchema = z
+  .object({
+    current_password: z.string().min(1, "Enter your current password."),
+    new_password: password,
+    confirm_password: z.string().min(1, "Type the new password again."),
+  })
+  .refine((v) => v.new_password === v.confirm_password, {
+    path: ["confirm_password"],
+    message: "The two new passwords do not match.",
+  })
+  .refine((v) => v.new_password !== v.current_password, {
+    path: ["new_password"],
+    message: "Choose a password different from the current one.",
+  });

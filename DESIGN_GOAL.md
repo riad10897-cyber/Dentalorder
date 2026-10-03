@@ -24,7 +24,7 @@ no product images, no shop browse page, no carts across sellers, no commission.
 
 ## The steps
 
-### Step 1 — Settings as a menu (both roles)
+### Step 1 — Settings as a menu (both roles) — SHIPPED 3 Oct 2026
 - Student "Profile" tab and seller "Settings" tab become one pattern: a header
   card (name, university, year), then grouped rows:
   - **Account**: Personal details › · Email (shown) · Change password ›

@@ -8,6 +8,15 @@ export default function SignInPage() {
         <p className="mt-1 text-sm text-ink-muted">Welcome back to Dentora.</p>
       </div>
       <SignInForm />
+      {/* No reset email yet: Supabase's built-in sender is rate-limited and
+          lands in spam. Until a real email provider is set up, a person
+          resets it for them. */}
+      <details className="text-center text-sm text-ink-muted">
+        <summary className="pressable mx-auto inline-flex min-h-11 cursor-pointer list-none items-center underline underline-offset-4">
+          Forgot your password?
+        </summary>
+        <p className="mt-1">Message Riad and he will set you a new one.</p>
+      </details>
       <p className="text-center text-sm text-ink-muted">
         Don&apos;t have an account?{" "}
         <a href="/sign-up" className="text-ink underline underline-offset-4">

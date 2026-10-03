@@ -25,3 +25,12 @@ export const getVerifiedUserId = cache(async (): Promise<string | null> => {
   if (error || !data?.claims?.sub) return null;
   return data.claims.sub;
 });
+
+/** The signed-in user's email, from the same verified token. */
+export const getVerifiedEmail = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  const email = data?.claims?.email;
+  if (error || typeof email !== "string") return null;
+  return email;
+});

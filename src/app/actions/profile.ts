@@ -52,6 +52,8 @@ export async function updateProfile(
 
   revalidatePath("/student/profile");
   revalidatePath("/student");
+  revalidatePath("/student/profile/details");
   revalidatePath("/supplier/settings");
+  revalidatePath("/supplier/settings/details");
   return { error: null, fieldErrors: {}, saved: true };
 }
