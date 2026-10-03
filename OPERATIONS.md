@@ -38,7 +38,7 @@ For a shop rather than a student who sells, change `'student_supplier'` to
 (no quotes).
 
 They start at $2.50 Frasaco and $1.20 Copy A. They set their own prices in
-the app under Settings, and should do that before telling their class.
+the app under Products, and should do that before telling their class.
 
 They can also list a few extras — gloves, burs, masks — under **Products**,
 in one of five fixed categories. Students see a seller's extras under the
@@ -110,7 +110,7 @@ This is read-only — running this query can't change or break anything, so don'
 
 ## 4. Changing a supplier's prices for them
 
-Suppliers do this themselves under Settings in the app. If one asks you to do
+Suppliers do this themselves under Products in the app. If one asks you to do
 it instead, SQL Editor → New query, with their email and the new prices:
 
 ```sql

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { updateProfile, type ProfileFormState } from "./actions";
+import { updateProfile, type ProfileFormState } from "@/app/actions/profile";
 import { OTHER_UNIVERSITY, UNIVERSITIES } from "@/lib/universities";
 
 const initialState: ProfileFormState = { error: null, fieldErrors: {}, saved: false };
@@ -14,11 +14,14 @@ export function ProfileForm({
   phone,
   university,
   yearOfStudy,
+  phoneHint,
 }: {
   fullName: string;
   phone: string | null;
   university: string | null;
   yearOfStudy: number | null;
+  /** Why the phone number is asked for, in the words of whoever reads it. */
+  phoneHint: string;
 }) {
   const [state, formAction, pending] = useActionState(updateProfile, initialState);
 
@@ -28,7 +31,15 @@ export function ProfileForm({
   const known = UNIVERSITIES.some((u) => u.value === university);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    // Keyed on the saved values: React resets a form after its action runs,
+    // and a <select> resets to the value it first mounted with, not the new
+    // one — so a saved year showed "Select year" again. A new key remounts
+    // the fields with what was just saved.
+    <form
+      key={[fullName, phone, university, yearOfStudy].join("|")}
+      action={formAction}
+      className="flex flex-col gap-4"
+    >
       <Field label="Full name" error={state.fieldErrors.full_name}>
         <input
           name="full_name"
@@ -43,7 +54,7 @@ export function ProfileForm({
       <Field
         label="Phone number"
         error={state.fieldErrors.phone}
-        hint="Your supplier uses this to reach you about your order."
+        hint={phoneHint}
       >
         <input
           name="phone"

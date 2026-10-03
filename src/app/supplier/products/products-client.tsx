@@ -22,7 +22,7 @@ export function ProductsClient({ products, canAdd }: { products: Product[]; canA
   const switchedOff = products.filter((p) => !p.isActive);
 
   return (
-    <div className="mt-5 flex flex-col gap-4 px-5">
+    <div className="mt-3 flex flex-col gap-4 px-5">
       {adding ? (
         <ProductForm onDone={() => setAdding(false)} />
       ) : (
@@ -52,7 +52,7 @@ export function ProductsClient({ products, canAdd }: { products: Product[]; canA
         if (inCategory.length === 0) return null;
         return (
           <section key={category.slug}>
-            <h2 className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">{category.name}</h2>
+            <h3 className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">{category.name}</h3>
             <ul className="overflow-hidden rounded-card border border-rule bg-card">
               {inCategory.map((product) =>
                 editingId === product.id ? (
@@ -77,7 +77,7 @@ export function ProductsClient({ products, canAdd }: { products: Product[]; canA
 
       {switchedOff.length > 0 && (
         <section>
-          <h2 className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">Switched off</h2>
+          <h3 className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">Switched off</h3>
           <p className="px-0.5 pb-2 text-caption text-ink-muted">
             Students don&rsquo;t see these. Past orders keep them as they were.
           </p>

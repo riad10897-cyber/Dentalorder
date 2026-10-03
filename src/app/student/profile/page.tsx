@@ -3,7 +3,7 @@ import { getStudentContext } from "@/lib/student/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import { signOut } from "@/app/actions/auth";
-import { ProfileForm } from "./profile-form";
+import { ProfileForm } from "@/app/_components/profile-form";
 
 /**
  * Profile is what the student can change, and nothing else.
@@ -30,6 +30,7 @@ export default async function StudentProfilePage() {
           phone={student.phone}
           university={student.university}
           yearOfStudy={student.yearOfStudy}
+          phoneHint="Your supplier uses this to reach you about your order."
         />
       </div>
 

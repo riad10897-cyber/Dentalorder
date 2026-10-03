@@ -12,7 +12,8 @@ export type ProfileFormState = {
 };
 
 /**
- * Saves the four things a student may change about themselves.
+ * Saves the four things anyone may change about themselves — a student on
+ * Profile, a seller on Settings.
  *
  * The row is addressed by the id from the verified session, never by an id
  * sent up with the form — that is what stops this being a way to edit
@@ -51,5 +52,6 @@ export async function updateProfile(
 
   revalidatePath("/student/profile");
   revalidatePath("/student");
+  revalidatePath("/supplier/settings");
   return { error: null, fieldErrors: {}, saved: true };
 }

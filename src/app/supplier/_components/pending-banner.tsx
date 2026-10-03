@@ -21,7 +21,7 @@ export function PendingBanner({ displayName }: { displayName: string }) {
       <ol className="mt-3 flex flex-col gap-1.5 text-small text-ink-muted">
         <li>
           <span className="tnum font-display text-ink">1.</span> Set your Frasaco and Copy A prices
-          in Settings — they are what students compare.
+          in Products — they are what students compare.
         </li>
         <li>
           <span className="tnum font-display text-ink">2.</span> Message Riad to say you are ready.
