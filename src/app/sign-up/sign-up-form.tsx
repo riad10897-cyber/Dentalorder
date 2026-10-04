@@ -120,7 +120,7 @@ export function SignUpForm() {
         <button
           type="button"
           onClick={toStepTwo}
-          className="pressable min-h-11 rounded-control bg-ink px-4 py-3 font-display text-body text-card"
+          className="pressable min-h-[3.125rem] rounded-button bg-ink px-4 py-3 text-native-body font-semibold text-card"
         >
           Continue
         </button>
@@ -173,7 +173,8 @@ function StepDots({ step }: { step: 1 | 2 }) {
       {[1, 2].map((n) => (
         <span
           key={n}
-          className={`h-1.5 rounded-full transition-[width,background-color] duration-200 ${
+          // Colour only: width is layout, and is never animated.
+          className={`h-1.5 rounded-full transition-colors duration-200 ${
             n === step ? "w-5 bg-ink" : "w-1.5 bg-rule"
           }`}
         />

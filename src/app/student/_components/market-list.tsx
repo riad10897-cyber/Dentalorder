@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { DirectorySupplier } from "@/lib/supplier/directory";
 import { groupSuppliersByUniversity } from "@/lib/supplier/group";
+import { SectionHeader } from "@/app/_components/section-header";
 
 /**
  * The market, "Paper, native": a search field, then the sellers as an
@@ -97,14 +98,6 @@ export function MarketList({
         )
       )}
     </>
-  );
-}
-
-export function SectionHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mx-1 mb-1.5 mt-[1.375rem] text-native-caption uppercase tracking-[0.02em] text-ink-faint">
-      {children}
-    </h2>
   );
 }
 

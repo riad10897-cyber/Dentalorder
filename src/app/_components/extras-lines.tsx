@@ -14,15 +14,15 @@ export function ExtrasLines({
 }) {
   if (extras.length === 0) return null;
   return (
-    <ul className={`${className} flex flex-col gap-1 border-t border-hairline pt-2.5`}>
+    <ul className={`${className} flex flex-col gap-1 border-t-[0.5px] border-separator pt-2.5`}>
       {extras.map((extra, i) => (
-        <li key={i} className="flex items-baseline justify-between gap-3 text-small">
+        <li key={i} className="flex items-baseline justify-between gap-3 text-list-secondary">
           <span className="min-w-0 truncate text-ink">
             {extra.name}
             {extra.unit && <span className="text-ink-muted"> · {extra.unit}</span>}
-            <span className="tnum font-display text-ink-muted"> ×{extra.quantity}</span>
+            <span className="tnum text-ink-faint"> ×{extra.quantity}</span>
           </span>
-          <span className="tnum shrink-0 font-display text-ink">${extra.lineTotal.toFixed(2)}</span>
+          <span className="tnum shrink-0 font-semibold text-ink">${extra.lineTotal.toFixed(2)}</span>
         </li>
       ))}
     </ul>

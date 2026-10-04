@@ -23,7 +23,7 @@ export async function RoleHome({ role }: { role: UserRole }) {
       <span className="rounded-control border border-rule bg-card px-3 py-1 text-micro uppercase text-ink">
         {ROLE_LABEL[role]}
       </span>
-      <h1 className="font-display text-title text-ink">
+      <h1 className="text-screen-title font-bold text-ink">
         {profile?.full_name ?? "Welcome"}
       </h1>
       <p className="text-small text-ink-muted">

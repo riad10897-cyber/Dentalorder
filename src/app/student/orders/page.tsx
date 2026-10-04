@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getStudentContext, listStudentOrders } from "@/lib/student/data";
+import { getStudentContext, listStudentOrders, type StudentOrderSummary } from "@/lib/student/data";
+import { SectionHeader } from "@/app/_components/section-header";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
-import { ReorderButton } from "./reorder-button";
 import { CancelOrderButton } from "./cancel-order-button";
 import { OrderStatus } from "./order-status";
 import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
@@ -30,106 +30,116 @@ export default async function OrderHistoryPage() {
   const settled = orders.filter((o) => !IN_FLIGHT.has(o.fulfillmentStatus));
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
       {/* A tab, not a page reached from somewhere — so no back arrow. */}
-      <h1 className="px-5 pt-6 font-display text-display">Orders</h1>
+      <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Orders</h1>
 
       {orders.length === 0 ? (
-        <EmptyState icon={<ClipboardIcon />} className="mx-5 mt-8">
+        <EmptyState native icon={<ClipboardIcon />} className="mt-2">
           No orders yet. Once you place your first order, it will be listed here.
         </EmptyState>
       ) : (
-        <ul className="mt-4 flex flex-col gap-2.5 px-5">
-          {[...inFlight, ...settled].map((order) => {
-            const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
-            const extrasCount = order.extras.reduce((sum, extra) => sum + extra.quantity, 0);
-            const rejected = order.fulfillmentStatus === "rejected";
-            const first = order.id === [...inFlight, ...settled][0]?.id;
-            const startsSettled = settled.length > 0 && order.id === settled[0]?.id;
-            return (
-              <li key={order.id} className="contents">
-                {first && inFlight.length > 0 && (
-                  <h2 className="px-0.5 pb-0.5 pt-1 text-micro uppercase text-ink-faint">
-                    In flight
-                  </h2>
-                )}
-                {startsSettled && inFlight.length > 0 && (
-                  <h2 className="px-0.5 pb-0.5 pt-4 text-micro uppercase text-ink-faint">
-                    Finished
-                  </h2>
-                )}
-                <div className="rounded-card border border-rule bg-card p-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <div>
-                    <h2 className="font-display text-body">{order.supplierName}</h2>
-                    <p className="tnum font-display text-caption text-ink-muted">
-                      {formatDate(order.createdAt)} · {describeLines(teeth, extrasCount)}
-                    </p>
-                  </div>
-                  <span className="tnum font-display text-lead">
-                    ${order.totalPrice.toFixed(2)}
-                  </span>
-                </div>
-
-                <ul className="mt-3 flex flex-wrap gap-1">
-                  {order.items.map((item, i) => (
-                    <li
-                      key={i}
-                      className="tnum rounded-control px-1.5 py-0.5 text-caption text-card"
-                      style={{
-                        background:
-                          item.toothType === "frasaco" ? "var(--frasaco)" : "var(--copy-a)",
-                      }}
-                    >
-                      {item.toothNumber}
-                      {item.quantity > 1 ? `×${item.quantity}` : ""}
-                    </li>
+        <>
+          {[
+            { title: "In flight", rows: inFlight },
+            { title: "Finished", rows: settled },
+          ].map((group) =>
+            group.rows.length === 0 ? null : (
+              <section key={group.title}>
+                <SectionHeader>{group.title}</SectionHeader>
+                <ul className="flex flex-col gap-2.5">
+                  {group.rows.map((order) => (
+                    <OrderCard key={order.id} order={order} />
                   ))}
                 </ul>
-
-                <ExtrasLines extras={order.extras} />
-
-                {rejected && order.rejectionReason && (
-                  <p className="mt-3 border-l-2 border-ink bg-card-sunk py-2 pl-3 pr-2 text-small text-ink">
-                    {order.rejectionReason}
-                  </p>
-                )}
-
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-hairline pt-3">
-                  <OrderStatus status={order.fulfillmentStatus} supplierName={order.supplierName} />
-                  {/* Again, only once the order is finished. Ordering again
-                      while it is still on its way would be a second order. */}
-                  {!IN_FLIGHT.has(order.fulfillmentStatus) && (
-                    <ReorderButton orderId={order.id} shownTotal={order.totalPrice} />
-                  )}
-                </div>
-                {/* Pending only: the seller hasn't acted on it yet. The
-                    database checks again, under a lock, when it saves. */}
-                {order.fulfillmentStatus === "pending" && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Link
-                      href={`/student/order/edit/${order.id}`}
-                      className="pressable flex min-h-11 flex-1 items-center justify-center rounded-control border border-rule bg-card px-3 font-display text-small text-ink"
-                    >
-                      Edit order
-                    </Link>
-                    <CancelOrderButton
-                      orderId={order.id}
-                      label="Cancel order"
-                      wrapperClassName="flex flex-1 flex-col gap-1"
-                      className="pressable flex min-h-11 w-full items-center justify-center rounded-control border border-rule bg-card px-3 font-display text-small text-ink-muted"
-                    />
-                  </div>
-                )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+              </section>
+            ),
+          )}
+        </>
       )}
 
       <StudentBottomNav />
     </main>
+  );
+}
+
+function OrderCard({ order }: { order: StudentOrderSummary }) {
+  const teeth = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const extrasCount = order.extras.reduce((sum, extra) => sum + extra.quantity, 0);
+  const rejected = order.fulfillmentStatus === "rejected";
+  const finished = !IN_FLIGHT.has(order.fulfillmentStatus);
+
+  return (
+    <li className="rounded-group bg-card p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="truncate text-native-body font-semibold text-ink">{order.supplierName}</h2>
+          <p className="tnum text-native-caption text-ink-faint">
+            {formatDate(order.createdAt)} · {describeLines(teeth, extrasCount)}
+          </p>
+        </div>
+        <span className="tnum shrink-0 text-[1.25rem] font-bold tracking-[-0.01em] text-ink">
+          ${order.totalPrice.toFixed(2)}
+        </span>
+      </div>
+
+      {order.items.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-1">
+          {order.items.map((item, i) => (
+            <li
+              key={i}
+              className="tnum rounded-full px-2 py-0.5 text-native-caption font-semibold text-white"
+              style={{ background: item.toothType === "frasaco" ? "var(--frasaco)" : "var(--copy-a)" }}
+            >
+              {item.toothNumber}
+              {item.quantity > 1 ? `×${item.quantity}` : ""}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <ExtrasLines extras={order.extras} />
+
+      {rejected && order.rejectionReason && (
+        <p className="mt-3 rounded-field bg-fill-faint px-3 py-2 text-list-secondary text-ink">
+          {order.rejectionReason}
+        </p>
+      )}
+
+      <div className="mt-3 flex items-center justify-between gap-3 border-t-[0.5px] border-separator pt-3">
+        <OrderStatus status={order.fulfillmentStatus} supplierName={order.supplierName} />
+        {/* Only once the order is finished: ordering again while it is
+            still on its way would be a second order. It opens the chart
+            filled with these lines at today's prices, onto the review. */}
+        {finished && (
+          <Link
+            href={`/student/order?supplier=${order.supplierId}&from=${order.id}`}
+            className="flex h-9 shrink-0 items-center rounded-full bg-ink px-4 text-list-secondary font-semibold text-card transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.94] motion-reduce:active:scale-100"
+          >
+            Order again
+          </Link>
+        )}
+      </div>
+
+      {/* Pending only: the seller hasn't acted on it yet. The database
+          checks again, under a lock, when it saves. */}
+      {order.fulfillmentStatus === "pending" && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link
+            href={`/student/order/edit/${order.id}`}
+            className="pressable flex h-11 flex-1 items-center justify-center rounded-field bg-fill px-3 text-native-body font-semibold text-ink"
+          >
+            Edit order
+          </Link>
+          <CancelOrderButton
+            orderId={order.id}
+            label="Cancel order"
+            wrapperClassName="flex flex-1 flex-col gap-1"
+            className="pressable flex h-11 w-full items-center justify-center rounded-field bg-fill px-3 text-native-body font-semibold text-ink-muted"
+          />
+        </div>
+      )}
+    </li>
   );
 }
 

@@ -19,30 +19,30 @@ export function OrderStatus({
   switch (status) {
     case "pending":
       return (
-        <p className="text-small text-ink-muted">
+        <p className="text-list-secondary text-ink-muted">
           Waiting for {supplierName} to confirm
         </p>
       );
     case "confirmed":
       return (
-        <p className="flex items-center gap-1.5 font-display text-body text-ink">
+        <p className="flex items-center gap-1.5 text-list-secondary font-semibold text-ink">
           <Tick />
           {supplierName} confirmed your order
         </p>
       );
     case "fulfilled":
       return (
-        <p className="flex items-center gap-1.5 font-display text-body" style={{ color: "var(--fulfilled)" }}>
+        <p className="flex items-center gap-1.5 text-list-secondary font-semibold" style={{ color: "var(--fulfilled)" }}>
           <Tick />
           Handed over
         </p>
       );
     case "rejected":
-      return <p className="font-display text-body text-ink">{supplierName} rejected this order</p>;
+      return <p className="text-list-secondary font-semibold text-ink">{supplierName} rejected this order</p>;
     case "cancelled":
-      return <p className="text-small text-ink-muted">Cancelled</p>;
+      return <p className="text-list-secondary text-ink-muted">Cancelled</p>;
     default:
-      return <p className="text-small text-ink-muted">{status}</p>;
+      return <p className="text-list-secondary text-ink-muted">{status}</p>;
   }
 }
 

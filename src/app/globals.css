@@ -30,9 +30,12 @@
   --glass-tab: rgba(242, 237, 225, 0.78);
   --glass-card: rgba(251, 248, 240, 0.76);
 
-  /* The system font, for the student app. Seller screens keep Newsreader
-     and Atkinson until they are restyled. */
+  /* The system font, everywhere. Newsreader and Atkinson are retired; the
+     two old variables still exist so every font utility and rule that
+     names them resolves to the system font. */
   --font-system: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-newsreader: var(--font-system);
+  --font-atkinson: var(--font-system);
 }
 
 @theme inline {
