@@ -96,28 +96,30 @@ export default async function OrderHistoryPage() {
                   </p>
                 )}
 
-                <div className="mt-3 flex items-center justify-between border-t border-hairline pt-3">
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-hairline pt-3">
                   <OrderStatus status={order.fulfillmentStatus} supplierName={order.supplierName} />
-                  <span className="flex items-center gap-1">
-                    {/* Only while the supplier has not acted on it. The
-                        database checks again, under a lock, when it saves. */}
-                    {order.fulfillmentStatus === "pending" && (
-                      <Link
-                        href={`/student/order/edit/${order.id}`}
-                        className="pressable flex min-h-11 items-center rounded-control px-3 font-display text-small text-ink underline underline-offset-2"
-                      >
-                        Edit
-                      </Link>
-                    )}
+                  {/* Again, only once the order is finished. Ordering again
+                      while it is still on its way would be a second order. */}
+                  {!IN_FLIGHT.has(order.fulfillmentStatus) && (
                     <ReorderButton orderId={order.id} shownTotal={order.totalPrice} />
-                  </span>
+                  )}
                 </div>
-                {/* Its own line, so the confirmation has room to say what
-                    cancelling means. Pending only; the database checks
-                    again, under a lock, when it runs. */}
+                {/* Pending only: the seller hasn't acted on it yet. The
+                    database checks again, under a lock, when it saves. */}
                 {order.fulfillmentStatus === "pending" && (
-                  <div className="mt-1 flex justify-end">
-                    <CancelOrderButton orderId={order.id} label="Cancel order" />
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Link
+                      href={`/student/order/edit/${order.id}`}
+                      className="pressable flex min-h-11 flex-1 items-center justify-center rounded-control border border-rule bg-card px-3 font-display text-small text-ink"
+                    >
+                      Edit order
+                    </Link>
+                    <CancelOrderButton
+                      orderId={order.id}
+                      label="Cancel order"
+                      wrapperClassName="flex flex-1 flex-col gap-1"
+                      className="pressable flex min-h-11 w-full items-center justify-center rounded-control border border-rule bg-card px-3 font-display text-small text-ink-muted"
+                    />
                   </div>
                 )}
                 </div>

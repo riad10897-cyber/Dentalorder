@@ -54,7 +54,7 @@ no product images, no shop browse page, no carts across sellers, no commission.
   price, the quantity stepper. The list itself stays compact.
 - Category chips above the list once a seller has more than eight products.
 
-### Step 4 — One next step per order card
+### Step 4 — One next step per order card — SHIPPED 4 Oct 2026
 - Seller: one primary button for the next status (Confirm → Mark handed over),
   "Mark paid" as a secondary toggle, Reject and the rest under a "More" menu.
 - Student: pending shows Edit + Cancel together; "Order again" only on

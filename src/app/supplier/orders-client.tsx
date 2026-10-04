@@ -251,61 +251,12 @@ function OrderCard({ order }: { order: SupplierOrder }) {
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex flex-wrap gap-2 border-t border-hairline pt-3">
-          {order.fulfillmentStatus === "pending" && (
-            <>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => setRejecting(true)}
-                className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small text-ink-muted disabled:opacity-50"
-              >
-                Reject
-              </button>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => runStatus({ orderId: order.id, fulfillmentStatus: "confirmed" })}
-                className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small disabled:opacity-50"
-              >
-                Confirm
-              </button>
-            </>
-          )}
-
-          {order.fulfillmentStatus !== "fulfilled" && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => runStatus({ orderId: order.id, fulfillmentStatus: "fulfilled" })}
-              className="pressable min-h-11 flex-1 rounded-control bg-ink py-2.5 font-display text-small text-card disabled:opacity-50"
-            >
-              Mark handed over
-            </button>
-          )}
-
-          {/* Paid is a separate fact from handed over, so it gets its own
-              control and can be set in either order. */}
-          {order.paymentStatus === "paid" ? (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => runStatus({ orderId: order.id, paymentStatus: "unpaid" })}
-              className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small text-ink-muted disabled:opacity-50"
-            >
-              Paid ✓ · undo
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => runStatus({ orderId: order.id, paymentStatus: "paid" })}
-              className="pressable min-h-11 flex-1 rounded-control border border-ink py-2.5 font-display text-small text-ink disabled:opacity-50"
-            >
-              Mark paid
-            </button>
-          )}
-        </div>
+        <OrderActions
+          order={order}
+          pending={pending}
+          onStatus={runStatus}
+          onReject={() => setRejecting(true)}
+        />
       )}
 
       {error && (
@@ -314,5 +265,119 @@ function OrderCard({ order }: { order: SupplierOrder }) {
         </p>
       )}
     </li>
+  );
+}
+
+type StatusPatch = Parameters<typeof updateOrderStatus>[0];
+
+/**
+ * One obvious next step per order: Confirm, then Mark handed over, then
+ * (once handed over and still owed) Mark paid. Paid sits beside it as its
+ * own toggle, because it can happen in either order. Everything rarer —
+ * rejecting, handing over without confirming first — waits under "More".
+ */
+function OrderActions({
+  order,
+  pending,
+  onStatus,
+  onReject,
+}: {
+  order: SupplierOrder;
+  pending: boolean;
+  onStatus: (patch: StatusPatch) => void;
+  onReject: () => void;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const status = order.fulfillmentStatus;
+  const paid = order.paymentStatus === "paid";
+
+  const next: { label: string; patch: StatusPatch } | null =
+    status === "pending"
+      ? { label: "Confirm", patch: { orderId: order.id, fulfillmentStatus: "confirmed" } }
+      : status === "confirmed"
+        ? { label: "Mark handed over", patch: { orderId: order.id, fulfillmentStatus: "fulfilled" } }
+        : status === "fulfilled" && !paid
+          ? { label: "Mark paid", patch: { orderId: order.id, paymentStatus: "paid" } }
+          : null;
+
+  // The paid toggle, unless "Mark paid" is already the main button.
+  const showPaidToggle = !(status === "fulfilled" && !paid);
+
+  const more: { label: string; onClick: () => void }[] =
+    status === "pending"
+      ? [
+          { label: "Mark handed over now", onClick: () => onStatus({ orderId: order.id, fulfillmentStatus: "fulfilled" }) },
+          { label: "Reject order…", onClick: onReject },
+        ]
+      : [];
+
+  return (
+    <div className="mt-3 border-t border-hairline pt-3">
+      <div className="flex gap-2">
+        {next && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => onStatus(next.patch)}
+            className="pressable min-h-11 flex-[2] rounded-control bg-ink px-3 py-2.5 font-display text-small text-card disabled:opacity-50"
+          >
+            {next.label}
+          </button>
+        )}
+        {showPaidToggle && (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={paid}
+            aria-label={paid ? "Paid. Tap to mark as not paid" : "Mark paid"}
+            disabled={pending}
+            onClick={() => onStatus({ orderId: order.id, paymentStatus: paid ? "unpaid" : "paid" })}
+            className={`pressable min-h-11 flex-1 whitespace-nowrap rounded-control border border-rule px-3 py-2.5 font-display text-small disabled:opacity-50 ${
+              paid ? "text-ink-muted" : "text-ink"
+            }`}
+          >
+            {/* Short, so it never wraps beside the main button. Tapping it again undoes. */}
+            {paid ? "Paid ✓" : "Mark paid"}
+          </button>
+        )}
+        {more.length > 0 && (
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            aria-label="More actions"
+            disabled={pending}
+            onClick={() => setMoreOpen((open) => !open)}
+            className={`pressable flex min-h-11 w-11 shrink-0 items-center justify-center rounded-control border disabled:opacity-50 ${
+              moreOpen ? "border-ink bg-card-sunk" : "border-rule"
+            }`}
+          >
+            <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5" cy="12" r="1.75" />
+              <circle cx="12" cy="12" r="1.75" />
+              <circle cx="19" cy="12" r="1.75" />
+            </svg>
+          </button>
+        )}
+      </div>
+      {moreOpen && more.length > 0 && (
+        <ul className="mt-2 overflow-hidden rounded-control border border-rule bg-card-sunk">
+          {more.map((item) => (
+            <li key={item.label} className="border-b border-hairline last:border-none">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setMoreOpen(false);
+                  item.onClick();
+                }}
+                className="pressable flex min-h-11 w-full items-center px-3 text-left text-small text-ink disabled:opacity-50"
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

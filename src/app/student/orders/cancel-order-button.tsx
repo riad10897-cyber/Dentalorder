@@ -16,12 +16,15 @@ export function CancelOrderButton({
   label = "Cancel",
   onCancelled,
   className,
+  wrapperClassName = "flex flex-col items-end gap-1",
 }: {
   orderId: string;
   label?: string;
   /** Where to go afterwards. Defaults to refreshing the current page. */
   onCancelled?: () => void;
   className?: string;
+  /** Layout of the button and its error, before it is tapped. */
+  wrapperClassName?: string;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -44,7 +47,7 @@ export function CancelOrderButton({
 
   if (!confirming) {
     return (
-      <span className="flex flex-col items-end gap-1">
+      <span className={wrapperClassName}>
         <button
           type="button"
           onClick={() => setConfirming(true)}
