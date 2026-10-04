@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { InstallCard } from "@/app/_components/install-card";
+import { OrderWindow } from "./_components/order-window";
 import { getStudentContext } from "@/lib/student/data";
 import { getSupplierDirectory } from "@/lib/supplier/directory";
 import { countOrderableBySupplier } from "@/lib/products/data";
@@ -38,6 +39,8 @@ export default async function StudentHomePage() {
         <p className="text-small text-ink-muted">Good to see you,</p>
         <h1 className="font-display text-display">{firstName}</h1>
       </header>
+
+      <OrderWindow />
 
       <InstallCard />
 

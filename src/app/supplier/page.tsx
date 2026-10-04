@@ -5,6 +5,8 @@ import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "./_components/bottom-nav";
 import { OrdersClient } from "./orders-client";
 import { PendingBanner } from "./_components/pending-banner";
+import { WeekControl } from "./_components/week-control";
+import { nextSwitchLabel } from "@/lib/orders/ordering-week";
 
 export default async function SupplierOrdersPage() {
   const userId = await getVerifiedUserId();
@@ -19,7 +21,9 @@ export default async function SupplierOrdersPage() {
   ]);
   if (!rep) redirect("/sign-in");
 
-  const currentWeek = orders.reduce((max, o) => Math.max(max, o.weekNumber ?? 0), 0) || 1;
+  // The seller's own week, not the newest order's: a quiet week with no
+  // orders yet still reads as the week it is.
+  const currentWeek = rep.currentWeek;
   const orderedThisWeek = new Set(
     orders.filter((o) => o.weekNumber === currentWeek).map((o) => o.studentId),
   ).size;
@@ -27,12 +31,14 @@ export default async function SupplierOrdersPage() {
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
       <header className="px-5 pt-6">
-        <p className="text-micro uppercase text-ink-faint">Week {currentWeek}</p>
-        <h1 className="mt-1 font-display text-heading">
+        <h1 className="font-display text-heading">
           <span className="tnum">{orderedThisWeek}</span> of{" "}
           <span className="tnum">{students.length}</span>{" "}
-          {students.length === 1 ? "student has" : "students have"} ordered
+          {students.length === 1 ? "student has" : "students have"} ordered this week
         </h1>
+        <div className="mt-3">
+          <WeekControl key={currentWeek} week={currentWeek} nextSwitch={nextSwitchLabel()} />
+        </div>
       </header>
 
       <InstallCard />

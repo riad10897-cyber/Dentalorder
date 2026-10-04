@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { effectiveWeek } from "@/lib/orders/ordering-week";
 import type {
   AccountStatus,
   FulfillmentStatus,
@@ -19,6 +20,9 @@ export interface SupplierContext {
   /** Suppliers start pending_approval. A pending one can see the screens
    *  but takes no orders, so every screen has to say so. */
   status: AccountStatus;
+  /** The week this seller is taking orders for now: the week they set,
+   *  moved on by every Saturday 1:00 PM since. New orders take it. */
+  currentWeek: number;
 }
 
 export async function getSupplierContext(
@@ -32,7 +36,7 @@ export async function getSupplierContext(
     supabase.from("profiles").select("full_name").eq("id", userId).single(),
     supabase
       .from("suppliers")
-      .select("display_name, kind, university, frasaco_price, copy_a_price, status")
+      .select("display_name, kind, university, frasaco_price, copy_a_price, status, current_week, week_set_at")
       .eq("id", userId)
       .single(),
   ]);
@@ -48,6 +52,7 @@ export async function getSupplierContext(
     frasacoPrice: Number(rep.frasaco_price),
     copyAPrice: Number(rep.copy_a_price),
     status: rep.status,
+    currentWeek: effectiveWeek(rep.current_week, new Date(rep.week_set_at)),
   };
 }
 

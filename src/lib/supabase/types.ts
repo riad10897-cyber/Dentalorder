@@ -141,6 +141,10 @@ export interface Database {
           commission_rate: string;
           delivery_notes: string | null;
           status: AccountStatus;
+          /** The semester week (1-17) this seller takes orders for. New orders take it, by trigger. */
+          current_week: number;
+          /** When current_week was last set. Stamped by the database. */
+          week_set_at: string;
           created_at: string;
         };
         Insert: {
@@ -163,6 +167,8 @@ export interface Database {
           commission_rate?: string;
           delivery_notes?: string | null;
           status?: AccountStatus;
+          current_week?: number;
+          week_set_at?: string;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["suppliers"]["Insert"]>;

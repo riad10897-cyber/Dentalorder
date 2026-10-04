@@ -247,9 +247,8 @@ export function OrderBuilder({
   return (
     <>
       {/* No week on screen: students don't think in semester weeks, and
-          when to order is between them and their seller. The order still
-          carries a week number for the seller's shopping list, set from
-          the student's order count. */}
+          when to order is between them and their seller. The database
+          files each order under the week its seller has set. */}
       <div className="mt-4">
         <DentalChart
           selections={selections}
