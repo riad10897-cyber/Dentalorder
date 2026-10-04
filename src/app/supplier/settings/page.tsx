@@ -6,6 +6,7 @@ import { getVerifiedEmail, getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "../_components/bottom-nav";
 import {
   APP_VERSION,
+  FEEDBACK_EMAIL,
   AccountHeader,
   MenuGroup,
   MenuInfo,
@@ -52,6 +53,12 @@ export default async function SupplierSettingsPage() {
 
       <MenuGroup title="Help">
         <MenuInfo label="Questions about Molaro" value="Message Riad" icon={<ChatIcon />} />
+        <MenuLink
+          href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent("Molaro feedback")}`}
+          label="Send feedback"
+          detail={FEEDBACK_EMAIL}
+          icon={<MailIcon />}
+        />
         <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 

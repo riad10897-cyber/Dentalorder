@@ -156,6 +156,9 @@ export function PushedHeader({
 
 export const APP_VERSION = "0.1.0";
 
+/** Where "Send feedback" goes: Riad's inbox, from every settings screen. */
+export const FEEDBACK_EMAIL = "riad10897@gmail.com";
+
 /** "BAU · Year 4", or as much of it as is known. */
 export function describeStudy(university: string | null, year: number | null): string {
   const parts = [university, year ? `Year ${year}` : null].filter(Boolean);
