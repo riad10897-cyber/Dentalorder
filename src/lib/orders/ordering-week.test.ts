@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deadlineLabel, effectiveWeek, nextSwitchLabel } from "./ordering-week";
+import { deadlineLabel, effectiveWeek, handOverWeek, nextSwitchLabel } from "./ordering-week";
 
 // The same cases the SQL (public.effective_week) was checked against.
 const setSunday = new Date("2026-10-04T09:00:00Z"); // Sun 4 Oct, 12:00 Beirut (summer time)
@@ -32,4 +32,10 @@ test("deadline and switch are told in Beirut time", () => {
   assert.equal(deadlineLabel(new Date("2026-10-10T09:55:00Z")), "Saturday 10 Oct, 12:50 PM");
   // Saturday 13:00 Beirut: the next week's.
   assert.equal(deadlineLabel(new Date("2026-10-10T10:00:00Z")), "Saturday 17 Oct, 12:50 PM");
+});
+
+test("a week's orders are handed over the week after", () => {
+  assert.equal(handOverWeek(4), "week 5");
+  assert.equal(handOverWeek(16), "week 17");
+  assert.equal(handOverWeek(17), "the week after");
 });

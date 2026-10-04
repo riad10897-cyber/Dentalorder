@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setCurrentWeek } from "../_actions/orders";
+import { handOverWeek } from "@/lib/orders/ordering-week";
 
 /**
  * "Week 4 of 17", with − and +, as an inset card ("Paper, native"). The
@@ -45,7 +46,7 @@ export function WeekControl({
     <section aria-label="Ordering week" className="rounded-group bg-card">
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <p aria-live="polite" className="min-w-0">
-          <span className="block text-native-caption text-ink-faint">Taking orders for</span>
+          <span className="block text-native-caption text-ink-faint">Taking orders in</span>
           <span className="text-[1.375rem] font-bold leading-tight tracking-[-0.015em] text-ink">
             Week <span className="tnum">{shown}</span>
             <span className="font-normal text-ink-faint"> of 17</span>
@@ -63,6 +64,8 @@ export function WeekControl({
       </div>
       <div className="border-t-[0.5px] border-separator px-4 py-2.5 text-native-caption text-ink-muted">
         {footnote && <p className="text-ink">{footnote}</p>}
+        {/* A week's orders are handed over the week after. */}
+        <p>Orders placed now are handed over in {handOverWeek(shown)}.</p>
         <p>
           {shown < 17
             ? <>Moves to week <span className="tnum">{shown + 1}</span> on {nextSwitch}.</>

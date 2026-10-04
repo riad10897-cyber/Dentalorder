@@ -65,6 +65,15 @@ export function nextSwitchLabel(at: Date = new Date()): string {
   return formatWallClock(ANCHOR_LOCAL_MS + (weekIndex(at) + 1) * WEEK_MS);
 }
 
+/**
+ * Orders placed in a week are handed over the week after: week 4's orders
+ * reach students in week 5. After week 17 there is no numbered week, so
+ * it reads "the week after".
+ */
+export function handOverWeek(orderWeek: number): string {
+  return orderWeek < LAST_WEEK ? `week ${orderWeek + 1}` : "the week after";
+}
+
 /** What students are told to order by: "Saturday 10 Oct, 12:50 PM". */
 export function deadlineLabel(at: Date = new Date()): string {
   return formatWallClock(ANCHOR_LOCAL_MS + (weekIndex(at) + 1) * WEEK_MS - DEADLINE_LEAD_MINUTES * 60 * 1000);

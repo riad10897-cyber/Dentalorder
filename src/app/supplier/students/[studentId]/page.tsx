@@ -84,7 +84,7 @@ export default async function SupplierStudentDetailPage({
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-native-body font-semibold text-ink">
-                    Week <span className="tnum">{order.weekNumber}</span>
+                    Week <span className="tnum">{order.weekNumber}</span> order
                   </span>
                   <span className="tnum text-native-body font-semibold text-ink">${order.totalPrice.toFixed(2)}</span>
                 </div>

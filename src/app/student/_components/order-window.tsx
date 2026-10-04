@@ -21,9 +21,10 @@ export function OrderWindow({ compact = false }: { compact?: boolean }) {
         <path d="M12 7v5l3 2" />
       </svg>
       <div className="min-w-0">
-        <p className="text-native-body font-semibold text-ink">Orders are open for this week</p>
+        <p className="text-native-body font-semibold text-ink">Orders are open</p>
         <p className="text-list-secondary text-ink-muted">
-          Order by <span className="text-ink">{deadline}</span>. After that, orders go into next week.
+          Order by <span className="text-ink">{deadline}</span> to get it next week. Later orders
+          come the week after.
         </p>
       </div>
     </section>
