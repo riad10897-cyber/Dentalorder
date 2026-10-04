@@ -46,8 +46,9 @@ chart when ordering from them, and add them to the same weekly order. There
 is no commission on extras. A product that has ever been ordered can't be
 deleted, only switched off: past orders keep its name and price as they were.
 
-They appear in the market within five minutes (the market list is cached
-that long). The next time they open the app they land on the supplier
+They appear in the market within thirty seconds (the market list is cached
+that long). The same goes the other way: a seller you delete or suspend by
+hand can still show in the market for up to thirty seconds. The next time they open the app they land on the supplier
 screens.
 
 **To stop someone supplying** — they graduated, or stopped selling — set them

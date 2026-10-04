@@ -45,11 +45,13 @@ export const getSupplierDirectory = unstable_cache(
   ["supplier-directory"],
   {
     // Sign-up and a supplier's own price change call revalidateTag.
-    // Approval and any price set by hand in SQL cannot, so this ceiling is
-    // what bounds how stale the list can be after one of those. Anything
-    // that commits money reads getSupplierFresh instead.
+    // Anything done by hand in SQL cannot — approving, suspending or
+    // deleting a seller — so this ceiling is how long the market can show
+    // a seller who is gone. Five minutes was long enough to look broken
+    // after a wipe; thirty seconds is not. Anything that commits money
+    // reads getSupplierFresh instead.
     tags: [SUPPLIER_DIRECTORY_TAG],
-    revalidate: 300,
+    revalidate: 30,
   },
 );
 
