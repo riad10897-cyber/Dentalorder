@@ -104,7 +104,9 @@ export function NativeRowBody({
   return (
     <>
       {icon && <span className="shrink-0 text-ink-muted">{icon}</span>}
-      <span className="-mb-2.5 flex min-h-11 min-w-0 flex-1 items-center gap-3 self-stretch border-b-[0.5px] border-separator pb-2.5 group-last/row:border-none">
+      {/* Equal space above and below the text on every row: the body is
+          the row's full height, so its separator sits at the row's foot. */}
+      <span className="flex min-h-11 min-w-0 flex-1 items-center gap-3 self-stretch border-b-[0.5px] border-separator py-2.5 pr-4 group-last/row:border-none">
         <span className="shrink-0 text-native-body text-ink">{label}</span>
         <span className="min-w-0 flex-1 truncate text-right text-list-secondary text-ink-faint">{detail}</span>
         {chevron}
@@ -114,7 +116,7 @@ export function NativeRowBody({
 }
 
 export const nativeRowClass =
-  "flex items-center gap-3 px-4 pt-2.5 transition-colors duration-[120ms] ease-[var(--ease-out)]";
+  "flex items-center gap-3 pl-4 transition-colors duration-[120ms] ease-[var(--ease-out)]";
 
 export function NativeChevron({ rotated = false }: { rotated?: boolean }) {
   return (
