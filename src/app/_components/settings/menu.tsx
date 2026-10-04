@@ -8,7 +8,7 @@ import { signOut } from "@/app/actions/auth";
  * as the settings of any phone app, so nobody has to learn it.
  */
 
-export function AccountHeader({ name, detail }: { name: string; detail: string }) {
+export function AccountHeader({ name, detail, native = false }: { name: string; detail: string; native?: boolean }) {
   const initials =
     name
       .split(/\s+/)
@@ -16,6 +16,22 @@ export function AccountHeader({ name, detail }: { name: string; detail: string }
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("") || "?";
+  if (native) {
+    return (
+      <div className="mt-1 flex items-center gap-3.5 rounded-group bg-card px-4 py-3.5">
+        <span
+          aria-hidden
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-card-sunk text-sheet-title font-semibold text-ink"
+        >
+          {initials}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-[1.25rem] font-semibold leading-tight text-ink">{name}</span>
+          <span className="block truncate text-list-secondary text-ink-muted">{detail}</span>
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="mx-5 mt-5 flex items-center gap-3 rounded-card border border-rule bg-card px-4 py-4">
       <span
@@ -36,11 +52,23 @@ export function MenuGroup({
   title,
   footnote,
   children,
+  native = false,
 }: {
   title: string;
   footnote?: string;
   children: React.ReactNode;
+  /** "Paper, native": an inset grouped list on the paper. */
+  native?: boolean;
 }) {
+  if (native) {
+    return (
+      <section>
+        <h2 className="mx-1 mb-1.5 mt-[1.375rem] text-native-caption uppercase tracking-[0.02em] text-ink-faint">{title}</h2>
+        <ul className="overflow-hidden rounded-group bg-card">{children}</ul>
+        {footnote && <p className="mx-1 mt-1.5 text-native-caption text-ink-faint">{footnote}</p>}
+      </section>
+    );
+  }
   return (
     <section className="mx-5 mt-6">
       <h2 className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">{title}</h2>
@@ -57,17 +85,75 @@ function RowIcon({ icon }: { icon?: React.ReactNode }) {
   return icon ? <span className="shrink-0 text-ink-muted">{icon}</span> : null;
 }
 
+/**
+ * A "Paper, native" row: icon, label, value on the right, an optional
+ * chevron. The separator runs under the text only, inset past the icon,
+ * and the last row in a group has none.
+ */
+export function NativeRowBody({
+  icon,
+  label,
+  detail,
+  chevron,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  detail?: React.ReactNode;
+  chevron?: React.ReactNode;
+}) {
+  return (
+    <>
+      {icon && <span className="shrink-0 text-ink-muted">{icon}</span>}
+      <span className="-mb-2.5 flex min-h-11 min-w-0 flex-1 items-center gap-3 self-stretch border-b-[0.5px] border-separator pb-2.5 group-last/row:border-none">
+        <span className="shrink-0 text-native-body text-ink">{label}</span>
+        <span className="min-w-0 flex-1 truncate text-right text-list-secondary text-ink-faint">{detail}</span>
+        {chevron}
+      </span>
+    </>
+  );
+}
+
+export const nativeRowClass =
+  "flex items-center gap-3 px-4 pt-2.5 transition-colors duration-[120ms] ease-[var(--ease-out)]";
+
+export function NativeChevron({ rotated = false }: { rotated?: boolean }) {
+  return (
+    <svg
+      aria-hidden
+      className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 motion-reduce:transition-none ${rotated ? "rotate-90" : ""}`}
+      fill="none"
+      stroke="var(--chevron)"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      viewBox="0 0 24 24"
+    >
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 export function MenuLink({
   href,
   label,
   detail,
   icon,
+  native = false,
 }: {
   href: string;
   label: string;
   detail?: string;
   icon?: React.ReactNode;
+  native?: boolean;
 }) {
+  if (native) {
+    return (
+      <li className="group/row">
+        <Link href={href} className={`${nativeRowClass} active:bg-card-sunk`}>
+          <NativeRowBody icon={icon} label={label} detail={detail} chevron={<NativeChevron />} />
+        </Link>
+      </li>
+    );
+  }
   return (
     <li className="border-b border-hairline last:border-none">
       <Link href={href} className={`pressable ${rowClass}`}>
@@ -90,7 +176,24 @@ export function MenuLink({
 }
 
 /** A row that only shows something: no chevron, nothing to open. */
-export function MenuInfo({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+export function MenuInfo({
+  label,
+  value,
+  icon,
+  native = false,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+  native?: boolean;
+}) {
+  if (native) {
+    return (
+      <li className={`group/row ${nativeRowClass}`}>
+        <NativeRowBody icon={icon} label={label} detail={value} />
+      </li>
+    );
+  }
   return (
     <li className={`border-b border-hairline last:border-none ${rowClass}`}>
       <RowIcon icon={icon} />
@@ -100,7 +203,19 @@ export function MenuInfo({ label, value, icon }: { label: string; value: string;
   );
 }
 
-export function SignOutRow() {
+export function SignOutRow({ native = false }: { native?: boolean }) {
+  if (native) {
+    return (
+      <form action={signOut} className="mt-[1.375rem]">
+        <button
+          type="submit"
+          className="flex h-11 w-full items-center justify-center rounded-group bg-card text-native-body text-ink transition-colors duration-[120ms] ease-[var(--ease-out)] active:bg-card-sunk"
+        >
+          Sign out
+        </button>
+      </form>
+    );
+  }
   return (
     <form action={signOut} className="mx-5 mt-6">
       <button

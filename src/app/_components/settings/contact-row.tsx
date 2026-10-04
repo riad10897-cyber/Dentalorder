@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { ChatIcon, MailIcon } from "@/app/_components/icons";
 import { emailHref, whatsappHref } from "@/lib/contact";
+import { NativeChevron, NativeRowBody, nativeRowClass } from "./menu";
+
+const nativeOptionClass =
+  "flex min-h-11 items-center gap-3 border-b-[0.5px] border-separator px-3.5 text-native-body text-ink last:border-none active:bg-card-sunk";
 
 const optionClass =
   "pressable flex min-h-11 items-center gap-3 border-b border-hairline px-4 py-2 text-body text-ink last:border-none";
@@ -11,9 +15,43 @@ const optionClass =
  * "Contact us": a settings row that opens to WhatsApp and email. The
  * number and address are never printed, only carried by the two links.
  */
-export function ContactRow() {
+export function ContactRow({ native = false }: { native?: boolean }) {
   const [open, setOpen] = useState(false);
   const whatsapp = whatsappHref("Hi, about Molaro: ");
+
+  if (native) {
+    return (
+      <li className="group/row">
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className={`${nativeRowClass} w-full text-left active:bg-card-sunk`}
+        >
+          <NativeRowBody
+            icon={<ChatIcon />}
+            label="Contact us"
+            detail={whatsapp ? "WhatsApp or email" : "Email"}
+            chevron={<NativeChevron rotated={open} />}
+          />
+        </button>
+        {open && (
+          <div className="menu-in mx-3 mb-2 mt-2.5 overflow-hidden rounded-field bg-fill-faint">
+            {whatsapp && (
+              <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={nativeOptionClass}>
+                <ChatIcon />
+                Message on WhatsApp
+              </a>
+            )}
+            <a href={emailHref("Molaro feedback")} className={nativeOptionClass}>
+              <MailIcon />
+              Send an email
+            </a>
+          </div>
+        )}
+      </li>
+    );
+  }
 
   return (
     <li className="border-b border-hairline last:border-none">

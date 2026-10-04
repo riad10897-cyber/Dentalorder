@@ -616,3 +616,37 @@ h6 {
   }
 }
 
+
+/* "Paper, native" forms on student screens (Personal details, Password).
+   The forms themselves are shared with seller screens, which keep the
+   old look; wrapping them in .native-form restyles them in place. Plain
+   CSS outranks Tailwind's utility layer, so these win over the forms'
+   own classes. */
+.native-form label {
+  font-size: var(--text-native-caption);
+  color: var(--ink-muted);
+}
+
+.native-form input,
+.native-form select {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: var(--radius-field);
+  background: var(--card);
+  padding-inline: 0.875rem;
+  font-size: var(--text-native-body);
+  color: var(--ink);
+}
+
+.native-form input:focus,
+.native-form select:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 0;
+}
+
+.native-form button[type="submit"] {
+  min-height: 3.125rem;
+  border-radius: var(--radius-button);
+  font-size: var(--text-native-body);
+  font-weight: 600;
+}

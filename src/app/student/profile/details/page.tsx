@@ -14,7 +14,7 @@ export default async function StudentDetailsPage() {
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
       <PushedHeader native backText="Profile" backHref="/student/profile" backLabel="Back to profile" title="Personal details" />
-      <div className="mt-5 px-5">
+      <div className="native-form mt-5 px-4">
         <ProfileForm
           fullName={student.fullName}
           phone={student.phone}

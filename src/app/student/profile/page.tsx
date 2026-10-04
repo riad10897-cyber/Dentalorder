@@ -29,27 +29,27 @@ export default async function StudentProfilePage() {
   if (!student) redirect("/sign-in");
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <h1 className="px-5 pt-6 font-display text-display">Profile</h1>
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
+      <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Profile</h1>
 
-      <AccountHeader name={student.fullName || "Your account"} detail={describeStudy(student.university, student.yearOfStudy)} />
+      <AccountHeader native name={student.fullName || "Your account"} detail={describeStudy(student.university, student.yearOfStudy)} />
 
-      <MenuGroup title="Account">
-        <MenuLink href="/student/profile/details" label="Personal details" icon={<PersonIcon />} detail={student.phone ?? "Add your phone"} />
-        {email && <MenuInfo label="Email" value={email} icon={<MailIcon />} />}
-        <MenuLink href="/student/profile/password" label="Password" detail="Change" icon={<LockIcon />} />
+      <MenuGroup native title="Account">
+        <MenuLink native href="/student/profile/details" label="Personal details" icon={<PersonIcon />} detail={student.phone ?? "Add your phone"} />
+        {email && <MenuInfo native label="Email" value={email} icon={<MailIcon />} />}
+        <MenuLink native href="/student/profile/password" label="Password" detail="Change" icon={<LockIcon />} />
       </MenuGroup>
 
-      <MenuGroup title="Share" footnote="Show the code in class, or send the link to your group.">
-        <MenuLink href="/student/profile/share" label="Share Molaro" detail="QR code" icon={<QrIcon />} />
+      <MenuGroup native title="Share" footnote="Show the code in class, or send the link to your group.">
+        <MenuLink native href="/student/profile/share" label="Share Molaro" detail="QR code" icon={<QrIcon />} />
       </MenuGroup>
 
-      <MenuGroup title="Help" footnote="Something wrong with an order? Message your seller first.">
-        <ContactRow />
-        <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
+      <MenuGroup native title="Help" footnote="Something wrong with an order? Message your seller first.">
+        <ContactRow native />
+        <MenuInfo native label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 
-      <SignOutRow />
+      <SignOutRow native />
 
       <StudentBottomNav />
     </main>
