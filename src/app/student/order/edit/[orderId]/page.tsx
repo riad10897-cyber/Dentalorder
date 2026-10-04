@@ -4,6 +4,7 @@ import { getSupplierFresh } from "@/lib/supplier/directory";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { priceMovesSinceOrder, productChangesSinceOrder } from "@/lib/orders/price-change";
 import { PushedHeader } from "@/app/_components/settings/menu";
+import { deadlineLabel } from "@/lib/orders/ordering-week";
 import { listOrderableProducts } from "@/lib/products/data";
 import { OrderBuilder } from "../../order-builder";
 import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
@@ -94,6 +95,7 @@ export default async function EditOrderPage({
         copyAPrice={supplier.copyAPrice}
         initialWeek={order.weekNumber}
         initialToothType={defaults.lastToothType}
+        deadline={deadlineLabel()}
         extras={products.map((p) => ({
           productId: p.id,
           name: p.name,

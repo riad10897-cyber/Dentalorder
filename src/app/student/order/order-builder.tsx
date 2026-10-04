@@ -8,9 +8,9 @@ import { ReviewSheet } from "./review-sheet";
 import { CancelOrderButton } from "@/app/student/orders/cancel-order-button";
 import { editToothOrder, submitToothOrder } from "@/app/student/_actions/orders";
 import type { PriceMove, ProductPriceMove } from "@/lib/orders/price-change";
-import type { priceToothOrder } from "@/lib/orders/tooth-pricing";
-import { priceWeeklyOrder, type PricedExtra } from "@/lib/orders/order-pricing";
+import { priceWeeklyOrder } from "@/lib/orders/order-pricing";
 import { ExtrasSection, type ExtraOption } from "./extras-section";
+import { TypeSwitch } from "./type-switch";
 import { describeLines } from "@/app/_components/extras-lines";
 import { haptic } from "@/lib/haptics";
 import { useCountingMoney } from "@/lib/use-counting-money";
@@ -23,6 +23,8 @@ interface OrderBuilderProps {
   copyAPrice: number;
   initialWeek: number;
   initialToothType: ToothType;
+  /** "Saturday 10 Oct, 12:50 PM": when this week's orders close. */
+  deadline: string;
   /** The seller's in-stock products right now, priced. Empty hides the section. */
   extras: ExtraOption[];
   /** Present when this screen is editing a pending order rather than placing a new one. */
@@ -55,7 +57,7 @@ interface UndoState {
   snapshot: ToothSelections;
 }
 
-const UNDO_TIMEOUT_MS = 7000;
+const UNDO_TIMEOUT_MS = 5000;
 
 export function OrderBuilder({
   supplierId,
@@ -64,6 +66,7 @@ export function OrderBuilder({
   copyAPrice,
   initialWeek,
   initialToothType,
+  deadline,
   extras,
   edit,
   prefill,
@@ -75,6 +78,9 @@ export function OrderBuilder({
   const start = edit ?? prefill;
   const [selections, setSelections] = useState<ToothSelections>(start?.initialSelections ?? {});
   const [extraQty, setExtraQty] = useState<Record<string, number>>(start?.initialExtras ?? {});
+  // The type a newly tapped tooth starts as. Defaults to the student's
+  // last used type: of 286 orders in a semester only 4 mixed both.
+  const [newToothType, setNewToothType] = useState<ToothType>(initialToothType);
   const [sheetTooth, setSheetTooth] = useState<number | null>(null);
   const [sheetFrasacoQty, setSheetFrasacoQty] = useState(0);
   const [sheetCopyQty, setSheetCopyQty] = useState(0);
@@ -157,11 +163,10 @@ export function OrderBuilder({
     const existingCopy = selections[toothSelectionKey(toothNumber, "copy_a")];
     setSheetTooth(toothNumber);
     if (!existingFrasaco && !existingCopy) {
-      // Default to the student's last used type: of 286 orders in a
-      // semester only 4 mixed both types, so the common case should need
-      // no extra taps.
-      setSheetFrasacoQty(initialToothType === "frasaco" ? 1 : 0);
-      setSheetCopyQty(initialToothType === "copy_a" ? 1 : 0);
+      // One of the type chosen in the switch, so the common case needs no
+      // extra taps.
+      setSheetFrasacoQty(newToothType === "frasaco" ? 1 : 0);
+      setSheetCopyQty(newToothType === "copy_a" ? 1 : 0);
     } else {
       setSheetFrasacoQty(existingFrasaco?.quantity ?? 0);
       setSheetCopyQty(existingCopy?.quantity ?? 0);
@@ -262,76 +267,85 @@ export function OrderBuilder({
 
   return (
     <>
-      {/* No week on screen: students don't think in semester weeks, and
-          when to order is between them and their seller. The database
-          files each order under the week its seller has set. */}
-      <div className="mt-4">
-        <DentalChart
-          selections={selections}
-          frasacoPrice={frasacoPrice}
-          copyAPrice={copyAPrice}
-          onTapTooth={openSheet}
-        />
+      {/* No week on screen: students don't think in semester weeks. The
+          database files each order under the week its seller has set; the
+          student only needs the deadline. */}
+      <div className="mt-3">
+        <TypeSwitch value={newToothType} onChange={setNewToothType} frasacoPrice={frasacoPrice} copyAPrice={copyAPrice} />
+        <p className="mt-2 text-center text-native-caption text-ink-muted">
+          Order by <span className="text-ink">{deadline}</span>
+        </p>
       </div>
+
+      <div className="mt-3.5">
+        <DentalChart selections={selections} onTapTooth={openSheet} />
+      </div>
+      <p className="mx-5 mt-2 text-center text-native-caption text-ink-faint">
+        Tap a tooth to choose type and quantity
+      </p>
 
       <ExtrasSection supplierName={supplierName} options={extras} quantities={extraQty} onChange={setExtra} />
 
-      <InThisOrder items={pricedItems} extras={pricedExtras} />
+      {/* Keeps the last row clear of the floating bar. */}
+      <div aria-hidden className="h-[8.125rem]" />
 
-      {/* Footer is pinned; this keeps the last card clear of it. */}
-      <div className="h-32" />
-
-      <div className="scroll-edge fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md bg-paper px-5 pb-6 pt-3">
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-md flex-col items-center px-3"
+        style={{ paddingBottom: "calc(1.625rem + env(safe-area-inset-bottom))" }}
+      >
         {undo && (
-          <div className="total-change mb-2 flex items-center justify-between rounded-control border border-rule bg-card-sunk px-3 py-2">
-            <span className="text-small text-ink-muted">{undo.message}</span>
+          <div
+            role="status"
+            className="note-in pointer-events-auto mb-3 flex h-9 items-center gap-3 whitespace-nowrap rounded-full bg-[rgba(20,18,15,0.86)] pl-3.5 pr-1.5 text-[0.875rem] text-card"
+          >
+            {undo.message}
             <button
               type="button"
               onClick={applyUndo}
-              className="pressable -my-2 px-2 py-2 font-display text-small underline underline-offset-2"
+              className="pressable relative h-7 rounded-full bg-[rgba(251,248,240,0.16)] px-3 text-[0.875rem] font-semibold text-card after:absolute after:-inset-2 after:content-['']"
             >
               Undo
             </button>
           </div>
         )}
 
-        {/* Editing, with every tooth taken off: there is nothing to review,
-            and what the student means is "I don't want this order". Offer
-            exactly that, rather than a Review button that does nothing. */}
-        {edit && !hasLines ? (
-          <CancelOrderButton
-            orderId={edit.orderId}
-            label="Cancel this order"
-            onCancelled={() => router.push("/student/orders")}
-            className="pressable min-h-11 w-full rounded-control border border-ink bg-card py-3 font-display text-body text-ink"
-          />
-        ) : (
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-micro uppercase text-ink-faint">Order total</div>
-            <div className="flex items-baseline gap-2">
-              <span
-                ref={totalRef}
-                className="tnum font-display text-heading"
-                data-testid="order-total"
+        <div className="glass-card pointer-events-auto flex w-full items-center gap-3 rounded-bar border-[0.5px] border-[rgba(20,18,15,0.10)] py-2 pl-[1.125rem] pr-2 shadow-floating">
+          {/* Editing, with every tooth taken off: there is nothing to
+              review, and what the student means is "I don't want this
+              order". Offer exactly that. */}
+          {edit && !hasLines ? (
+            <CancelOrderButton
+              orderId={edit.orderId}
+              label="Cancel this order"
+              onCancelled={() => router.push("/student/orders")}
+              wrapperClassName="flex flex-1 flex-col gap-1 py-1"
+              className="pressable h-12 w-full rounded-[1.125rem] bg-ink text-native-body font-semibold text-card"
+            />
+          ) : (
+            <>
+              <div className="min-w-0 flex-1">
+                <span
+                  ref={totalRef}
+                  className="tnum block text-[1.375rem] font-bold leading-tight tracking-[-0.01em] text-ink"
+                  data-testid="order-total"
+                >
+                  ${subtotal.toFixed(2)}
+                </span>
+                <div className="tnum truncate text-native-caption text-ink-muted">
+                  {hasLines ? describeLines(totalTeeth, totalExtras) : "Nothing yet"}
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={!hasLines}
+                onClick={() => setReviewOpen(true)}
+                className="h-12 shrink-0 rounded-[1.125rem] bg-ink px-6 text-native-body font-semibold text-card transition-transform duration-[120ms] ease-[var(--ease-out)] active:scale-95 disabled:opacity-30 disabled:active:scale-100 motion-reduce:active:scale-100"
               >
-                ${subtotal.toFixed(2)}
-              </span>
-              <span className="tnum font-display text-caption text-ink-muted">
-                {describeLines(totalTeeth, totalExtras)}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            disabled={!hasLines}
-            onClick={() => setReviewOpen(true)}
-            className="pressable min-h-11 rounded-control bg-ink px-6 py-3 font-display text-body text-card disabled:opacity-30"
-          >
-            Review
-          </button>
+                Review
+              </button>
+            </>
+          )}
         </div>
-        )}
       </div>
 
       {sheetTooth !== null && (
@@ -379,68 +393,5 @@ export function OrderBuilder({
         />
       )}
     </>
-  );
-}
-
-function InThisOrder({
-  items,
-  extras,
-}: {
-  items: ReturnType<typeof priceToothOrder>["items"];
-  extras: PricedExtra[];
-}) {
-  return (
-    <div className="mx-2 mt-3 rounded-card border border-rule bg-card">
-      <div className="border-b border-hairline px-4 py-3 text-micro uppercase text-ink-faint">
-        In this order
-      </div>
-      {items.length === 0 && extras.length === 0 ? (
-        <p className="px-4 py-5 text-center text-small text-ink-muted">
-          Nothing yet. Tap a tooth above to add it.
-        </p>
-      ) : (
-        <ul>
-          {items.map((item) => (
-            <li
-              key={`${item.toothNumber}:${item.toothType}`}
-              className="flex items-center justify-between border-b border-hairline px-4 py-2.5 last:border-none"
-            >
-              <span className="flex items-center gap-2.5">
-                <span
-                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                  style={{
-                    background:
-                      item.toothType === "frasaco" ? "var(--frasaco)" : "var(--copy-a)",
-                  }}
-                />
-                <span className="tnum font-display text-body">Tooth {item.toothNumber}</span>
-                <span className="text-caption text-ink-muted">
-                  {item.toothType === "frasaco" ? "Frasaco" : "Copy A"}
-                </span>
-              </span>
-              <span className="flex items-baseline gap-3">
-                <span className="tnum font-display text-caption text-ink-muted">×{item.quantity}</span>
-                <span className="tnum font-display text-body">${item.lineTotal.toFixed(2)}</span>
-              </span>
-            </li>
-          ))}
-          {extras.map((extra) => (
-            <li
-              key={extra.productId}
-              className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-2.5 last:border-none"
-            >
-              <span className="min-w-0 truncate text-body">
-                {extra.name}
-                {extra.unit && <span className="text-caption text-ink-muted"> · {extra.unit}</span>}
-              </span>
-              <span className="flex shrink-0 items-baseline gap-3">
-                <span className="tnum font-display text-caption text-ink-muted">×{extra.quantity}</span>
-                <span className="tnum font-display text-body">${extra.lineTotal.toFixed(2)}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 }

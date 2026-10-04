@@ -10,8 +10,6 @@ export type { ToothSelectionKey, ToothSelections } from "@/lib/teeth/selection";
 
 interface DentalChartProps {
   selections: ToothSelections;
-  frasacoPrice: number;
-  copyAPrice: number;
   onTapTooth: (toothNumber: number) => void;
 }
 
@@ -45,31 +43,22 @@ function columnDip(columnIndex: number, arch: "upper" | "lower"): string {
 // the first render matches on both sides.
 let chartArrived = false;
 
-export function DentalChart({
-  selections,
-  frasacoPrice,
-  copyAPrice,
-  onTapTooth,
-}: DentalChartProps) {
+export function DentalChart({ selections, onTapTooth }: DentalChartProps) {
   const [arrive] = useState(() => !chartArrived);
   useEffect(() => {
     chartArrived = true;
   }, []);
 
+  // "Paper, native": the chart is a card of its own, with no key, labels
+  // or midline rule — the type switch above names the colours, and a gap
+  // between the arches gives the lower arch's dip its room.
   return (
-    <div className="mx-2 rounded-card border border-rule bg-card px-2 py-4">
-      <ColourKey frasacoPrice={frasacoPrice} copyAPrice={copyAPrice} />
-
-      <ArchLabel>Upper</ArchLabel>
+    <div className="mx-2 select-none rounded-chart bg-card px-2 pb-[1.125rem] pt-4 [-webkit-user-select:none]">
       {CHART_ROWS.slice(0, 2).map((row, i) => (
         <ArchRow key={i} row={row} rowIndex={i} arrive={arrive} selections={selections} onTapTooth={onTapTooth} />
       ))}
 
-      <div className="my-2 flex items-center gap-2 px-1" aria-hidden="true">
-        <span className="h-px flex-1 bg-rule" />
-        <span className="text-micro uppercase text-ink-faint">Midline</span>
-        <span className="h-px flex-1 bg-rule" />
-      </div>
+      <div aria-hidden className="h-[1.875rem]" />
 
       {CHART_ROWS.slice(2).map((row, i) => (
         <ArchRow
@@ -81,29 +70,7 @@ export function DentalChart({
           onTapTooth={onTapTooth}
         />
       ))}
-      <ArchLabel>Lower</ArchLabel>
     </div>
-  );
-}
-
-function ColourKey({ frasacoPrice, copyAPrice }: { frasacoPrice: number; copyAPrice: number }) {
-  return (
-    <div className="mb-3 flex items-center justify-center gap-4 px-1 text-caption text-ink-muted">
-      <span className="flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-frasaco" />
-        Frasaco <span className="tnum font-display text-ink">${frasacoPrice.toFixed(2)}</span>
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-copy-a" />
-        Copy A <span className="tnum font-display text-ink">${copyAPrice.toFixed(2)}</span>
-      </span>
-    </div>
-  );
-}
-
-function ArchLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="px-1 py-1 text-center text-micro uppercase text-ink-faint">{children}</div>
   );
 }
 
@@ -167,7 +134,7 @@ function ToothButton({
   } else if (copyA) {
     backgroundColor = "var(--copy-a)";
   } else {
-    backgroundColor = "var(--card)";
+    backgroundColor = "rgba(20, 18, 15, 0.06)";
   }
   const backgroundImage = hasBoth
     ? "linear-gradient(135deg, var(--frasaco) 0 50%, var(--copy-a) 50% 100%)"
@@ -187,9 +154,11 @@ function ToothButton({
         { "--dip": dip, width: `${CELL_W}px`, height: `${CELL_H}px` } as React.CSSProperties
       }
     >
+      {/* Unselected teeth sit a little smaller and grow into place when
+          picked (.tooth-face, on the spring-pop curve). */}
       <span
-        className={`tooth-face relative flex items-center justify-center rounded-control border ${
-          selected ? "border-transparent" : "border-rule"
+        className={`tooth-face relative flex items-center justify-center rounded-tooth ${
+          selected ? "scale-100" : "scale-[0.92]"
         }`}
         style={{
           backgroundColor,
@@ -199,14 +168,12 @@ function ToothButton({
         }}
       >
         <span
-          className={`tnum font-display text-caption ${
-            selected ? "text-card" : "text-ink-faint"
-          }`}
+          className={`tnum text-[0.75rem] font-semibold ${selected ? "text-white" : "text-ink-faint"}`}
         >
           {toothNumber}
         </span>
         {combinedQty > 1 && (
-          <span className="tooth-badge tnum absolute -right-1 -top-1 flex h-[1.0625rem] min-w-[1.0625rem] items-center justify-center rounded-full bg-ink px-1 font-display text-[0.625rem] leading-none text-card">
+          <span className="tooth-badge tnum absolute -right-[0.3125rem] -top-[0.3125rem] flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border-2 border-card bg-ink px-1 text-[0.625rem] font-semibold leading-none text-white">
             {combinedQty}
           </span>
         )}

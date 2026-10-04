@@ -5,11 +5,10 @@ import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { getSupplierFresh } from "@/lib/supplier/directory";
 import { PushedHeader } from "@/app/_components/settings/menu";
-import { TypePrices } from "@/app/_components/type-prices";
 import { listOrderableProducts } from "@/lib/products/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { OrderBuilder } from "./order-builder";
-import { OrderWindow } from "../_components/order-window";
+import { deadlineLabel } from "@/lib/orders/ordering-week";
 
 /**
  * The chart, for one supplier.
@@ -74,11 +73,7 @@ export default async function NewOrderPage({
         backHref="/student"
         backLabel="Back to the market"
         title={supplier.displayName}
-        subtitle={<TypePrices frasacoPrice={supplier.frasacoPrice} copyAPrice={supplier.copyAPrice} />}
       />
-      <div className="px-5 pt-1">
-        <OrderWindow compact />
-      </div>
 
       <OrderBuilder
         supplierId={supplier.id}
@@ -87,6 +82,7 @@ export default async function NewOrderPage({
         copyAPrice={supplier.copyAPrice}
         initialWeek={orderDefaults.nextWeek}
         initialToothType={orderDefaults.lastToothType}
+        deadline={deadlineLabel()}
         extras={products.map((p) => ({
           productId: p.id,
           name: p.name,

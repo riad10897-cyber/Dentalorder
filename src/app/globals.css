@@ -231,7 +231,8 @@ h6 {
   transition:
     background-color 140ms var(--ease-out),
     border-color 140ms var(--ease-out),
-    color 140ms var(--ease-out);
+    color 140ms var(--ease-out),
+    scale 380ms var(--ease-spring-pop);
 }
 
 /* ── Two-state controls ────────────────────────────────────────────
@@ -498,8 +499,11 @@ h6 {
   }
 
   /* The colour change is the state, so it stays — it is the only thing
-     telling a student the tooth is now selected. Nothing here moves. */
+     telling a student the tooth is now selected. Nothing here moves: the
+     pop into place is dropped, and every tooth sits at full size. */
   .tooth-face {
+    /* Tailwind's scale-* sets the scale property, not transform. */
+    scale: none;
     transition:
       background-color 140ms var(--ease-out),
       border-color 140ms var(--ease-out),

@@ -19,16 +19,17 @@ export interface ExtraOption {
 const CHIPS_FROM = 9;
 
 /**
- * "Extras from Riad": the seller's in-stock products, under the chart.
+ * "Also from Majzoub": the seller's in-stock products, under the chart.
  *
  * Only what this seller sells right now — the list is read fresh when the
  * screen loads, and it is the same list the database will price against.
- * A stepper per product, starting at zero. No section at all when the
- * seller has listed nothing: an empty "Extras" box under every chart would
- * be noise.
+ * A pill stepper per product, starting at zero. No section at all when the
+ * seller has listed nothing: an empty box under every chart would be noise.
  *
- * Tapping a product opens a sheet with what the seller wrote about it.
- * With more than eight products, category chips narrow the list.
+ * Tapping a product's name opens a sheet with what the seller wrote about
+ * it. With more than eight products, category chips narrow the list.
+ * Products arrive in shelf order (category, then name), so the one inset
+ * list still reads by category.
  */
 export function ExtrasSection({
   supplierName,
@@ -48,84 +49,48 @@ export function ExtrasSection({
   const open = options.find((o) => o.productId === openId) ?? null;
   const categories = PRODUCT_CATEGORIES.filter((c) => options.some((o) => o.category === c.slug));
   const showChips = options.length >= CHIPS_FROM && categories.length > 1;
-  const shown = showChips && filter ? categories.filter((c) => c.slug === filter) : categories;
+  const listed = showChips && filter ? options.filter((o) => o.category === filter) : options;
+  const firstName = supplierName.split(/\s+/)[0] || supplierName;
 
   return (
-    <section className="mx-2 mt-3 rounded-card border border-rule bg-card" aria-label={`Extras from ${supplierName}`}>
-      <h2 className="border-b border-hairline px-4 py-3 font-display text-body">Extras from {supplierName}</h2>
+    <section aria-label={`Extras from ${supplierName}`}>
+      <h2 className="mx-5 mb-1.5 mt-[1.375rem] text-native-caption uppercase tracking-[0.02em] text-ink-faint">
+        Also from {firstName}
+      </h2>
       {showChips && (
-        <div className="flex gap-2 overflow-x-auto border-b border-hairline px-4 py-2.5" role="group" aria-label="Category">
+        <div className="mb-2 flex gap-2 overflow-x-auto px-4 py-1.5" role="group" aria-label="Category">
           <Chip label="All" selected={filter === null} onClick={() => setFilter(null)} />
           {categories.map((c) => (
             <Chip key={c.slug} label={c.name} selected={filter === c.slug} onClick={() => setFilter(c.slug)} />
           ))}
         </div>
       )}
-      {shown.map((category) => {
-        const inCategory = options.filter((o) => o.category === category.slug);
-        if (inCategory.length === 0) return null;
-        return (
-          <div key={category.slug}>
-            <p className="px-4 pb-1 pt-3 text-micro uppercase text-ink-faint">{category.name}</p>
-            <ul>
-              {inCategory.map((option) => {
-                const qty = quantities[option.productId] ?? 0;
-                return (
-                  <li
-                    key={option.productId}
-                    className="flex items-center gap-3 border-b border-hairline px-4 py-2 last:border-none"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setOpenId(option.productId)}
-                      aria-label={`${option.name}, details`}
-                      className="pressable flex min-h-11 min-w-0 flex-1 items-center gap-1.5 text-left"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-body text-ink">{option.name}</span>
-                        <span className="tnum block truncate text-caption text-ink-muted">
-                          {[option.brand, `$${option.price.toFixed(2)}`, option.unit].filter(Boolean).join(" · ")}
-                        </span>
-                      </span>
-                      <svg
-                        aria-hidden
-                        className="h-4 w-4 shrink-0 text-ink-faint"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={1.75}
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M9 6l6 6-6 6" />
-                      </svg>
-                    </button>
-                    <span className="flex shrink-0 items-center gap-1">
-                      <Stepper
-                        label={`One fewer ${option.name}`}
-                        symbol="−"
-                        disabled={qty === 0}
-                        onClick={() => onChange(option.productId, qty - 1)}
-                      />
-                      <span
-                        className={`tnum w-6 text-center font-display text-body ${qty ? "text-ink" : "text-ink-faint"}`}
-                        aria-live="polite"
-                        aria-label={`${option.name}: ${qty}`}
-                      >
-                        {qty}
-                      </span>
-                      <Stepper
-                        label={`One more ${option.name}`}
-                        symbol="+"
-                        disabled={qty >= 10}
-                        onClick={() => onChange(option.productId, qty + 1)}
-                      />
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
+      <ul className="mx-4 overflow-hidden rounded-group bg-card">
+        {listed.map((option, i) => {
+          const qty = quantities[option.productId] ?? 0;
+          return (
+            <li
+              key={option.productId}
+              className={`flex items-center gap-3 px-3.5 py-2.5 ${
+                i < listed.length - 1 ? "border-b-[0.5px] border-separator" : ""
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenId(option.productId)}
+                aria-label={`${option.name}, details`}
+                className="flex min-h-11 min-w-0 flex-1 flex-col justify-center text-left"
+              >
+                <span className="truncate text-[1rem] leading-snug text-ink">{option.name}</span>
+                <span className="tnum truncate text-native-caption text-ink-faint">
+                  {[option.brand, `$${option.price.toFixed(2)}`, option.unit].filter(Boolean).join(" · ")}
+                </span>
+              </button>
+              <PillStepper name={option.name} value={qty} onChange={(next) => onChange(option.productId, next)} />
+            </li>
+          );
+        })}
+      </ul>
       {open && (
         <ProductSheet
           option={open}
@@ -138,31 +103,56 @@ export function ExtrasSection({
   );
 }
 
-function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+/**
+ * − count +, as a capsule. Each button is drawn 38 wide and reaches a
+ * 44×44 target through an invisible, larger hit area.
+ */
+export function PillStepper({
+  name,
+  value,
+  onChange,
+  max = 10,
+  height = "h-8",
+  surface = "bg-fill",
+  countClass = "text-list-secondary",
+}: {
+  name: string;
+  value: number;
+  onChange: (next: number) => void;
+  max?: number;
+  height?: string;
+  surface?: string;
+  countClass?: string;
+}) {
   return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={`pressable min-h-11 shrink-0 rounded-control border px-3 text-small ${
-        selected ? "border-ink bg-ink text-card" : "border-rule bg-card text-ink"
-      }`}
-    >
-      {label}
-    </button>
+    <span className={`flex shrink-0 items-center rounded-full ${height} ${surface}`}>
+      <StepButton label={`One fewer ${name}`} disabled={value <= 0} onClick={() => onChange(value - 1)}>
+        −
+      </StepButton>
+      <span
+        className={`tnum min-w-4 text-center font-semibold ${countClass} ${value ? "text-ink" : "text-ink-faint"}`}
+        aria-live="polite"
+        aria-label={`${name}: ${value}`}
+      >
+        {value}
+      </span>
+      <StepButton label={`One more ${name}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
+        +
+      </StepButton>
+    </span>
   );
 }
 
-function Stepper({
+function StepButton({
   label,
-  symbol,
   disabled,
   onClick,
+  children,
 }: {
   label: string;
-  symbol: string;
   disabled: boolean;
   onClick: () => void;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -170,9 +160,24 @@ function Stepper({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="pressable flex h-11 w-11 items-center justify-center rounded-control border border-rule bg-card font-display text-lead disabled:opacity-30"
+      className="pressable relative flex h-full w-[2.375rem] items-center justify-center text-[1.125rem] text-ink after:absolute after:-inset-x-[0.1875rem] after:-inset-y-1.5 after:content-[''] disabled:opacity-30"
     >
-      {symbol}
+      {children}
+    </button>
+  );
+}
+
+function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`pressable relative h-8 shrink-0 rounded-full px-3.5 text-list-secondary font-medium after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] ${
+        selected ? "bg-ink text-card" : "bg-fill text-ink"
+      }`}
+    >
+      {label}
     </button>
   );
 }
