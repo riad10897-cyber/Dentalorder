@@ -111,14 +111,19 @@ export function EmptyState({
   icon,
   children,
   className = "",
+  native = false,
 }: {
   icon: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** "Paper, native": a plain inset group rather than a dashed box. */
+  native?: boolean;
 }) {
   return (
     <div
-      className={`flex flex-col items-center gap-2 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted ${className}`}
+      className={`flex flex-col items-center gap-2 px-4 py-6 text-center ${
+        native ? "rounded-group bg-card text-list-secondary" : "rounded-card border border-dashed border-rule text-small"
+      } text-ink-muted ${className}`}
     >
       <span className="text-ink-faint">{icon}</span>
       <p>{children}</p>

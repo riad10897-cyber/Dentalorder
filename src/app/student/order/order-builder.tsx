@@ -39,6 +39,15 @@ interface OrderBuilderProps {
     initialSelections: ToothSelections;
     initialExtras: Record<string, number>;
   };
+  /** A new order started from an earlier one (Reorder): its lines, at today's prices. */
+  prefill?: {
+    initialSelections: ToothSelections;
+    initialExtras: Record<string, number>;
+    /** Extras on the earlier order the seller no longer has; left out, and said so. */
+    goneExtras: string[];
+    /** Open straight onto the review sheet. */
+    openReview: boolean;
+  };
 }
 
 interface UndoState {
@@ -57,17 +66,24 @@ export function OrderBuilder({
   initialToothType,
   extras,
   edit,
+  prefill,
 }: OrderBuilderProps) {
   const router = useRouter();
   // Fixed for the life of the screen: the week comes from the calendar,
   // not from a control.
   const [week] = useState(initialWeek);
-  const [selections, setSelections] = useState<ToothSelections>(edit?.initialSelections ?? {});
-  const [extraQty, setExtraQty] = useState<Record<string, number>>(edit?.initialExtras ?? {});
+  const start = edit ?? prefill;
+  const [selections, setSelections] = useState<ToothSelections>(start?.initialSelections ?? {});
+  const [extraQty, setExtraQty] = useState<Record<string, number>>(start?.initialExtras ?? {});
   const [sheetTooth, setSheetTooth] = useState<number | null>(null);
   const [sheetFrasacoQty, setSheetFrasacoQty] = useState(0);
   const [sheetCopyQty, setSheetCopyQty] = useState(0);
-  const [reviewOpen, setReviewOpen] = useState(false);
+  // Reorder opens on the review, as long as something is left to review.
+  const [reviewOpen, setReviewOpen] = useState(
+    () =>
+      !!prefill?.openReview &&
+      (Object.keys(prefill.initialSelections).length > 0 || Object.keys(prefill.initialExtras).length > 0),
+  );
   const [undo, setUndo] = useState<UndoState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -351,7 +367,13 @@ export function OrderBuilder({
               ? { moves: edit.priceMoves, productMoves: edit.productMoves, was: edit.originalTotal, now: subtotal }
               : null
           }
-          goneNotice={edit && edit.goneExtras.length > 0 ? edit.goneExtras : null}
+          goneNotice={
+            edit && edit.goneExtras.length > 0
+              ? edit.goneExtras
+              : prefill && prefill.goneExtras.length > 0
+                ? prefill.goneExtras
+                : null
+          }
           onClose={() => setReviewOpen(false)}
           onConfirm={handleConfirm}
         />

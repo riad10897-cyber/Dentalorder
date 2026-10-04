@@ -201,3 +201,39 @@ export async function getEditableOrder(userId: string, orderId: string): Promise
       })),
   };
 }
+
+export interface ReorderSource {
+  id: string;
+  supplierId: string;
+  lines: { toothNumber: number; toothType: ToothType; quantity: number }[];
+  extras: { productId: string; name: string; quantity: number }[];
+}
+
+/**
+ * One of this student's own weekly orders, as lines to start a new order
+ * from (Reorder). Any status: a handed-over order is the usual one to
+ * repeat. Prices are not carried over: the new order is priced today.
+ * RLS already limits this to the student's own orders.
+ */
+export async function getReorderSource(userId: string, orderId: string): Promise<ReorderSource | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("orders")
+    .select("id, supplier_id, order_type, order_items(tooth_number, tooth_type, product_id, product_name, quantity)")
+    .eq("id", orderId)
+    .eq("student_id", userId)
+    .maybeSingle();
+
+  if (!data || data.order_type !== "tooth" || data.supplier_id === null) return null;
+  return {
+    id: data.id,
+    supplierId: data.supplier_id,
+    lines: (data.order_items ?? [])
+      .filter((item) => item.tooth_number !== null && item.tooth_type !== null)
+      .map((item) => ({ toothNumber: item.tooth_number!, toothType: item.tooth_type!, quantity: item.quantity })),
+    extras: (data.order_items ?? [])
+      .filter((item) => item.product_id !== null)
+      .map((item) => ({ productId: item.product_id!, name: item.product_name ?? "Product", quantity: item.quantity })),
+  };
+}
+

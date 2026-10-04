@@ -42,7 +42,7 @@ function wasDismissed(): boolean {
  * Renders nothing on the server and on the first paint: whether to show it
  * depends on the browser, and guessing would flash it at installed users.
  */
-export function InstallCard() {
+export function InstallCard({ native = false }: { native?: boolean }) {
   const [mode, setMode] = useState<Mode>("hidden");
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
 
@@ -90,7 +90,11 @@ export function InstallCard() {
   return (
     <section
       aria-label="Add Molaro to your home screen"
-      className="mx-5 mt-4 rounded-card border border-rule bg-card px-4 py-3.5"
+      className={
+        native
+          ? "mt-4 rounded-group bg-card px-4 py-3.5"
+          : "mx-5 mt-4 rounded-card border border-rule bg-card px-4 py-3.5"
+      }
     >
       <div className="flex items-start gap-3">
         <Image src="/icons/icon-192.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-control" />

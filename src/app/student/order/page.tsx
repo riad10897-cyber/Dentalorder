@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
-import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
+import { getStudentContext, getOrderDefaults, getReorderSource } from "@/lib/student/data";
+import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { getSupplierFresh } from "@/lib/supplier/directory";
 import { PushedHeader } from "@/app/_components/settings/menu";
 import { TypePrices } from "@/app/_components/type-prices";
@@ -18,26 +21,49 @@ import { OrderWindow } from "../_components/order-window";
 export default async function NewOrderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ supplier?: string }>;
+  searchParams: Promise<{ supplier?: string; from?: string }>;
 }) {
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
-  const { supplier: supplierId } = await searchParams;
+  const { supplier: supplierId, from } = await searchParams;
   if (!supplierId) redirect("/student");
 
   // Prices read now, not from the cached market list: they are what the
   // chart totals up and what the database will be asked to confirm. From
   // a cache, a refused order would reload the same stale price and be
   // refused again.
-  const [student, orderDefaults, supplier, products] = await Promise.all([
+  const [student, orderDefaults, supplier, products, source] = await Promise.all([
     getStudentContext(userId),
     getOrderDefaults(userId),
     getSupplierFresh(supplierId),
     listOrderableProducts(supplierId),
+    from && UUID.test(from) ? getReorderSource(userId, from) : Promise.resolve(null),
   ]);
   if (!student) redirect("/sign-in");
   if (!supplier || supplier.id === userId) redirect("/student");
+
+  // Reorder: the earlier order's lines, priced today by this screen like
+  // any new order. Only from this seller; extras they no longer sell are
+  // left out and named on the review.
+  let prefill: React.ComponentProps<typeof OrderBuilder>["prefill"];
+  if (source && source.supplierId === supplier.id) {
+    const initialSelections: ToothSelections = {};
+    for (const line of source.lines) {
+      initialSelections[toothSelectionKey(line.toothNumber, line.toothType)] = {
+        toothType: line.toothType,
+        quantity: line.quantity,
+      };
+    }
+    const onSale = new Set(products.map((p) => p.id));
+    const initialExtras: Record<string, number> = {};
+    const goneExtras: string[] = [];
+    for (const extra of source.extras) {
+      if (onSale.has(extra.productId)) initialExtras[extra.productId] = extra.quantity;
+      else goneExtras.push(extra.name);
+    }
+    prefill = { initialSelections, initialExtras, goneExtras, openReview: true };
+  }
 
   // No bottom nav on this screen: the pinned order footer occupies that
   // space, and stacking both leaves too little chart at 375px. The back
@@ -70,6 +96,7 @@ export default async function NewOrderPage({
           price: p.price,
           category: p.category,
         }))}
+        prefill={prefill}
       />
     </main>
   );
