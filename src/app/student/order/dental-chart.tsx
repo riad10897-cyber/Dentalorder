@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CHART_ROWS } from "@/lib/teeth/fdi";
 import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
 
@@ -36,19 +37,32 @@ function columnDip(columnIndex: number, arch: "upper" | "lower"): string {
   return `${arch === "upper" ? dip : -dip}px`;
 }
 
+// The rows rise in once per visit to the app, not every time the order
+// screen opens: a student who goes back to the market and picks another
+// seller has already seen the chart arrive, and waiting for it again is
+// just delay. Lives in the module, so it lasts until the page is
+// reloaded. The server never sets it, so a fresh load always animates and
+// the first render matches on both sides.
+let chartArrived = false;
+
 export function DentalChart({
   selections,
   frasacoPrice,
   copyAPrice,
   onTapTooth,
 }: DentalChartProps) {
+  const [arrive] = useState(() => !chartArrived);
+  useEffect(() => {
+    chartArrived = true;
+  }, []);
+
   return (
     <div className="mx-2 rounded-card border border-rule bg-card px-2 py-4">
       <ColourKey frasacoPrice={frasacoPrice} copyAPrice={copyAPrice} />
 
       <ArchLabel>Upper</ArchLabel>
       {CHART_ROWS.slice(0, 2).map((row, i) => (
-        <ArchRow key={i} row={row} rowIndex={i} selections={selections} onTapTooth={onTapTooth} />
+        <ArchRow key={i} row={row} rowIndex={i} arrive={arrive} selections={selections} onTapTooth={onTapTooth} />
       ))}
 
       <div className="my-2 flex items-center gap-2 px-1" aria-hidden="true">
@@ -62,6 +76,7 @@ export function DentalChart({
           key={i + 2}
           row={row}
           rowIndex={i + 2}
+          arrive={arrive}
           selections={selections}
           onTapTooth={onTapTooth}
         />
@@ -95,17 +110,19 @@ function ArchLabel({ children }: { children: React.ReactNode }) {
 function ArchRow({
   row,
   rowIndex,
+  arrive,
   selections,
   onTapTooth,
 }: {
   row: { arch: "upper" | "lower"; teeth: number[] };
   rowIndex: number;
+  arrive: boolean;
   selections: ToothSelections;
   onTapTooth: (toothNumber: number) => void;
 }) {
   return (
     <div
-      className="arch-row flex justify-center"
+      className={`${arrive ? "arch-row " : ""}flex justify-center`}
       style={{ "--row-index": rowIndex, gap: `${GUTTER}px` } as React.CSSProperties}
     >
       {row.teeth.map((toothNumber, columnIndex) => (

@@ -25,8 +25,11 @@ export function ProductForm({ product }: { product?: Product }) {
   const [unit, setUnit] = useState(product?.unit ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
 
-  function backToList() {
-    router.push("/supplier/products");
+  // The list says what just happened, once: "Added", "Saved" or
+  // "Switched off", with the product's name. Only an id travels in the
+  // address; the list looks the name up in the seller's own products.
+  function backToList(done: "added" | "saved" | "off", productId: string | undefined) {
+    router.push(productId ? `/supplier/products?done=${done}&id=${productId}` : "/supplier/products");
     router.refresh();
   }
 
@@ -41,7 +44,7 @@ export function ProductForm({ product }: { product?: Product }) {
         setFieldErrors(result.fieldErrors ?? {});
         return;
       }
-      backToList();
+      backToList(product ? "saved" : "added", product?.id ?? result.productId);
     });
   }
 
@@ -54,7 +57,7 @@ export function ProductForm({ product }: { product?: Product }) {
         setError(result.error);
         return;
       }
-      backToList();
+      backToList("off", product.id);
     });
   }
 

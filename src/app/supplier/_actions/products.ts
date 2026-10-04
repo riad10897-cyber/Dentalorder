@@ -7,7 +7,7 @@ import { categoryIdFor } from "@/lib/products/data";
 import { productIdSchema, productInputSchema } from "@/lib/validation/products";
 
 export type ProductActionResult =
-  | { ok: true }
+  | { ok: true; productId?: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 function fieldErrorsOf(issues: { path: PropertyKey[]; message: string }[]) {
@@ -57,7 +57,7 @@ export async function createProduct(input: unknown): Promise<ProductActionResult
   }
   if (!data || data.length === 0) return { ok: false, error: "That product wasn't saved. Try again." };
   revalidatePath("/supplier/products");
-  return { ok: true };
+  return { ok: true, productId: data[0].id };
 }
 
 export async function updateProduct(productId: string, input: unknown): Promise<ProductActionResult> {

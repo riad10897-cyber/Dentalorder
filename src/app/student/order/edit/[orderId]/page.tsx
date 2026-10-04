@@ -7,6 +7,7 @@ import { PushedHeader } from "@/app/_components/settings/menu";
 import { listOrderableProducts } from "@/lib/products/data";
 import { OrderBuilder } from "../../order-builder";
 import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
+import { EmptyState, InfoIcon } from "@/app/_components/icons";
 
 /**
  * Edit a pending order: the same chart, opened on what was ordered.
@@ -44,10 +45,10 @@ export default async function EditOrderPage({
     return (
       <main className="mx-auto min-h-dvh max-w-md">
         <PushedHeader backHref="/student/orders" backLabel="Back to orders" title="Edit order" />
-        <p className="mx-5 mt-6 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<InfoIcon />} className="mx-5 mt-6">
           This supplier is not taking orders at the moment, so the order cannot be changed. It
           stays as you placed it.
-        </p>
+        </EmptyState>
       </main>
     );
   }

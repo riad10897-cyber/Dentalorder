@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { countsAsLive, getSupplierContext, getStudentDetail } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "../../_components/bottom-nav";
+import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
 
 // Words, not colours: the palette's colours each mean one thing (a tooth
 // type, or fulfilled), and none of them means "pending".
@@ -64,9 +65,9 @@ export default async function SupplierStudentDetailPage({
       <h2 className="px-5 pb-1.5 pt-6 text-micro uppercase text-ink-faint">Order history</h2>
 
       {orders.length === 0 ? (
-        <p className="mx-5 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<ClipboardIcon />} className="mx-5">
           This student hasn&rsquo;t placed an order yet.
-        </p>
+        </EmptyState>
       ) : (
         <ul className="mx-5 overflow-hidden rounded-card border border-rule bg-card">
           {orders.map((order) => (

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BoxIcon, ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon, StoreIcon } from "@/app/_components/icons";
 import { getSupplierContext } from "@/lib/supplier/data";
 import { getStudentContext } from "@/lib/student/data";
 import { getVerifiedEmail, getVerifiedUserId } from "@/lib/supabase/auth";
@@ -39,19 +40,19 @@ export default async function SupplierSettingsPage() {
       />
 
       <MenuGroup title="Account">
-        <MenuLink href="/supplier/settings/details" label="Personal details" detail={person.phone ?? "Add your phone"} />
-        {email && <MenuInfo label="Email" value={email} />}
-        <MenuLink href="/supplier/settings/password" label="Password" detail="Change" />
+        <MenuLink href="/supplier/settings/details" label="Personal details" icon={<PersonIcon />} detail={person.phone ?? "Add your phone"} />
+        {email && <MenuInfo label="Email" value={email} icon={<MailIcon />} />}
+        <MenuLink href="/supplier/settings/password" label="Password" detail="Change" icon={<LockIcon />} />
       </MenuGroup>
 
       <MenuGroup title="Selling">
-        <MenuLink href="/supplier/settings/market" label="How you appear in the market" detail={seller.displayName} />
-        <MenuLink href="/supplier/products" label="Prices and products" />
+        <MenuLink href="/supplier/settings/market" label="How you appear in the market" icon={<StoreIcon />} detail={seller.displayName} />
+        <MenuLink href="/supplier/products" label="Prices and products" icon={<BoxIcon />} />
       </MenuGroup>
 
       <MenuGroup title="Help">
-        <MenuInfo label="Questions about Dentora" value="Message Riad" />
-        <MenuInfo label="Version" value={APP_VERSION} />
+        <MenuInfo label="Questions about Dentora" value="Message Riad" icon={<ChatIcon />} />
+        <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 
       <SignOutRow />

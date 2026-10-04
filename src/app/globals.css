@@ -157,6 +157,48 @@ h6 {
     color 140ms var(--ease-out);
 }
 
+/* ── Two-state controls ────────────────────────────────────────────
+   "Mark paid" ↔ "Paid ✓" is a money fact flipping. Snapping between the
+   two read as a glitch rather than a change. Paint-only, and composed
+   with .pressable's transform so press feedback survives. */
+.pressable.state-fade {
+  transition:
+    transform 120ms var(--ease-out),
+    background-color 140ms var(--ease-out),
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+/* ── Small menus ───────────────────────────────────────────────────
+   The order card's "More" list. A transition with @starting-style
+   rather than keyframes, so tapping ⋯ twice quickly retargets instead of
+   restarting. A short drop from the button says where it came from.
+   Browsers without @starting-style simply show it, which is fine. */
+.menu-in {
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+
+@starting-style {
+  .menu-in {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+/* ── Saved confirmation ────────────────────────────────────────────
+   Shown once, after a save sends the seller back to the list. */
+.note-in {
+  transition: opacity 200ms var(--ease-out);
+}
+
+@starting-style {
+  .note-in {
+    opacity: 0;
+  }
+}
+
 /* The quantity badge is new content, not a state change, so it arrives
    rather than fading in place. Never from scale(0) — 0.9 keeps it a
    thing that grew rather than a thing conjured. */
@@ -357,6 +399,25 @@ h6 {
   .tooth-badge {
     animation-name: fade-only;
     animation-duration: 180ms;
+  }
+
+  /* Menus fade, they don't drop. */
+  .menu-in {
+    transition: opacity 150ms var(--ease-out);
+  }
+
+  @starting-style {
+    .menu-in {
+      transform: none;
+    }
+  }
+
+  .pressable.state-fade {
+    transition:
+      opacity 120ms var(--ease-out),
+      background-color 140ms var(--ease-out),
+      border-color 140ms var(--ease-out),
+      color 140ms var(--ease-out);
   }
 
   /* The colour change is the state, so it stays — it is the only thing

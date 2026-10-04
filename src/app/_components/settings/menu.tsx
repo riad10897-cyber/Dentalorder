@@ -52,10 +52,26 @@ export function MenuGroup({
 
 const rowClass = "flex min-h-12 items-center gap-3 px-4 py-2.5";
 
-export function MenuLink({ href, label, detail }: { href: string; label: string; detail?: string }) {
+/** The row's icon, in the muted ink every row's icon shares. */
+function RowIcon({ icon }: { icon?: React.ReactNode }) {
+  return icon ? <span className="shrink-0 text-ink-muted">{icon}</span> : null;
+}
+
+export function MenuLink({
+  href,
+  label,
+  detail,
+  icon,
+}: {
+  href: string;
+  label: string;
+  detail?: string;
+  icon?: React.ReactNode;
+}) {
   return (
     <li className="border-b border-hairline last:border-none">
       <Link href={href} className={`pressable ${rowClass}`}>
+        <RowIcon icon={icon} />
         <span className="shrink-0 text-body text-ink">{label}</span>
         <span className="min-w-0 flex-1 truncate text-right text-small text-ink-muted">{detail}</span>
         <svg
@@ -74,9 +90,10 @@ export function MenuLink({ href, label, detail }: { href: string; label: string;
 }
 
 /** A row that only shows something: no chevron, nothing to open. */
-export function MenuInfo({ label, value }: { label: string; value: string }) {
+export function MenuInfo({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <li className={`border-b border-hairline last:border-none ${rowClass}`}>
+      <RowIcon icon={icon} />
       <span className="shrink-0 text-body text-ink">{label}</span>
       <span className="min-w-0 flex-1 truncate text-right text-small text-ink-muted">{value}</span>
     </li>

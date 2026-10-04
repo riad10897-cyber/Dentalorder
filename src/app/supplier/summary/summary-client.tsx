@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { SupplierOrder } from "@/lib/supplier/data";
 import { TOOTH_NAMES } from "@/lib/teeth/fdi";
+import { EmptyState, BoxIcon } from "@/app/_components/icons";
 
 type ToothType = "frasaco" | "copy_a";
 
@@ -95,9 +96,9 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
       </div>
 
       {summary.totalTeeth === 0 && summary.extrasQuantity === 0 ? (
-        <p className="mx-5 mt-5 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<BoxIcon />} className="mx-5 mt-5">
           No orders for week {week} yet.
-        </p>
+        </EmptyState>
       ) : (
         <>
           <p className="px-5 pb-1 pt-5 text-caption text-ink-muted">

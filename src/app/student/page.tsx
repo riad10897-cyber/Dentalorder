@@ -5,6 +5,7 @@ import { countOrderableBySupplier } from "@/lib/products/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "./_components/bottom-nav";
 import { MarketList } from "./_components/market-list";
+import { EmptyState, StoreIcon } from "@/app/_components/icons";
 
 /**
  * Home is the market.
@@ -45,10 +46,10 @@ export default async function StudentHomePage() {
       <h2 className="px-5 pb-2 pt-6 text-micro uppercase text-ink-faint">Order from</h2>
 
       {market.length === 0 ? (
-        <p className="mx-5 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<StoreIcon />} className="mx-5">
           No supplier is taking orders yet. As soon as someone in your year starts supplying, they
           will show up here.
-        </p>
+        </EmptyState>
       ) : (
         <div className="mx-5">
           <MarketList suppliers={market} university={student.university} extrasCounts={extrasCounts} />

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/products/data";
 import { PRODUCT_CATEGORIES, categoryName } from "@/lib/products/categories";
 import { setProductActive, setProductInStock } from "../_actions/products";
+import { EmptyState, BoxIcon } from "@/app/_components/icons";
 
 export function ProductsClient({ products, canAdd }: { products: Product[]; canAdd: boolean }) {
   const selling = products.filter((p) => p.isActive);
@@ -23,10 +24,10 @@ export function ProductsClient({ products, canAdd }: { products: Product[]; canA
       )}
 
       {products.length === 0 && (
-        <p className="rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<BoxIcon />}>
           No products yet. Start with whatever your class asks you for besides teeth — gloves,
           burs, a box of masks.
-        </p>
+        </EmptyState>
       )}
 
       {PRODUCT_CATEGORIES.map((category) => {

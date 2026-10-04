@@ -5,14 +5,27 @@ import { listOwnProducts } from "@/lib/products/data";
 import { SupplierBottomNav } from "../_components/bottom-nav";
 import { ProductsClient } from "./products-client";
 import { ToothPricesForm } from "./tooth-prices-form";
+import { CheckIcon } from "@/app/_components/icons";
 
 /** Everything a seller sells, and its price: teeth first, then extras. */
-export default async function SupplierProductsPage() {
+const DONE_LABEL = { added: "Added", saved: "Saved", off: "Switched off" } as const;
+
+export default async function SupplierProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ done?: string; id?: string }>;
+}) {
+  const { done, id } = await searchParams;
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
   const [supplier, products] = await Promise.all([getSupplierContext(userId), listOwnProducts(userId)]);
   if (!supplier) redirect("/student");
+
+  // Only a product of this seller's own, named from their own list: the
+  // address can say which, never what it is called.
+  const justDone = done && done in DONE_LABEL ? products.find((p) => p.id === id) : undefined;
+  const doneLabel = justDone ? DONE_LABEL[done as keyof typeof DONE_LABEL] : null;
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
@@ -41,6 +54,17 @@ export default async function SupplierProductsPage() {
             Students add these to their weekly order with you, beside their teeth.
           </p>
         </div>
+        {justDone && doneLabel && (
+          <p
+            role="status"
+            className="note-in mx-5 mt-3 flex items-center gap-2 rounded-control border border-rule bg-card-sunk px-3 py-2.5 text-small text-ink"
+          >
+            <CheckIcon className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 truncate">
+              {doneLabel} · {justDone.name}
+            </span>
+          </p>
+        )}
         <ProductsClient products={products} canAdd={supplier.status === "active"} />
       </section>
 

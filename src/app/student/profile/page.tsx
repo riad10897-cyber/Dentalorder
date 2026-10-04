@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon } from "@/app/_components/icons";
 import { getStudentContext } from "@/lib/student/data";
 import { getVerifiedEmail, getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
@@ -33,14 +34,14 @@ export default async function StudentProfilePage() {
       <AccountHeader name={student.fullName || "Your account"} detail={describeStudy(student.university, student.yearOfStudy)} />
 
       <MenuGroup title="Account">
-        <MenuLink href="/student/profile/details" label="Personal details" detail={student.phone ?? "Add your phone"} />
-        {email && <MenuInfo label="Email" value={email} />}
-        <MenuLink href="/student/profile/password" label="Password" detail="Change" />
+        <MenuLink href="/student/profile/details" label="Personal details" icon={<PersonIcon />} detail={student.phone ?? "Add your phone"} />
+        {email && <MenuInfo label="Email" value={email} icon={<MailIcon />} />}
+        <MenuLink href="/student/profile/password" label="Password" detail="Change" icon={<LockIcon />} />
       </MenuGroup>
 
       <MenuGroup title="Help" footnote="Something wrong with an order? Message your seller first.">
-        <MenuInfo label="Questions about Dentora" value="Message Riad" />
-        <MenuInfo label="Version" value={APP_VERSION} />
+        <MenuInfo label="Questions about Dentora" value="Message Riad" icon={<ChatIcon />} />
+        <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 
       <SignOutRow />

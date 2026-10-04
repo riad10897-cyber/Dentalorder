@@ -7,6 +7,7 @@ import type { SupplierOrder } from "@/lib/supplier/data";
 import { rejectOrder, updateOrderStatus } from "./_actions/orders";
 import { haptic } from "@/lib/haptics";
 import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
+import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
 
 type Tab = "pending" | "confirmed" | "fulfilled" | "rejected";
 const TABS: { key: Tab; label: string }[] = [
@@ -108,11 +109,11 @@ export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mx-5 mt-4 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<ClipboardIcon />} className="mx-5 mt-4">
           {query.trim()
             ? `Nothing in ${TABS.find((t) => t.key === tab)?.label.toLowerCase()} matches “${query.trim()}”.`
             : EMPTY[tab]}
-        </p>
+        </EmptyState>
       ) : (
         <ul className="mt-3 flex flex-col gap-2.5 px-5">
           {filtered.map((order) => (
@@ -332,8 +333,8 @@ function OrderActions({
             aria-label={paid ? "Paid. Tap to mark as not paid" : "Mark paid"}
             disabled={pending}
             onClick={() => onStatus({ orderId: order.id, paymentStatus: paid ? "unpaid" : "paid" })}
-            className={`pressable min-h-11 flex-1 whitespace-nowrap rounded-control border border-rule px-3 py-2.5 font-display text-small disabled:opacity-50 ${
-              paid ? "text-ink-muted" : "text-ink"
+            className={`pressable state-fade min-h-11 flex-1 whitespace-nowrap rounded-control border px-3 py-2.5 font-display text-small disabled:opacity-50 ${
+              paid ? "border-hairline bg-card-sunk text-ink-muted" : "border-rule bg-card text-ink"
             }`}
           >
             {/* Short, so it never wraps beside the main button. Tapping it again undoes. */}
@@ -360,7 +361,7 @@ function OrderActions({
         )}
       </div>
       {moreOpen && more.length > 0 && (
-        <ul className="mt-2 overflow-hidden rounded-control border border-rule bg-card-sunk">
+        <ul className="menu-in mt-2 overflow-hidden rounded-control border border-rule bg-card-sunk">
           {more.map((item) => (
             <li key={item.label} className="border-b border-hairline last:border-none">
               <button

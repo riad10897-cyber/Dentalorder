@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSupplierContext, listSupplierStudents } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "../_components/bottom-nav";
+import { EmptyState, PeopleIcon } from "@/app/_components/icons";
 
 function initials(name: string) {
   return (
@@ -36,9 +37,9 @@ export default async function SupplierStudentsPage() {
       </header>
 
       {students.length === 0 ? (
-        <p className="mx-5 mt-6 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<PeopleIcon />} className="mx-5 mt-6">
           No student has ordered from you yet. They appear here after their first order.
-        </p>
+        </EmptyState>
       ) : (
         <ul className="mx-5 mt-5 overflow-hidden rounded-card border border-rule bg-card">
           {students.map((student) => (

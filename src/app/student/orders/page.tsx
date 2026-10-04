@@ -7,6 +7,7 @@ import { ReorderButton } from "./reorder-button";
 import { CancelOrderButton } from "./cancel-order-button";
 import { OrderStatus } from "./order-status";
 import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
+import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
 
 // Placed, not yet done with. A cancelled or rejected order has nothing
 // left to wait for, so it reads as history rather than as in flight.
@@ -34,9 +35,9 @@ export default async function OrderHistoryPage() {
       <h1 className="px-5 pt-6 font-display text-display">Orders</h1>
 
       {orders.length === 0 ? (
-        <p className="mx-5 mt-8 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+        <EmptyState icon={<ClipboardIcon />} className="mx-5 mt-8">
           No orders yet. Once you place your first weekly order, it will be listed here.
-        </p>
+        </EmptyState>
       ) : (
         <ul className="mt-4 flex flex-col gap-2.5 px-5">
           {[...inFlight, ...settled].map((order) => {
