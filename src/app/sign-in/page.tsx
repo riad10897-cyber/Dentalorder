@@ -2,7 +2,7 @@ import { SignInForm } from "./sign-in-form";
 import { emailHref, whatsappHref } from "@/lib/contact";
 
 export default function SignInPage() {
-  const whatsapp = whatsappHref("Hi Riad, I forgot my Molaro password. My email is: ");
+  const whatsapp = whatsappHref("Hi, I forgot my Molaro password. My email is: ");
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-5 py-10">
       <div>
@@ -18,7 +18,7 @@ export default function SignInPage() {
           Forgot your password?
         </summary>
         <p className="mt-1">
-          Contact Riad and he will set you a new one:{" "}
+          Contact us and we will set you a new one:{" "}
           {whatsapp && (
             <>
               <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-4">

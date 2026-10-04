@@ -23,7 +23,7 @@ export default async function SupplierMarketPage() {
         title="In the market"
         intro="What students see when they choose who to order from."
       />
-      <MenuGroup title="Your listing" footnote="Message Riad to change any of these.">
+      <MenuGroup title="Your listing" footnote="Contact us (Settings → Help) to change any of these.">
         <MenuInfo label="Name" value={seller.displayName} />
         <MenuInfo label="Faculty" value={seller.university ?? "Every faculty"} />
         <MenuInfo label="Status" value={SELLER_STATUS_LABEL[seller.status]} />

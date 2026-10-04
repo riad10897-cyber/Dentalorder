@@ -8,12 +8,12 @@ const optionClass =
   "pressable flex min-h-11 items-center gap-3 border-b border-hairline px-4 py-2 text-body text-ink last:border-none";
 
 /**
- * "Contact Riad": a settings row that opens to WhatsApp and email. The
+ * "Contact us": a settings row that opens to WhatsApp and email. The
  * number and address are never printed, only carried by the two links.
  */
 export function ContactRow() {
   const [open, setOpen] = useState(false);
-  const whatsapp = whatsappHref("Hi Riad, about Molaro: ");
+  const whatsapp = whatsappHref("Hi, about Molaro: ");
 
   return (
     <li className="border-b border-hairline last:border-none">
@@ -26,7 +26,7 @@ export function ContactRow() {
         <span className="shrink-0 text-ink-muted">
           <ChatIcon />
         </span>
-        <span className="shrink-0 text-body text-ink">Contact Riad</span>
+        <span className="shrink-0 text-body text-ink">Contact us</span>
         <span className="min-w-0 flex-1 truncate text-right text-small text-ink-muted">
           {whatsapp ? "WhatsApp or email" : "Email"}
         </span>

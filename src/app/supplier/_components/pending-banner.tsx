@@ -24,7 +24,7 @@ export function PendingBanner({ displayName }: { displayName: string }) {
           in Products — they are what students compare.
         </li>
         <li>
-          <span className="tnum font-display text-ink">2.</span> Message Riad to say you are ready.
+          <span className="tnum font-display text-ink">2.</span> Contact us (Settings → Help) to say you are ready.
         </li>
         <li>
           <span className="tnum font-display text-ink">3.</span> Once approved, this notice
