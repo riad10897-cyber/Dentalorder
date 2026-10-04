@@ -44,7 +44,7 @@ export default async function EditOrderPage({
   if (!supplier) {
     return (
       <main className="mx-auto min-h-dvh max-w-md">
-        <PushedHeader backHref="/student/orders" backLabel="Back to orders" title="Edit order" />
+        <PushedHeader native backText="Orders" backHref="/student/orders" backLabel="Back to orders" title="Edit order" />
         <EmptyState icon={<InfoIcon />} className="mx-5 mt-6">
           This supplier is not taking orders at the moment, so the order cannot be changed. It
           stays as you placed it.
@@ -80,7 +80,7 @@ export default async function EditOrderPage({
 
   return (
     <main className="mx-auto min-h-dvh max-w-md">
-      <PushedHeader
+      <PushedHeader native backText="Orders"
         backHref="/student/orders"
         backLabel="Back to orders"
         title="Edit order"

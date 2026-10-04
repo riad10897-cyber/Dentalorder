@@ -18,6 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Claude Design handoff: a reference prototype, not app code.
+      "design_handoff_ios_feel/**",
     ],
   },
 ];

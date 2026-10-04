@@ -13,7 +13,7 @@ export default async function StudentDetailsPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <PushedHeader backHref="/student/profile" backLabel="Back to profile" title="Personal details" />
+      <PushedHeader native backText="Profile" backHref="/student/profile" backLabel="Back to profile" title="Personal details" />
       <div className="mt-5 px-5">
         <ProfileForm
           fullName={student.fullName}

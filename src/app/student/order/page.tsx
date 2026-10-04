@@ -44,7 +44,7 @@ export default async function NewOrderPage({
   // link is the way out.
   return (
     <main className="mx-auto min-h-dvh max-w-md">
-      <PushedHeader
+      <PushedHeader native backText="Market"
         backHref="/student"
         backLabel="Back to the market"
         title={supplier.displayName}

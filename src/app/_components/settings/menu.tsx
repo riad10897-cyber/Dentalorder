@@ -122,16 +122,68 @@ export function SignOutRow() {
 export function PushedHeader({
   backHref,
   backLabel,
+  backText,
   title,
   subtitle,
   intro,
+  native = false,
 }: {
   backHref: string;
   backLabel: string;
+  /** The previous screen's title, shown beside the chevron on native bars ("Market"). */
+  backText?: string;
   title: string;
   subtitle?: React.ReactNode;
   intro?: string;
+  /** "Paper, native" (student screens): a fixed glass bar, title centred. */
+  native?: boolean;
 }) {
+  if (native) {
+    return (
+      <>
+        <header
+          className="glass-bar fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md border-b-[0.5px] border-[rgba(20,18,15,0.14)]"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="relative flex h-[3.75rem] items-center px-2">
+            <Link
+              href={backHref}
+              aria-label={backLabel}
+              className="pressable relative z-10 flex h-11 max-w-[40%] items-center gap-1.5 rounded-control pl-1 pr-2 text-nav-title text-ink"
+            >
+              <svg
+                aria-hidden
+                width="12"
+                height="20"
+                viewBox="0 0 12 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.6}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-[1.25rem] w-[0.75rem] shrink-0"
+              >
+                <path d="M10 2L2 10l8 8" />
+              </svg>
+              {backText && <span className="truncate">{backText}</span>}
+            </Link>
+            <h1 className="pointer-events-none absolute inset-x-0 mx-auto max-w-[50%] truncate text-center text-nav-title font-semibold text-ink">
+              {title}
+            </h1>
+          </div>
+        </header>
+        {/* Holds the bar's place: content starts below it and scrolls under. */}
+        <div aria-hidden style={{ height: "calc(3.75rem + env(safe-area-inset-top))" }} />
+        {(subtitle || intro) && (
+          <div className="px-5 pt-3">
+            {subtitle && <div className="text-native-caption text-ink-muted">{subtitle}</div>}
+            {intro && <p className="mt-1 text-list-secondary text-ink-muted">{intro}</p>}
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <header className="px-5 pt-5">
       <div className="flex items-center gap-2">
