@@ -73,6 +73,8 @@ export const updateOrderStatusSchema = z.object({
   paymentStatus: paymentStatusSchema.optional(),
 });
 
+export const currentWeekSchema = z.number().int().min(1, "Weeks start at 1.").max(17, "The semester has 17 weeks.");
+
 export const updateRepPricesSchema = z.object({
   frasacoPrice: z.coerce.number().positive().max(1000),
   copyAPrice: z.coerce.number().positive().max(1000),

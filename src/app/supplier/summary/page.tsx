@@ -13,7 +13,7 @@ export default async function RepSummaryPage() {
     listSupplierOrders(userId),
   ]);
   if (!rep) redirect("/sign-in");
-  const currentWeek = orders.reduce((max, o) => Math.max(max, o.weekNumber ?? 0), 0) || 1;
+  const currentWeek = rep.currentWeek;
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SUPPLIER_DIRECTORY_TAG } from "@/lib/supplier/directory";
@@ -8,6 +8,7 @@ import {
   rejectOrderSchema,
   updateOrderStatusSchema,
   updateRepPricesSchema,
+  currentWeekSchema,
 } from "@/lib/validation/orders";
 import type { Database } from "@/lib/supabase/types";
 
@@ -115,5 +116,31 @@ export async function updateSupplierPrices(input: {
   // they kept showing the old price for up to five minutes while the
   // database charged the new one — a student saw $2.50 and paid $3.00.
   revalidateTag(SUPPLIER_DIRECTORY_TAG);
+  return { ok: true };
+}
+
+/**
+ * The week this seller is taking orders for. Every order placed from now
+ * on lands in it (the database stamps it on insert); orders already placed
+ * keep theirs. Confined to the seller's own row by suppliers_update_own.
+ */
+export async function setCurrentWeek(week: unknown): Promise<ActionResult> {
+  const parsed = currentWeekSchema.safeParse(week);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "That week isn't valid." };
+
+  const userId = await getVerifiedUserId();
+  if (!userId) return { ok: false, error: "Sign in again to change the week." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("suppliers")
+    .update({ current_week: parsed.data })
+    .eq("id", userId)
+    .select("current_week");
+
+  if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) return { ok: false, error: "The week wasn't changed. Refresh and try again." };
+  revalidatePath("/supplier");
+  revalidatePath("/supplier/summary");
   return { ok: true };
 }
