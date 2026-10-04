@@ -45,12 +45,16 @@ insert into keep_emails (email) values
 do $$
 declare
   found int;
+  missing text;
 begin
   select count(*) into found
   from auth.users u
-  join keep_emails k on lower(k.email) = lower(u.email);
+  join keep_emails k on lower(btrim(k.email)) = lower(u.email);
+  select string_agg(k.email, ', ') into missing
+  from keep_emails k
+  where not exists (select 1 from auth.users u where lower(u.email) = lower(btrim(k.email)));
   if found <> 3 then
-    raise exception 'Stopped: only % of the 3 emails match an account. Nothing was deleted. Check the spelling.', found;
+    raise exception 'Stopped: only % of the 3 emails match an account. Not found: %. Nothing was deleted.', found, missing;
   end if;
 end $$;
 
@@ -62,7 +66,7 @@ delete from public.commission_statements;
 -- Deleting the login removes the profile, the seller listing and that
 -- seller's products with it.
 delete from auth.users u
-where not exists (select 1 from keep_emails k where lower(k.email) = lower(u.email));
+where not exists (select 1 from keep_emails k where lower(btrim(k.email)) = lower(u.email));
 
 -- What is left. Expect: accounts 3, profiles 3, orders 0, order lines 0.
 select
