@@ -1,4 +1,8 @@
 /*
+ * A week's number is the week the teeth are FOR, not the week they are
+ * ordered in: sellers are students too, so during week 4 they take
+ * orders for week 5, and an order filed under week 5 is handed over then.
+ *
  * Ordering weeks run from Saturday 1:00 PM to the next Saturday 1:00 PM,
  * Beirut time. Students are told to order by 12:50 PM; anything placed
  * before 1:00 PM still goes into that week.
@@ -63,15 +67,6 @@ function formatWallClock(localMs: number): string {
 /** When this ordering week ends and the next begins: "Saturday 10 Oct, 1:00 PM". */
 export function nextSwitchLabel(at: Date = new Date()): string {
   return formatWallClock(ANCHOR_LOCAL_MS + (weekIndex(at) + 1) * WEEK_MS);
-}
-
-/**
- * Orders placed in a week are handed over the week after: week 4's orders
- * reach students in week 5. After week 17 there is no numbered week, so
- * it reads "the week after".
- */
-export function handOverWeek(orderWeek: number): string {
-  return orderWeek < LAST_WEEK ? `week ${orderWeek + 1}` : "the week after";
 }
 
 /** What students are told to order by: "Saturday 10 Oct, 12:50 PM". */

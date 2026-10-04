@@ -5,7 +5,6 @@ import type { SupplierOrder } from "@/lib/supplier/data";
 import { TOOTH_NAMES } from "@/lib/teeth/fdi";
 import { EmptyState, BoxIcon } from "@/app/_components/icons";
 import { SectionHeader } from "@/app/_components/section-header";
-import { handOverWeek } from "@/lib/orders/ordering-week";
 
 type ToothType = "frasaco" | "copy_a";
 
@@ -101,7 +100,7 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
             type="button"
             onClick={() => setWeek(w)}
             aria-pressed={w === week}
-            aria-label={`Week ${w} orders`}
+            aria-label={`Week ${w}`}
             className={`pressable state-fade tnum relative flex h-9 shrink-0 items-center rounded-full px-3.5 text-list-secondary font-semibold after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] ${
               w === week ? "bg-ink text-card" : "bg-fill text-ink"
             }`}
@@ -113,7 +112,7 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
 
       {summary.totalTeeth === 0 && summary.extrasQuantity === 0 ? (
         <EmptyState native icon={<BoxIcon />} className="mt-4">
-          No orders placed in week {week} yet.
+          No orders for week {week} yet.
         </EmptyState>
       ) : (
         <>
@@ -128,7 +127,7 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
                 {summary.extrasQuantity === 1 ? "extra" : "extras"}
               </>
             )}{" "}
-            to buy. Ordered in week <span className="tnum">{week}</span>, handed over in {handOverWeek(week)}.
+            to buy for week <span className="tnum">{week}</span>
           </p>
 
           {summary.frasacoRows.length > 0 && (
@@ -182,7 +181,7 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
           )}
 
           <div className="mt-5 flex items-center justify-between rounded-button bg-ink px-4 py-4">
-            <span className="text-list-secondary text-card/70">Week {week} orders total</span>
+            <span className="text-list-secondary text-card/70">Week {week} total</span>
             <span className="tnum text-[1.625rem] font-bold tracking-[-0.015em] text-card">
               ${summary.grandTotal.toFixed(2)}
             </span>

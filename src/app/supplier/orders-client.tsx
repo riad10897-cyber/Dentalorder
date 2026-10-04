@@ -8,7 +8,6 @@ import { rejectOrder, updateOrderStatus } from "./_actions/orders";
 import { haptic } from "@/lib/haptics";
 import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
 import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
-import { handOverWeek } from "@/lib/orders/ordering-week";
 
 type Tab = "pending" | "confirmed" | "fulfilled" | "rejected";
 const TABS: { key: Tab; label: string }[] = [
@@ -183,7 +182,8 @@ function OrderCard({ order }: { order: SupplierOrder }) {
         <div className="min-w-0">
           <h2 className="truncate text-native-body font-semibold text-ink">{order.studentName}</h2>
           <p className="tnum text-native-caption text-ink-faint">
-            {weekLine(order)} · {describeLines(teeth, extrasCount)}
+            {/* The week the order is for, and handed over in. */}
+            Week {order.weekNumber} · {describeLines(teeth, extrasCount)}
           </p>
         </div>
         <span className="tnum shrink-0 text-[1.25rem] font-bold tracking-[-0.01em] text-ink">
@@ -283,16 +283,6 @@ function OrderCard({ order }: { order: SupplierOrder }) {
       )}
     </li>
   );
-}
-
-/**
- * A week's orders are handed over the week after. Still to hand over: say
- * when ("Hand over in week 5"). Done with: say when it was ordered.
- */
-function weekLine(order: SupplierOrder): string {
-  if (order.weekNumber === null) return "No week";
-  const inFlight = order.fulfillmentStatus === "pending" || order.fulfillmentStatus === "confirmed";
-  return inFlight ? `Hand over in ${handOverWeek(order.weekNumber)}` : `Ordered in week ${order.weekNumber}`;
 }
 
 type StatusPatch = Parameters<typeof updateOrderStatus>[0];

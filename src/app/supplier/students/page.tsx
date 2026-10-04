@@ -59,7 +59,7 @@ export default async function SupplierStudentsPage() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-native-body text-ink">{student.fullName}</span>
                     <span className="block text-list-secondary text-ink-faint">
-                      {student.lastWeekOrdered ? `Last ordered in week ${student.lastWeekOrdered}` : "No orders yet"}
+                      {student.lastWeekOrdered ? `Last order: week ${student.lastWeekOrdered}` : "No orders yet"}
                     </span>
                   </span>
                   <span className="shrink-0 text-right">

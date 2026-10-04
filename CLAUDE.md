@@ -164,6 +164,10 @@ whether the row exists. Three false signals in one week all came from this.
 - **FDI tooth numbering**, 32 teeth: 11–18, 21–28, 31–38, 41–48. Four quadrants of eight. Quadrant 1 is upper right, 2 upper left, 3 lower left, 4 lower right — from the patient's perspective.
 - **Frasaco** is the genuine brand tooth (~$2.50). **Copy A** is the cheaper copy (~$1.20). Reps set their own prices.
 - Students order **weekly**, weeks 1–17 of the academic semester.
+- **A week's number is the week the teeth are for.** Sellers are students
+  too: during week 4 they take orders for week 5, and a "week 5" order is
+  handed over in week 5. The seller's week card reads "Taking orders for
+  week 5". Students never see week numbers.
 - 286 orders in one semester from a single group. Only 4 of them mixed both tooth types — default the type selector to the student's last used type.
 - There are no reps. A **seller** (a row in `suppliers`) sells teeth and, since "Extras from your seller", a few products. A student picks a seller per order. Sellers never see each other's orders, nor each other's products beyond what any student sees.
 - A weekly order is `order_type = 'tooth'` even when it carries extras: "tooth" means "a weekly order from a seller". One order, one seller.

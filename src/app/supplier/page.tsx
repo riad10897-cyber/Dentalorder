@@ -21,8 +21,8 @@ export default async function SupplierOrdersPage() {
   ]);
   if (!rep) redirect("/sign-in");
 
-  // The seller's own week, not the newest order's: a quiet week with no
-  // orders yet still reads as the week it is.
+  // The seller's own week (the week orders are for), not the newest
+  // order's: a quiet week with no orders yet still reads as that week.
   const currentWeek = rep.currentWeek;
   const orderedThisWeek = new Set(
     orders.filter((o) => o.weekNumber === currentWeek).map((o) => o.studentId),
@@ -41,7 +41,7 @@ export default async function SupplierOrdersPage() {
           <>
             <span className="tnum font-semibold">{orderedThisWeek}</span> of{" "}
             <span className="tnum">{students.length}</span>{" "}
-            {students.length === 1 ? "student has" : "students have"} ordered this week.
+            {students.length === 1 ? "student has" : "students have"} ordered for this week.
           </>
         }
       />
