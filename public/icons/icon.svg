@@ -1,23 +1,49 @@
-<!-- Molaro app icon: the master art. The PNGs in public/icons/ and src/app/
-     (icon.png 256, apple-icon.png 180, icon-192, icon-512) are this file
-     rendered at those sizes, opaque on --paper, since iOS fills transparency
-     with black. Re-render them from this whenever it changes. -->
+<!-- Molaro app icon, the master art. Three tooth layers fanned like cards:
+     Copy A blue and Frasaco red behind, the ivory tooth in front, each casting
+     its own shadow, on a deep ink ground with a faint paper grain. The PNGs in
+     public/icons/ (192, 512) and src/app/ (icon.png 256, apple-icon.png 180)
+     are this file rendered at those sizes, fully opaque. Re-render them from
+     this whenever it changes. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#F2EDE1"/>
-  <g transform="translate(50 51) scale(1.12) translate(-50 -51)">
-    <path fill="#14120F" d="
-      M 30 34
-      C 30 26.5 35.5 22.5 41.5 23
-      C 45.5 23.3 47.5 26.2 50 26.2
-      C 52.5 26.2 54.5 23.3 58.5 23
-      C 64.5 22.5 70 26.5 70 34
-      C 70 41.5 67.5 47.5 66.5 53.5
-      C 65.5 61 64.5 71 62.3 77.6
-      C 61.2 81 57.4 81 56.8 77.4
-      C 55.9 71.5 54.6 62.5 50 60.5
-      C 45.4 62.5 44.1 71.5 43.2 77.4
-      C 42.6 81 38.8 81 37.7 77.6
-      C 35.5 71 34.5 61 33.5 53.5
-      C 32.5 47.5 30 41.5 30 34 Z"/>
+  <defs>
+    <path id="t" d="M 30 34 C 30 26.5 35.5 22.5 41.5 23 C 45.5 23.3 47.5 26.2 50 26.2 C 52.5 26.2 54.5 23.3 58.5 23 C 64.5 22.5 70 26.5 70 34 C 70 41.5 67.5 47.5 66.5 53.5 C 65.5 61 64.5 71 62.3 77.6 C 61.2 81 57.4 81 56.8 77.4 C 55.9 71.5 54.6 62.5 50 60.5 C 45.4 62.5 44.1 71.5 43.2 77.4 C 42.6 81 38.8 81 37.7 77.6 C 35.5 71 34.5 61 33.5 53.5 C 32.5 47.5 30 41.5 30 34 Z"/>
+    <filter id="sh-back" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.4" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="sh-front" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="2.2" stdDeviation="2.4" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7"/>
+      <feColorMatrix values="0 0 0 0 0.95  0 0 0 0 0.93  0 0 0 0 0.88  0 0 0 0.07 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <radialGradient id="enamel" cx="0.36" cy="0.22" r="0.95">
+      <stop offset="0" stop-color="#FFFEF9"/>
+      <stop offset="0.5" stop-color="#F3EDDF"/>
+      <stop offset="1" stop-color="#D6CBB3"/>
+    </radialGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CC4337"/>
+      <stop offset="1" stop-color="#A72C23"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A6C7C"/>
+      <stop offset="1" stop-color="#34505D"/>
+    </linearGradient>
+    <radialGradient id="bg" cx="0.5" cy="0.38" r="0.8">
+      <stop offset="0" stop-color="#2B2822"/>
+      <stop offset="1" stop-color="#110F0D"/>
+    </radialGradient>
+  </defs>
+  <rect width="100" height="100" fill="url(#bg)"/>
+  <g transform="translate(0 -1.5)">
+    <g transform="rotate(-18 50 84) translate(50 52) scale(0.86) translate(-50 -52)" filter="url(#sh-back)"><use href="#t" fill="url(#blue)"/></g>
+    <g transform="rotate(18 50 84) translate(50 52) scale(0.86) translate(-50 -52)" filter="url(#sh-back)"><use href="#t" fill="url(#red)"/></g>
+    <g transform="translate(50 52) scale(0.95) translate(-50 -52)" filter="url(#sh-front)">
+      <use href="#t" fill="url(#enamel)"/>
+      <use href="#t" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="0.5" transform="translate(0 0.35)"/>
+    </g>
   </g>
+  <rect width="100" height="100" fill="#000" filter="url(#grain)"/>
 </svg>
