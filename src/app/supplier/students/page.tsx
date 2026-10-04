@@ -4,19 +4,6 @@ import { getSupplierContext, listSupplierStudents } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "../_components/bottom-nav";
 
-const AVATAR_COLORS = [
-  { bg: "bg-ink/12", text: "text-ink" },
-  { bg: "bg-copy-a/12", text: "text-copy-a" },
-  { bg: "bg-ink/12", text: "text-ink" },
-  { bg: "bg-warning/12", text: "text-ink-muted" },
-];
-
-function colorFor(id: string) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
-
 function initials(name: string) {
   return (
     name
@@ -40,46 +27,51 @@ export default async function SupplierStudentsPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <div className="px-6 pt-5">
-        <div className="text-[13px] text-ink-muted">{students.length} students assigned</div>
-        <div className="font-display text-xl font-bold">Students</div>
-      </div>
+      <header className="px-5 pt-6">
+        <h1 className="font-display text-display">Students</h1>
+        <p className="mt-1 text-small text-ink-muted">
+          <span className="tnum">{students.length}</span>{" "}
+          {students.length === 1 ? "student has" : "students have"} ordered from you.
+        </p>
+      </header>
 
       {students.length === 0 ? (
-        <div className="mx-6 mt-8 rounded-card border border-dashed border-rule p-6 text-center text-sm text-ink-muted">
-          No student has ordered from you yet.
-        </div>
+        <p className="mx-5 mt-6 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+          No student has ordered from you yet. They appear here after their first order.
+        </p>
       ) : (
-        <div className="mt-5 flex flex-col gap-2 px-6">
-          {students.map((student) => {
-            const color = colorFor(student.studentId);
-            return (
+        <ul className="mx-5 mt-5 overflow-hidden rounded-card border border-rule bg-card">
+          {students.map((student) => (
+            <li key={student.studentId} className="border-b border-hairline last:border-none">
               <Link
-                key={student.studentId}
                 href={`/supplier/students/${student.studentId}`}
-                className="flex items-center gap-3 rounded-lg border border-rule bg-card px-3.5 py-3"
+                className="pressable flex min-h-12 items-center gap-3 px-4 py-3"
               >
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display text-[13px] font-bold ${color.bg} ${color.text}`}
+                <span
+                  aria-hidden
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card-sunk font-display text-small text-ink"
                 >
                   {initials(student.fullName)}
-                </div>
-                <div className="flex-1">
-                  <div className="text-[13px] font-semibold">{student.fullName}</div>
-                  <div className="mt-0.5 text-[11px] text-ink-muted">
-                    {student.lastWeekOrdered ? `Last: Week ${student.lastWeekOrdered}` : "No orders yet"}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-display text-[15px] font-bold">
-                    ${student.totalSpent.toFixed(2)}
-                  </div>
-                  <div className="text-[11px] text-ink-muted">{student.orderCount} orders</div>
-                </div>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-body text-ink">{student.fullName}</span>
+                  <span className="block text-caption text-ink-muted">
+                    {student.lastWeekOrdered ? `Last: week ${student.lastWeekOrdered}` : "No orders yet"}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="tnum block font-display text-body">${student.totalSpent.toFixed(2)}</span>
+                  <span className="tnum block text-caption text-ink-muted">
+                    {student.orderCount} {student.orderCount === 1 ? "order" : "orders"}
+                  </span>
+                </span>
+                <svg aria-hidden className="h-4 w-4 shrink-0 text-ink-faint" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
               </Link>
-            );
-          })}
-        </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       <SupplierBottomNav />

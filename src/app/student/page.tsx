@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
 import { getSupplierDirectory } from "@/lib/supplier/directory";
+import { countOrderableBySupplier } from "@/lib/products/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "./_components/bottom-nav";
 import { MarketList } from "./_components/market-list";
@@ -17,10 +18,11 @@ export default async function StudentHomePage() {
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
-  const [student, { nextWeek }, suppliers] = await Promise.all([
+  const [student, { nextWeek }, suppliers, extrasCounts] = await Promise.all([
     getStudentContext(userId),
     getOrderDefaults(userId),
     getSupplierDirectory(),
+    countOrderableBySupplier(),
   ]);
   if (!student) redirect("/sign-in");
 
@@ -49,7 +51,7 @@ export default async function StudentHomePage() {
         </p>
       ) : (
         <div className="mx-5">
-          <MarketList suppliers={market} university={student.university} />
+          <MarketList suppliers={market} university={student.university} extrasCounts={extrasCounts} />
         </div>
       )}
 

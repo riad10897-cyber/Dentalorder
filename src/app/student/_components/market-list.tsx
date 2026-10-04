@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { DirectorySupplier } from "@/lib/supplier/directory";
 import { groupSuppliersByUniversity } from "@/lib/supplier/group";
+import { TypePrices } from "@/app/_components/type-prices";
 
 const HEADING = "px-0.5 pb-1.5 pt-1 text-micro uppercase text-ink-faint";
 
@@ -15,14 +16,22 @@ const HEADING = "px-0.5 pb-1.5 pt-1 text-micro uppercase text-ink-faint";
 export function MarketList({
   suppliers,
   university,
+  extrasCounts,
 }: {
   suppliers: DirectorySupplier[];
   university: string | null;
+  /** Extras on sale per seller id. A seller with none is simply absent. */
+  extrasCounts: Record<string, number>;
 }) {
   const { mine, others, grouped } = groupSuppliersByUniversity(suppliers, university);
 
   const row = (supplier: DirectorySupplier, showUniversity: boolean) => (
-    <MarketRow key={supplier.id} supplier={supplier} showUniversity={showUniversity} />
+    <MarketRow
+      key={supplier.id}
+      supplier={supplier}
+      showUniversity={showUniversity}
+      extras={extrasCounts[supplier.id] ?? 0}
+    />
   );
 
   return (
@@ -56,13 +65,16 @@ export function MarketList({
 function MarketRow({
   supplier,
   showUniversity,
+  extras,
 }: {
   supplier: DirectorySupplier;
   showUniversity: boolean;
+  extras: number;
 }) {
   const meta = [
     supplier.kind === "shop" ? "Shop" : "Student supplier",
     showUniversity ? supplier.university : null,
+    extras > 0 ? `+ ${extras} ${extras === 1 ? "extra" : "extras"}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -76,11 +88,10 @@ function MarketRow({
         <span className="block truncate font-display text-body text-ink">
           {supplier.displayName}
         </span>
-        {meta && <span className="block truncate text-caption text-ink-muted">{meta}</span>}
-      </span>
-      <span className="tnum shrink-0 text-right text-caption text-ink-muted">
-        <span className="block">F ${supplier.frasacoPrice.toFixed(2)}</span>
-        <span className="block">C ${supplier.copyAPrice.toFixed(2)}</span>
+        <span className="mt-0.5 block">
+          <TypePrices frasacoPrice={supplier.frasacoPrice} copyAPrice={supplier.copyAPrice} />
+        </span>
+        {meta && <span className="mt-0.5 block truncate text-caption text-ink-muted">{meta}</span>}
       </span>
       <svg
         className="ml-1 shrink-0 text-ink-faint"

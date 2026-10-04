@@ -96,31 +96,43 @@ export function SignOutRow() {
   );
 }
 
-/** The top of a screen opened from a menu: back to the menu, and a title. */
+/**
+ * The top of every pushed screen — anything opened from somewhere else,
+ * as opposed to a tab. Back arrow on the left, the title beside it, one
+ * optional line under the title, and an optional intro underneath. The
+ * same on every such screen, so the way back is always in the same place.
+ */
 export function PushedHeader({
   backHref,
   backLabel,
   title,
+  subtitle,
   intro,
 }: {
   backHref: string;
   backLabel: string;
   title: string;
+  subtitle?: React.ReactNode;
   intro?: string;
 }) {
   return (
-    <header className="px-5 pt-4">
-      <Link
-        href={backHref}
-        aria-label={backLabel}
-        className="pressable -ml-2.5 flex h-11 w-11 items-center justify-center rounded-control text-ink"
-      >
-        <svg aria-hidden width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
-      </Link>
-      <h1 className="mt-1 font-display text-heading text-ink">{title}</h1>
-      {intro && <p className="mt-1 text-small text-ink-muted">{intro}</p>}
+    <header className="px-5 pt-5">
+      <div className="flex items-center gap-2">
+        <Link
+          href={backHref}
+          aria-label={backLabel}
+          className="pressable -ml-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink"
+        >
+          <svg aria-hidden width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </Link>
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-title text-ink">{title}</h1>
+          {subtitle && <div className="truncate text-caption text-ink-muted">{subtitle}</div>}
+        </div>
+      </div>
+      {intro && <p className="mt-2 text-small text-ink-muted">{intro}</p>}
     </header>
   );
 }

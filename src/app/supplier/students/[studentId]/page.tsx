@@ -1,14 +1,17 @@
-import Link from "next/link";
+import { PushedHeader } from "@/app/_components/settings/menu";
 import { notFound, redirect } from "next/navigation";
 import { countsAsLive, getSupplierContext, getStudentDetail } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "../../_components/bottom-nav";
 
-const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-warning/10 text-ink-muted",
-  confirmed: "bg-copy-a/10 text-copy-a",
-  fulfilled: "bg-ink/10 text-ink",
-  cancelled: "bg-card-sunk text-ink-muted",
+// Words, not colours: the palette's colours each mean one thing (a tooth
+// type, or fulfilled), and none of them means "pending".
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  confirmed: "Confirmed",
+  fulfilled: "Handed over",
+  cancelled: "Cancelled",
+  rejected: "Rejected",
 };
 
 export default async function SupplierStudentDetailPage({
@@ -40,53 +43,42 @@ export default async function SupplierStudentDetailPage({
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <div className="flex items-center gap-4 px-6 pt-5">
-        <Link
-          href="/supplier/students"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-rule bg-card"
-          aria-label="Back"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        <div>
-          <div className="font-display text-lg font-bold">{profile.full_name}</div>
-          {metaParts && <div className="text-xs text-ink-muted">{metaParts}</div>}
+      <PushedHeader
+        backHref="/supplier/students"
+        backLabel="Back to students"
+        title={profile.full_name}
+        subtitle={metaParts || undefined}
+      />
+
+      <div className="mx-5 mt-5 grid grid-cols-2 gap-2.5">
+        <div className="rounded-card border border-rule bg-card px-4 py-3.5 text-center">
+          <div className="tnum font-display text-heading text-ink">{orders.length}</div>
+          <div className="mt-0.5 text-caption text-ink-muted">{orders.length === 1 ? "Order" : "Orders"}</div>
+        </div>
+        <div className="rounded-card border border-rule bg-card px-4 py-3.5 text-center">
+          <div className="tnum font-display text-heading text-ink">${totalSpent.toFixed(2)}</div>
+          <div className="mt-0.5 text-caption text-ink-muted">Total spent</div>
         </div>
       </div>
 
-      <div className="mx-6 mt-5 grid grid-cols-2 gap-2.5">
-        <div className="rounded-lg border border-rule bg-card px-4 py-3.5 text-center">
-          <div className="font-display text-2xl font-extrabold text-ink">{orders.length}</div>
-          <div className="mt-0.5 text-[11px] text-ink-muted">Orders</div>
-        </div>
-        <div className="rounded-lg border border-rule bg-card px-4 py-3.5 text-center">
-          <div className="font-display text-2xl font-extrabold text-ink">
-            ${totalSpent.toFixed(2)}
-          </div>
-          <div className="mt-0.5 text-[11px] text-ink-muted">Total Spent</div>
-        </div>
-      </div>
-
-      <div className="px-6 pb-2 pt-6 text-xs font-semibold uppercase tracking-wider text-ink-muted">
-        Order History
-      </div>
+      <h2 className="px-5 pb-1.5 pt-6 text-micro uppercase text-ink-faint">Order history</h2>
 
       {orders.length === 0 ? (
-        <div className="mx-6 rounded-card border border-dashed border-rule p-6 text-center text-sm text-ink-muted">
-          This student hasn&apos;t placed an order yet.
-        </div>
+        <p className="mx-5 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+          This student hasn&rsquo;t placed an order yet.
+        </p>
       ) : (
-        <div className="flex flex-col gap-2 px-6">
+        <ul className="mx-5 overflow-hidden rounded-card border border-rule bg-card">
           {orders.map((order) => (
-            <div key={order.id} className="rounded-lg border border-rule bg-card px-4 py-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">Week {order.weekNumber}</span>
-                <span className="font-display text-sm font-bold">${order.totalPrice.toFixed(2)}</span>
+            <li key={order.id} className="border-b border-hairline px-4 py-3 last:border-none">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-display text-body">
+                  Week <span className="tnum">{order.weekNumber}</span>
+                </span>
+                <span className="tnum font-display text-body">${order.totalPrice.toFixed(2)}</span>
               </div>
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-xs text-ink-muted">
+              <div className="mt-0.5 flex items-baseline justify-between gap-3">
+                <span className="min-w-0 truncate text-caption text-ink-muted">
                   {[
                     ...order.items.map((i) => `#${i.toothNumber}`),
                     ...order.extras.map((e) => e.name),
@@ -94,17 +86,13 @@ export default async function SupplierStudentDetailPage({
                     .slice(0, 6)
                     .join(", ")}
                 </span>
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[11px] ${
-                    STATUS_STYLE[order.fulfillmentStatus] ?? STATUS_STYLE.pending
-                  }`}
-                >
-                  {order.fulfillmentStatus}
+                <span className="shrink-0 text-caption text-ink-muted">
+                  {STATUS_LABEL[order.fulfillmentStatus] ?? order.fulfillmentStatus}
                 </span>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       <SupplierBottomNav />

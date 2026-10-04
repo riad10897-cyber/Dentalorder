@@ -60,7 +60,7 @@ no product images, no shop browse page, no carts across sellers, no commission.
 - Student: pending shows Edit + Cancel together; "Order again" only on
   finished orders.
 
-### Step 5 — Market and small polish
+### Step 5 — Market and small polish — SHIPPED 4 Oct 2026
 - Market rows say "Frasaco $2.50 · Copy A $1.20" with the type colours.
 - Seller's product count on each market row ("+ 12 extras").
 - Consistent screen headers and back buttons on every pushed screen.

@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getEditableOrder, getOrderDefaults } from "@/lib/student/data";
 import { getSupplierFresh } from "@/lib/supplier/directory";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { priceMovesSinceOrder, productChangesSinceOrder } from "@/lib/orders/price-change";
+import { PushedHeader } from "@/app/_components/settings/menu";
 import { listOrderableProducts } from "@/lib/products/data";
 import { OrderBuilder } from "../../order-builder";
 import { toothSelectionKey, type ToothSelections } from "@/lib/teeth/selection";
@@ -42,9 +42,9 @@ export default async function EditOrderPage({
   ]);
   if (!supplier) {
     return (
-      <main className="mx-auto min-h-dvh max-w-md px-5 pt-6">
-        <BackLink />
-        <p className="mt-6 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
+      <main className="mx-auto min-h-dvh max-w-md">
+        <PushedHeader backHref="/student/orders" backLabel="Back to orders" title="Edit order" />
+        <p className="mx-5 mt-6 rounded-card border border-dashed border-rule px-4 py-6 text-center text-small text-ink-muted">
           This supplier is not taking orders at the moment, so the order cannot be changed. It
           stays as you placed it.
         </p>
@@ -79,16 +79,12 @@ export default async function EditOrderPage({
 
   return (
     <main className="mx-auto min-h-dvh max-w-md">
-      <div className="flex items-center gap-3 px-5 pt-5">
-        <BackLink />
-        <div className="min-w-0">
-          <h1 className="truncate font-display text-title">Edit order</h1>
-          <p className="tnum truncate text-caption text-ink-muted">
-            {supplier.displayName} · Frasaco ${supplier.frasacoPrice.toFixed(2)} · Copy A $
-            {supplier.copyAPrice.toFixed(2)}
-          </p>
-        </div>
-      </div>
+      <PushedHeader
+        backHref="/student/orders"
+        backLabel="Back to orders"
+        title="Edit order"
+        subtitle={supplier.displayName}
+      />
 
       <OrderBuilder
         supplierId={supplier.id}
@@ -117,19 +113,5 @@ export default async function EditOrderPage({
         }}
       />
     </main>
-  );
-}
-
-function BackLink() {
-  return (
-    <Link
-      href="/student/orders"
-      className="pressable -ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-control"
-      aria-label="Back to orders"
-    >
-      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-        <path d="M19 12H5M12 19l-7-7 7-7" />
-      </svg>
-    </Link>
   );
 }

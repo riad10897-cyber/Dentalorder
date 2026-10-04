@@ -90,6 +90,23 @@ export async function getOwnProduct(supplierId: string, productId: string): Prom
   return data ? toProduct(data as Row) : null;
 }
 
+/**
+ * How many extras each seller has on sale right now, for the market rows.
+ * RLS (products_select_market) already limits this to switched-on, in-stock
+ * products of sellers taking orders; the filters repeat it for reading.
+ */
+export async function countOrderableBySupplier(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select("supplier_id")
+    .eq("is_active", true)
+    .eq("in_stock", true);
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) counts[row.supplier_id] = (counts[row.supplier_id] ?? 0) + 1;
+  return counts;
+}
+
 export async function categoryIdFor(slug: ProductCategorySlug): Promise<string | null> {
   const supabase = await createClient();
   const { data } = await supabase.from("product_categories").select("id").eq("slug", slug).maybeSingle();
