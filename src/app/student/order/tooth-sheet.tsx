@@ -1,7 +1,8 @@
 "use client";
 
 import { TOOTH_NAMES } from "@/lib/teeth/fdi";
-import { BottomSheet } from "./bottom-sheet";
+import { BottomSheet, SheetTitle, sheetPrimary, sheetSecondary } from "./bottom-sheet";
+import { PillStepper } from "./extras-section";
 
 interface ToothSheetProps {
   toothNumber: number;
@@ -34,69 +35,39 @@ export function ToothSheet({
 }: ToothSheetProps) {
   const positionSubtotal = frasacoQty * frasacoPrice + copyQty * copyAPrice;
   const combinedQty = frasacoQty + copyQty;
+  // At zero the main button removes the tooth (if it was on the order);
+  // for a tooth not yet added there is nothing to do.
+  const removing = combinedQty === 0;
 
   return (
     <BottomSheet
       label={`Tooth ${toothNumber} options`}
       onClose={onClose}
-      header={
-        <>
-          <div className="font-display text-title">Tooth {toothNumber}</div>
-          <div className="text-small text-ink-muted">{TOOTH_NAMES[toothNumber]}</div>
-        </>
-      }
+      header={<SheetTitle title={`Tooth ${toothNumber}`} subtitle={TOOTH_NAMES[toothNumber]} />}
     >
       {() => (
         <>
-          <div className="flex flex-col gap-2 px-5">
-            <TypeRow
-              label="Frasaco"
-              price={frasacoPrice}
-              accent="var(--frasaco)"
-              qty={frasacoQty}
-              onChange={onChangeFrasacoQty}
-            />
-            <TypeRow
-              label="Copy A"
-              price={copyAPrice}
-              accent="var(--copy-a)"
-              qty={copyQty}
-              onChange={onChangeCopyQty}
-            />
+          <div className="mx-4 mt-2.5 overflow-hidden rounded-button bg-fill-faint">
+            <TypeRow label="Frasaco" price={frasacoPrice} dot="var(--frasaco)" qty={frasacoQty} onChange={onChangeFrasacoQty} />
+            <div aria-hidden className="ml-[2.375rem] border-t-[0.5px] border-separator" />
+            <TypeRow label="Copy A" price={copyAPrice} dot="var(--copy-a)" qty={copyQty} onChange={onChangeCopyQty} />
           </div>
 
-          <div className="mx-5 mt-4 flex items-center justify-between border-t border-hairline pt-3">
-            <span className="text-small text-ink-muted">
-              <span className="tnum font-display">{combinedQty}</span>{" "}
-              {combinedQty === 1 ? "tooth" : "teeth"} at this position
-            </span>
-            <span
-              key={positionSubtotal}
-              className="total-change tnum font-display text-lead"
-              data-testid="sheet-subtotal"
-            >
-              ${positionSubtotal.toFixed(2)}
-            </span>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-2 px-5">
-            <button
-              type="button"
-              onClick={onCommit}
-              disabled={combinedQty === 0}
-              className="pressable min-h-11 w-full rounded-control bg-ink py-3 font-display text-body text-card disabled:opacity-35"
-            >
-              {hasExisting ? "Update order" : "Add to order"}
-            </button>
-            {hasExisting && (
-              <button
-                type="button"
-                onClick={onRemove}
-                className="pressable min-h-11 w-full rounded-control py-2.5 text-small text-ink-muted"
-              >
-                Remove from order
+          <div className="flex gap-2 px-4 pt-4">
+            {hasExisting && !removing && (
+              <button type="button" onClick={onRemove} className={sheetSecondary}>
+                Remove
               </button>
             )}
+            <button
+              type="button"
+              onClick={removing ? onRemove : onCommit}
+              disabled={removing && !hasExisting}
+              className={`${sheetPrimary} tnum flex-1`}
+              data-testid="sheet-subtotal"
+            >
+              {removing ? "Remove" : `${hasExisting ? "Update" : "Add"} · $${positionSubtotal.toFixed(2)}`}
+            </button>
           </div>
         </>
       )}
@@ -107,74 +78,33 @@ export function ToothSheet({
 function TypeRow({
   label,
   price,
-  accent,
+  dot,
   qty,
   onChange,
 }: {
   label: string;
   price: number;
-  accent: string;
+  dot: string;
   qty: number;
   onChange: (q: number) => void;
 }) {
-  const active = qty > 0;
   return (
-    <div
-      className={`flex items-center justify-between rounded-control border px-3.5 py-3 ${
-        active ? "bg-card-sunk" : "bg-card"
-      }`}
-      style={{ borderColor: active ? accent : "var(--rule)" }}
-    >
-      <div className="flex items-center gap-2.5">
-        <span
-          className="inline-block h-3 w-3 shrink-0 rounded-[2px]"
-          style={{ background: accent }}
-        />
-        <div>
-          <div className="font-display text-body">{label}</div>
-          <div className="tnum font-display text-caption text-ink-muted">${price.toFixed(2)} each</div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2.5">
-        <StepperButton
-          label="−"
-          ariaLabel={`One fewer ${label}`}
-          disabled={qty === 0}
-          onClick={() => onChange(Math.max(0, qty - 1))}
-        />
-        <span className="tnum w-5 text-center font-display text-lead">{qty}</span>
-        <StepperButton
-          label="+"
-          ariaLabel={`One more ${label}`}
-          disabled={qty >= MAX_QTY}
-          onClick={() => onChange(Math.min(MAX_QTY, qty + 1))}
-        />
-      </div>
+    <div className="flex items-center gap-3 px-3.5 py-3">
+      <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: dot }} />
+      <span className="min-w-0 flex-1">
+        <span className="text-native-body text-ink">{label}</span>{" "}
+        <span className="tnum text-list-secondary text-ink-faint">${price.toFixed(2)}</span>
+      </span>
+      <PillStepper
+        name={label}
+        value={qty}
+        onChange={(q) => onChange(Math.max(0, Math.min(MAX_QTY, q)))}
+        max={MAX_QTY}
+        height="h-9"
+        surface="bg-card"
+        countClass="text-native-body"
+        buttonWidth="w-11"
+      />
     </div>
-  );
-}
-
-function StepperButton({
-  label,
-  ariaLabel,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  ariaLabel: string;
-  disabled?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      disabled={disabled}
-      onClick={onClick}
-      className="pressable flex h-11 w-11 items-center justify-center rounded-control border border-rule bg-card font-display text-lead disabled:opacity-30"
-    >
-      {label}
-    </button>
   );
 }

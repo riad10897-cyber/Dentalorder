@@ -12,6 +12,9 @@ import {
 import { haptic } from "@/lib/haptics";
 
 const DISMISS_FRACTION = 0.45;
+// The sheet floats 8px above the bottom edge with its shadow below it, so
+// "off screen" is its own height plus that gap and the shadow's reach.
+const OFFSCREEN_EXTRA = 40;
 
 // Apple's momentum projection (Designing Fluid Interfaces). Not the
 // textbook v²/2a — this is the exponential-decay form that matches how
@@ -39,6 +42,23 @@ function rubberband(overshoot: number, dimension: number, constant = 0.55): numb
  * call it to slide the sheet away. Buttons whose result replaces the sheet
  * (Add to order) call their own handler and close at once.
  */
+/** Title and subtitle, in every sheet's header. */
+export function SheetTitle({ title, subtitle }: { title: React.ReactNode; subtitle?: React.ReactNode }) {
+  return (
+    <>
+      <div className="text-sheet-title font-bold text-ink">{title}</div>
+      {subtitle && <div className="text-list-secondary text-ink-faint">{subtitle}</div>}
+    </>
+  );
+}
+
+const buttonBase =
+  "flex h-[3.125rem] items-center justify-center rounded-button px-[1.125rem] text-native-body font-semibold transition-transform duration-[120ms] ease-[var(--ease-out)] active:scale-[0.97] disabled:opacity-35 disabled:active:scale-100 motion-reduce:active:scale-100";
+/** The sheet's main action. */
+export const sheetPrimary = `${buttonBase} bg-ink text-card`;
+/** A second action beside it. */
+export const sheetSecondary = `${buttonBase} bg-fill text-ink`;
+
 export function BottomSheet({
   label,
   header,
@@ -79,7 +99,7 @@ export function BottomSheet({
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
-    heightRef.current = panel.offsetHeight || 1;
+    heightRef.current = (panel.offsetHeight || 1) + OFFSCREEN_EXTRA;
     if (reduceMotion) return;
 
     y.set(heightRef.current);
@@ -189,9 +209,14 @@ export function BottomSheet({
   const close = () => dismiss();
 
   return (
-    <div className={`fixed inset-0 ${zIndex} flex items-end justify-center`}>
+    // "Paper, native": an inset card, 8px clear of the sides and bottom,
+    // rounded on every corner.
+    <div
+      className={`fixed inset-0 ${zIndex} flex items-end justify-center px-2`}
+      style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
+    >
       <motion.div
-        className="scrim absolute inset-0 bg-ink/45"
+        className="scrim absolute inset-0 bg-[rgba(20,18,15,0.32)]"
         style={reduceMotion ? undefined : { opacity: scrimOpacity }}
         onClick={close}
       />
@@ -201,7 +226,7 @@ export function BottomSheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className={`sheet-panel relative w-full max-w-md rounded-t-[0.75rem] bg-card pb-8 shadow-[0_-0.5rem_2rem_rgba(20,18,15,0.18)] ${className}`}
+        className={`sheet-panel relative w-full max-w-md rounded-sheet bg-card pb-5 shadow-sheet ${className}`}
         style={reduceMotion ? undefined : { transform }}
       >
         {/* The entire header is the grab area. A handle-sized target is a
@@ -211,10 +236,15 @@ export function BottomSheet({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
-          className="shrink-0 cursor-grab touch-none px-5 pb-3 pt-3 active:cursor-grabbing"
+          className="relative shrink-0 cursor-grab touch-none px-[1.375rem] pb-1.5 pt-2 active:cursor-grabbing"
         >
-          <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-rule" />
+          <div className="mx-auto mb-3.5 h-[0.3125rem] w-9 rounded-full bg-[rgba(20,18,15,0.20)]" />
           {header}
+          {/* For screen readers: the sheet otherwise closes by gesture,
+              tapping outside or Escape, none of which they can see. */}
+          <button type="button" onClick={close} className="sr-only">
+            Close
+          </button>
         </div>
         {children(close)}
       </motion.div>

@@ -12,7 +12,6 @@ import { priceWeeklyOrder } from "@/lib/orders/order-pricing";
 import { ExtrasSection, type ExtraOption } from "./extras-section";
 import { TypeSwitch } from "./type-switch";
 import { describeLines } from "@/app/_components/extras-lines";
-import { haptic } from "@/lib/haptics";
 import { useCountingMoney } from "@/lib/use-counting-money";
 import type { ToothType } from "@/lib/supabase/types";
 
@@ -255,12 +254,8 @@ export function OrderBuilder({
         setError(result.message);
         return;
       }
-      // Success is only knowable once the order is written, so this is
-      // as early as the tick can honestly fire. It goes in the same
-      // frame as the navigation that shows the confirmation, rather
-      // than on the confirmation screen after it has hydrated, which
-      // would land the tick noticeably late.
-      haptic();
+      // No haptic here: the tick lands when the hold completes, on the
+      // review sheet. A second one on success would read as two events.
       router.push(`/student/order/confirmed/${result.orderId}${edit ? "?edited=1" : ""}`);
     });
   }

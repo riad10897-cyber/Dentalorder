@@ -115,6 +115,7 @@ export function PillStepper({
   height = "h-8",
   surface = "bg-fill",
   countClass = "text-list-secondary",
+  buttonWidth = "w-[2.375rem]",
 }: {
   name: string;
   value: number;
@@ -123,10 +124,11 @@ export function PillStepper({
   height?: string;
   surface?: string;
   countClass?: string;
+  buttonWidth?: string;
 }) {
   return (
     <span className={`flex shrink-0 items-center rounded-full ${height} ${surface}`}>
-      <StepButton label={`One fewer ${name}`} disabled={value <= 0} onClick={() => onChange(value - 1)}>
+      <StepButton width={buttonWidth} label={`One fewer ${name}`} disabled={value <= 0} onClick={() => onChange(value - 1)}>
         −
       </StepButton>
       <span
@@ -136,7 +138,7 @@ export function PillStepper({
       >
         {value}
       </span>
-      <StepButton label={`One more ${name}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
+      <StepButton width={buttonWidth} label={`One more ${name}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
         +
       </StepButton>
     </span>
@@ -144,11 +146,13 @@ export function PillStepper({
 }
 
 function StepButton({
+  width,
   label,
   disabled,
   onClick,
   children,
 }: {
+  width: string;
   label: string;
   disabled: boolean;
   onClick: () => void;
@@ -160,7 +164,7 @@ function StepButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="pressable relative flex h-full w-[2.375rem] items-center justify-center text-[1.125rem] text-ink after:absolute after:-inset-x-[0.1875rem] after:-inset-y-1.5 after:content-[''] disabled:opacity-30"
+      className={`pressable relative flex h-full ${width} items-center justify-center text-[1.125rem] text-ink after:absolute after:-inset-x-[0.1875rem] after:-inset-y-1.5 after:content-[''] disabled:opacity-30`}
     >
       {children}
     </button>

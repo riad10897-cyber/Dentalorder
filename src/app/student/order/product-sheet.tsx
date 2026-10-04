@@ -1,8 +1,8 @@
 "use client";
 
 import { categoryName } from "@/lib/products/categories";
-import type { ExtraOption } from "./extras-section";
-import { BottomSheet } from "./bottom-sheet";
+import { PillStepper, type ExtraOption } from "./extras-section";
+import { BottomSheet, SheetTitle, sheetPrimary } from "./bottom-sheet";
 
 const MAX_QTY = 10;
 
@@ -36,90 +36,60 @@ export function ProductSheet({
       zIndex="z-50"
       className="flex max-h-[85vh] flex-col"
       header={
-        <>
-          <div className="font-display text-title">{option.name}</div>
-          <div className="tnum font-display text-lead text-ink">
-            ${option.price.toFixed(2)}
-            <span className="font-body text-small text-ink-muted">{option.unit ? ` · ${option.unit}` : " each"}</span>
-          </div>
-        </>
+        <SheetTitle
+          title={option.name}
+          subtitle={
+            <span className="tnum">
+              ${option.price.toFixed(2)}
+              {option.unit ? ` · ${option.unit}` : " each"}
+            </span>
+          }
+        />
       }
     >
       {(dismiss) => (
         <>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5">
-            {option.description ? (
-              <p className="whitespace-pre-line text-body text-ink">{option.description}</p>
-            ) : (
-              <p className="text-small text-ink-muted">The seller hasn&rsquo;t added a description.</p>
-            )}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <p className={`mx-[1.375rem] mt-2 whitespace-pre-line ${option.description ? "text-native-body text-ink" : "text-list-secondary text-ink-faint"}`}>
+              {option.description ?? "The seller hasn’t added a description."}
+            </p>
 
-            <dl className="mt-4 border-t border-hairline">
-              {facts.map((fact) => (
-                <div key={fact.label} className="flex justify-between gap-3 border-b border-hairline py-2.5">
-                  <dt className="text-small text-ink-muted">{fact.label}</dt>
-                  <dd className="min-w-0 text-right text-small text-ink">{fact.value}</dd>
+            <dl className="mx-4 mt-2.5 overflow-hidden rounded-button bg-fill-faint">
+              {facts.map((fact, i) => (
+                <div
+                  key={fact.label}
+                  className={`flex justify-between gap-3 px-3.5 py-3 ${
+                    i < facts.length - 1 ? "border-b-[0.5px] border-separator" : ""
+                  }`}
+                >
+                  <dt className="text-list-secondary text-ink-faint">{fact.label}</dt>
+                  <dd className="min-w-0 text-right text-list-secondary text-ink">{fact.value}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          <div className="mx-5 mt-4 flex shrink-0 items-center justify-between">
-            <span className="text-small text-ink-muted">In this order</span>
-            <span className="flex items-center gap-2.5">
-              <Step
-                label={`One fewer ${option.name}`}
-                symbol="−"
-                disabled={quantity === 0}
-                onClick={() => onChange(quantity - 1)}
-              />
-              <span className="tnum w-6 text-center font-display text-lead" aria-live="polite">
-                {quantity}
-              </span>
-              <Step
-                label={`One more ${option.name}`}
-                symbol="+"
-                disabled={quantity >= MAX_QTY}
-                onClick={() => onChange(quantity + 1)}
-              />
-            </span>
+          <div className="mx-4 mt-2.5 flex shrink-0 items-center justify-between rounded-button bg-fill-faint px-3.5 py-3">
+            <span className="text-native-body text-ink">In this order</span>
+            <PillStepper
+              name={option.name}
+              value={quantity}
+              onChange={(q) => onChange(Math.max(0, Math.min(MAX_QTY, q)))}
+              max={MAX_QTY}
+              height="h-9"
+              surface="bg-card"
+              countClass="text-native-body"
+              buttonWidth="w-11"
+            />
           </div>
 
-          <div className="mt-4 shrink-0 px-5">
-            <button
-              type="button"
-              onClick={dismiss}
-              className="pressable min-h-11 w-full rounded-control bg-ink py-3 font-display text-body text-card"
-            >
+          <div className="shrink-0 px-4 pt-4">
+            <button type="button" onClick={dismiss} className={`${sheetPrimary} w-full`}>
               Done
             </button>
           </div>
         </>
       )}
     </BottomSheet>
-  );
-}
-
-function Step({
-  label,
-  symbol,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  symbol: string;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className="pressable flex h-11 w-11 items-center justify-center rounded-control border border-rule bg-card font-display text-lead disabled:opacity-30"
-    >
-      {symbol}
-    </button>
   );
 }
