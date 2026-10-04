@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { InstallCard } from "@/app/_components/install-card";
 import { getSupplierContext, listSupplierOrders, listSupplierStudents } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "./_components/bottom-nav";
@@ -33,6 +34,8 @@ export default async function SupplierOrdersPage() {
           {students.length === 1 ? "student has" : "students have"} ordered
         </h1>
       </header>
+
+      <InstallCard />
 
       {rep.status !== "active" && (
         <PendingBanner displayName={rep.displayName} />

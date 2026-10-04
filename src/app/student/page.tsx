@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { InstallCard } from "@/app/_components/install-card";
 import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
 import { getSupplierDirectory } from "@/lib/supplier/directory";
 import { countOrderableBySupplier } from "@/lib/products/data";
@@ -42,6 +43,8 @@ export default async function StudentHomePage() {
           Week <span className="tnum">{nextWeek}</span> of <span className="tnum">17</span>
         </p>
       </header>
+
+      <InstallCard />
 
       <h2 className="px-5 pb-2 pt-6 text-micro uppercase text-ink-faint">Order from</h2>
 
