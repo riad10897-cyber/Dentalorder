@@ -6,6 +6,7 @@ import { TypePrices } from "@/app/_components/type-prices";
 import { listOrderableProducts } from "@/lib/products/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { OrderBuilder } from "./order-builder";
+import { OrderWindow } from "../_components/order-window";
 
 /**
  * The chart, for one supplier.
@@ -49,6 +50,9 @@ export default async function NewOrderPage({
         title={supplier.displayName}
         subtitle={<TypePrices frasacoPrice={supplier.frasacoPrice} copyAPrice={supplier.copyAPrice} />}
       />
+      <div className="px-5 pt-1">
+        <OrderWindow compact />
+      </div>
 
       <OrderBuilder
         supplierId={supplier.id}

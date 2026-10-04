@@ -6,6 +6,7 @@ import { SupplierBottomNav } from "./_components/bottom-nav";
 import { OrdersClient } from "./orders-client";
 import { PendingBanner } from "./_components/pending-banner";
 import { WeekControl } from "./_components/week-control";
+import { nextSwitchLabel } from "@/lib/orders/ordering-week";
 
 export default async function SupplierOrdersPage() {
   const userId = await getVerifiedUserId();
@@ -36,11 +37,8 @@ export default async function SupplierOrdersPage() {
           {students.length === 1 ? "student has" : "students have"} ordered this week
         </h1>
         <div className="mt-3">
-          <WeekControl key={currentWeek} week={currentWeek} />
+          <WeekControl key={currentWeek} week={currentWeek} nextSwitch={nextSwitchLabel()} />
         </div>
-        <p className="mt-1.5 text-caption text-ink-muted">
-          New orders go into this week. Move it on when a new week starts.
-        </p>
       </header>
 
       <InstallCard />

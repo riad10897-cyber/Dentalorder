@@ -13,7 +13,13 @@ export default async function RepSummaryPage() {
     listSupplierOrders(userId),
   ]);
   if (!rep) redirect("/sign-in");
-  const currentWeek = rep.currentWeek;
+  // Saturday afternoon, right after the switch, the seller is buying for
+  // the week that just closed: open on it while the new week is empty.
+  const hasOrders = (week: number) => orders.some((o) => o.weekNumber === week);
+  const currentWeek =
+    !hasOrders(rep.currentWeek) && rep.currentWeek > 1 && hasOrders(rep.currentWeek - 1)
+      ? rep.currentWeek - 1
+      : rep.currentWeek;
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">

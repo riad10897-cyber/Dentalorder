@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { setCurrentWeek } from "../_actions/orders";
 
 /**
- * "Week 4 of 17", with − and +. The seller moves it on when a new week
- * starts; every order placed after that lands in the new week. Shown at
- * once, put back if the save fails.
+ * "Week 4 of 17", with − and +. The week moves on by itself every
+ * Saturday at 1:00 PM; the buttons are for putting it right (the first
+ * week of a semester, a holiday). Shown at once, put back if the save
+ * fails.
  */
-export function WeekControl({ week }: { week: number }) {
+export function WeekControl({ week, nextSwitch }: { week: number; nextSwitch: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [shown, setShown] = useState(week);
@@ -60,6 +61,11 @@ export function WeekControl({ week }: { week: number }) {
           +
         </button>
       </div>
+      <p className="text-caption text-ink-muted">
+        {shown < 17
+          ? <>Moves to week <span className="tnum">{shown + 1}</span> on {nextSwitch}.</>
+          : "Last week of the semester. Set week 1 when the next one starts."}
+      </p>
       {error && (
         <p className="text-caption text-ink" role="alert">
           {error}

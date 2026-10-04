@@ -120,9 +120,12 @@ export async function updateSupplierPrices(input: {
 }
 
 /**
- * The week this seller is taking orders for. Every order placed from now
- * on lands in it (the database stamps it on insert); orders already placed
- * keep theirs. Confined to the seller's own row by suppliers_update_own.
+ * Set the week this seller is taking orders for, from now. Every order
+ * placed after this lands in it, and it moves on by itself each Saturday
+ * at 1:00 PM. Orders already placed keep theirs. Confined to the seller's
+ * own row by suppliers_update_own. week_set_at is sent only so the write
+ * counts as a new setting even when the number is unchanged; the database
+ * replaces the time with its own.
  */
 export async function setCurrentWeek(week: unknown): Promise<ActionResult> {
   const parsed = currentWeekSchema.safeParse(week);
@@ -134,7 +137,7 @@ export async function setCurrentWeek(week: unknown): Promise<ActionResult> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("suppliers")
-    .update({ current_week: parsed.data })
+    .update({ current_week: parsed.data, week_set_at: new Date().toISOString() })
     .eq("id", userId)
     .select("current_week");
 
