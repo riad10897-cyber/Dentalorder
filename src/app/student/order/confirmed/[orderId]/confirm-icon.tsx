@@ -4,19 +4,19 @@
 // via the .tick-in rule in globals.css.
 export function ConfirmIcon() {
   return (
-    <div className="tick-in mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-ink">
+    <div className="tick-in flex h-[5.25rem] w-[5.25rem] items-center justify-center rounded-full bg-ink">
       <svg
-        width="30"
-        height="30"
+        width="38"
+        height="38"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="var(--card)"
-        strokeWidth={2}
+        stroke="#ffffff"
+        strokeWidth={2.6}
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
       >
-        <path d="M4.5 12.5l5 5 10-11" />
+        <path d="M5 12.5l4.5 4.5L19 7.5" />
       </svg>
     </div>
   );
