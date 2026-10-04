@@ -71,6 +71,8 @@ export default async function NewOrderPage({
           productId: p.id,
           name: p.name,
           unit: p.unit,
+          brand: p.brand,
+          description: p.description,
           price: p.price,
           category: p.category,
         }))}

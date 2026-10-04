@@ -49,7 +49,7 @@ no product images, no shop browse page, no carts across sellers, no commission.
   options (a real schema change touching price snapshotting). Default: each
   size its own product, until told otherwise.
 
-### Step 3 — Product detail for students
+### Step 3 — Product detail for students — SHIPPED 4 Oct 2026
 - Tapping an extra opens a bottom sheet: name, brand, description, pack size,
   price, the quantity stepper. The list itself stays compact.
 - Category chips above the list once a seller has more than eight products.
