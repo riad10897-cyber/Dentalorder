@@ -3,7 +3,7 @@
 // is cached here, just this app's own static assets and page shells, so the
 // app still opens (even if a page needs a fresh network round-trip to show
 // real data) on a slow or flaky connection.
-const CACHE_VERSION = "molaro-v1";
+const CACHE_VERSION = "molaro-v2";
 const PRECACHE_URLS = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
