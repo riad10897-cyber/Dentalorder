@@ -7,7 +7,6 @@ import { describeLines } from "@/app/_components/extras-lines";
 import { BottomSheet } from "./bottom-sheet";
 
 export function ReviewSheet({
-  week,
   repName,
   items,
   extras = [],
@@ -20,7 +19,6 @@ export function ReviewSheet({
   onClose,
   onConfirm,
 }: {
-  week: number;
   repName: string | null;
   items: ReturnType<typeof priceToothOrder>["items"];
   extras?: PricedExtra[];
@@ -48,8 +46,7 @@ export function ReviewSheet({
         <>
           <div className="font-display text-title">{mode === "edit" ? "Review changes" : "Review order"}</div>
           <div className="text-small text-ink-muted">
-            Week {week}
-            {repName ? ` · to ${repName}` : ""}
+            {repName ? `To ${repName}` : ""}
           </div>
         </>
       }

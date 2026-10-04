@@ -36,7 +36,7 @@ export default async function OrderHistoryPage() {
 
       {orders.length === 0 ? (
         <EmptyState icon={<ClipboardIcon />} className="mx-5 mt-8">
-          No orders yet. Once you place your first weekly order, it will be listed here.
+          No orders yet. Once you place your first order, it will be listed here.
         </EmptyState>
       ) : (
         <ul className="mt-4 flex flex-col gap-2.5 px-5">
@@ -61,9 +61,7 @@ export default async function OrderHistoryPage() {
                 <div className="rounded-card border border-rule bg-card p-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <div>
-                    <h2 className="font-display text-body">
-                      Week <span className="tnum">{order.weekNumber}</span>
-                    </h2>
+                    <h2 className="font-display text-body">{order.supplierName}</h2>
                     <p className="tnum font-display text-caption text-ink-muted">
                       {formatDate(order.createdAt)} · {describeLines(teeth, extrasCount)}
                     </p>

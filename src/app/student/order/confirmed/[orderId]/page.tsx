@@ -21,7 +21,7 @@ export default async function OrderConfirmedPage({
   const supabase = await createClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, week_number, total_price, order_items(quantity, product_id), suppliers(display_name)")
+    .select("id, total_price, order_items(quantity, product_id), suppliers(display_name)")
     .eq("id", orderId)
     .eq("order_type", "tooth")
     .single();
@@ -45,12 +45,11 @@ export default async function OrderConfirmedPage({
         <p className="confirm-stagger mt-1 text-body text-ink-muted" style={stagger(1)}>
           {wasEdit ? (
             <>
-              {supplierName} now has your changed week{" "}
-              <span className="tnum">{order.week_number}</span> order.
+              {supplierName} now has your changed order.
             </>
           ) : (
             <>
-              {supplierName} has your week <span className="tnum">{order.week_number}</span> order.
+              {supplierName} has your order.
             </>
           )}
         </p>
@@ -63,7 +62,7 @@ export default async function OrderConfirmedPage({
         <p className="text-micro uppercase text-ink-faint">Total due</p>
         <p className="tnum mt-1 font-display text-figure">${total.toFixed(2)}</p>
         <p className="tnum mt-2 text-caption text-ink-muted">
-          {describeLines(toothCount, extrasCount)} · week {order.week_number}
+          {describeLines(toothCount, extrasCount)}
         </p>
       </section>
 

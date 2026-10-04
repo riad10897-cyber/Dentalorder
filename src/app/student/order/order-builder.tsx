@@ -246,14 +246,11 @@ export function OrderBuilder({
 
   return (
     <>
-      {/* Not a selector. Seventeen buttons asked a question nobody was
-          asking: an order is for the week you are in. This just lets them
-          keep count. */}
-      <p className="px-5 pb-1 pt-4 text-caption text-ink-muted">
-        Week <span className="tnum">{week}</span> of <span className="tnum">17</span>
-      </p>
-
-      <div className="mt-3">
+      {/* No week on screen: students don't think in semester weeks, and
+          when to order is between them and their seller. The order still
+          carries a week number for the seller's shopping list, set from
+          the student's order count. */}
+      <div className="mt-4">
         <DentalChart
           selections={selections}
           frasacoPrice={frasacoPrice}
@@ -343,7 +340,6 @@ export function OrderBuilder({
 
       {reviewOpen && (
         <ReviewSheet
-          week={week}
           repName={supplierName}
           items={pricedItems}
           extras={pricedExtras}

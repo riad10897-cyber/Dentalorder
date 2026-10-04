@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon } from "@/app/_components/icons";
+import { ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon, QrIcon } from "@/app/_components/icons";
 import { getStudentContext } from "@/lib/student/data";
 import { getVerifiedEmail, getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
@@ -38,6 +38,10 @@ export default async function StudentProfilePage() {
         <MenuLink href="/student/profile/details" label="Personal details" icon={<PersonIcon />} detail={student.phone ?? "Add your phone"} />
         {email && <MenuInfo label="Email" value={email} icon={<MailIcon />} />}
         <MenuLink href="/student/profile/password" label="Password" detail="Change" icon={<LockIcon />} />
+      </MenuGroup>
+
+      <MenuGroup title="Share" footnote="Show the code in class, or send the link to your group.">
+        <MenuLink href="/student/profile/share" label="Share Molaro" detail="QR code" icon={<QrIcon />} />
       </MenuGroup>
 
       <MenuGroup title="Help" footnote="Something wrong with an order? Message your seller first.">

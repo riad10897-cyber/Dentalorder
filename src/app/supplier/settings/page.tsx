@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { BoxIcon, ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon, StoreIcon } from "@/app/_components/icons";
+import { BoxIcon, ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon, QrIcon, StoreIcon } from "@/app/_components/icons";
 import { getSupplierContext } from "@/lib/supplier/data";
 import { getStudentContext } from "@/lib/student/data";
 import { getVerifiedEmail, getVerifiedUserId } from "@/lib/supabase/auth";
@@ -49,6 +49,10 @@ export default async function SupplierSettingsPage() {
       <MenuGroup title="Selling">
         <MenuLink href="/supplier/settings/market" label="How you appear in the market" icon={<StoreIcon />} detail={seller.displayName} />
         <MenuLink href="/supplier/products" label="Prices and products" icon={<BoxIcon />} />
+      </MenuGroup>
+
+      <MenuGroup title="Share" footnote="Show the code in class, or send the link to your group.">
+        <MenuLink href="/supplier/settings/share" label="Share Molaro" detail="QR code" icon={<QrIcon />} />
       </MenuGroup>
 
       <MenuGroup title="Help">

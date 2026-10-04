@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { InstallCard } from "@/app/_components/install-card";
-import { getStudentContext, getOrderDefaults } from "@/lib/student/data";
+import { getStudentContext } from "@/lib/student/data";
 import { getSupplierDirectory } from "@/lib/supplier/directory";
 import { countOrderableBySupplier } from "@/lib/products/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
@@ -20,9 +20,8 @@ export default async function StudentHomePage() {
   const userId = await getVerifiedUserId();
   if (!userId) redirect("/sign-in");
 
-  const [student, { nextWeek }, suppliers, extrasCounts] = await Promise.all([
+  const [student, suppliers, extrasCounts] = await Promise.all([
     getStudentContext(userId),
-    getOrderDefaults(userId),
     getSupplierDirectory(),
     countOrderableBySupplier(),
   ]);
@@ -38,10 +37,6 @@ export default async function StudentHomePage() {
       <header className="px-5 pt-6">
         <p className="text-small text-ink-muted">Good to see you,</p>
         <h1 className="font-display text-display">{firstName}</h1>
-        {/* The week is a line to keep count by, not something to set. */}
-        <p className="mt-1 text-caption text-ink-muted">
-          Week <span className="tnum">{nextWeek}</span> of <span className="tnum">17</span>
-        </p>
       </header>
 
       <InstallCard />

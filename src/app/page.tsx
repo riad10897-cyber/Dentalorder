@@ -14,7 +14,7 @@ export default async function LandingPage() {
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 px-5 py-10 text-center">
       <h1 className="font-display text-figure text-ink">Molaro</h1>
       <p className="text-body text-ink-muted">
-        Weekly tooth ordering and dental supplies for students in Lebanon.
+        Tooth ordering and dental supplies for students in Lebanon.
       </p>
       <div className="flex w-full flex-col gap-3">
         <a
