@@ -2752,7 +2752,7 @@ alter table public.products
 -- 1. suppliers.current_week (1-17) is the week the seller last set, and
 --    suppliers.week_set_at is when. Set by the seller from their Orders
 --    screen, under the existing suppliers_update_own policy; week_set_at
---    is stamped by the database, not sent by the app.
+--    is always stamped by the database with the time of the change.
 -- 2. public.effective_week() adds one week for every Saturday 1:00 PM
 --    (Asia/Beirut, wall clock, so summer and winter time both hold) that
 --    has passed since then, and stops at 17. No scheduled job: the week is
@@ -2798,16 +2798,18 @@ as $$
   ))::smallint;
 $$;
 
--- The seller changes current_week; the database records when.
+-- The seller sets a week; the database records when. Any write that
+-- touches current_week or week_set_at counts as setting the week now —
+-- including setting it to the number it already holds, which restarts
+-- the count from today. Whatever time a request sends is never kept.
 create or replace function public.stamp_week_set_at()
 returns trigger
 language plpgsql
 as $$
 begin
-  if new.current_week is distinct from old.current_week then
+  if new.current_week is distinct from old.current_week
+     or new.week_set_at is distinct from old.week_set_at then
     new.week_set_at := now();
-  else
-    new.week_set_at := old.week_set_at;
   end if;
   return new;
 end;
