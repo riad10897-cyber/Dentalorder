@@ -51,7 +51,7 @@ export default async function SupplierSettingsPage() {
       </MenuGroup>
 
       <MenuGroup title="Help">
-        <MenuInfo label="Questions about Dentora" value="Message Riad" icon={<ChatIcon />} />
+        <MenuInfo label="Questions about Molaro" value="Message Riad" icon={<ChatIcon />} />
         <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 

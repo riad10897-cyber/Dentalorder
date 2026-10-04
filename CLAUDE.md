@@ -1,6 +1,7 @@
 # DentalOrder — Working Rules
 
 You are building DentalOrder, a mobile-first web app for dental students in Lebanon.
+Its public name is **Molaro** (renamed from Dentora, Oct 2026). Use "Molaro" in every user-facing string; "DentalOrder" stays only in code and file names.
 The full specification is `DentalOrder_Build_Spec_v3.md` in this repo. **Read it before writing any code.**
 Visual mockups are in `/reference`. They are the design source of truth.
 

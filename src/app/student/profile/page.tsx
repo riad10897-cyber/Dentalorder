@@ -40,7 +40,7 @@ export default async function StudentProfilePage() {
       </MenuGroup>
 
       <MenuGroup title="Help" footnote="Something wrong with an order? Message your seller first.">
-        <MenuInfo label="Questions about Dentora" value="Message Riad" icon={<ChatIcon />} />
+        <MenuInfo label="Questions about Molaro" value="Message Riad" icon={<ChatIcon />} />
         <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 

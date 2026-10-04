@@ -1,4 +1,4 @@
-# Design goal — make Dentora feel like a real app
+# Design goal — make Molaro feel like a real app
 
 Set by the owner on 3 Oct 2026. Work through it **one step at a time, in order**.
 After each step: build, tsc, tests, walk it at 375px on real data, push, report, stop.
