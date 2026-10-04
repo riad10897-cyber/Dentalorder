@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon, QrIcon } from "@/app/_components/icons";
+import { ContactRow } from "@/app/_components/settings/contact-row";
+import { InfoIcon, LockIcon, MailIcon, PersonIcon, QrIcon } from "@/app/_components/icons";
 import { getStudentContext } from "@/lib/student/data";
 import { getVerifiedEmail, getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "../_components/bottom-nav";
 import {
   APP_VERSION,
-  FEEDBACK_EMAIL,
   AccountHeader,
   MenuGroup,
   MenuInfo,
@@ -45,13 +45,7 @@ export default async function StudentProfilePage() {
       </MenuGroup>
 
       <MenuGroup title="Help" footnote="Something wrong with an order? Message your seller first.">
-        <MenuInfo label="Questions about Molaro" value="Message Riad" icon={<ChatIcon />} />
-        <MenuLink
-          href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent("Molaro feedback")}`}
-          label="Send feedback"
-          detail={FEEDBACK_EMAIL}
-          icon={<MailIcon />}
-        />
+        <ContactRow />
         <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 

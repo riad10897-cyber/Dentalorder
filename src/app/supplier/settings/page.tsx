@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { BoxIcon, ChatIcon, InfoIcon, LockIcon, MailIcon, PersonIcon, QrIcon, StoreIcon } from "@/app/_components/icons";
+import { ContactRow } from "@/app/_components/settings/contact-row";
+import { BoxIcon, InfoIcon, LockIcon, MailIcon, PersonIcon, QrIcon, StoreIcon } from "@/app/_components/icons";
 import { getSupplierContext } from "@/lib/supplier/data";
 import { getStudentContext } from "@/lib/student/data";
 import { getVerifiedEmail, getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "../_components/bottom-nav";
 import {
   APP_VERSION,
-  FEEDBACK_EMAIL,
   AccountHeader,
   MenuGroup,
   MenuInfo,
@@ -56,13 +56,7 @@ export default async function SupplierSettingsPage() {
       </MenuGroup>
 
       <MenuGroup title="Help">
-        <MenuInfo label="Questions about Molaro" value="Message Riad" icon={<ChatIcon />} />
-        <MenuLink
-          href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent("Molaro feedback")}`}
-          label="Send feedback"
-          detail={FEEDBACK_EMAIL}
-          icon={<MailIcon />}
-        />
+        <ContactRow />
         <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 
