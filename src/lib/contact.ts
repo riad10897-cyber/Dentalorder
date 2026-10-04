@@ -12,7 +12,7 @@ export const CONTACT_EMAIL = "riad10897@gmail.com";
  * 961 and the Lebanese number, e.g. "96170123456". Empty hides the
  * WhatsApp button and leaves email.
  */
-export const CONTACT_WHATSAPP = "";
+export const CONTACT_WHATSAPP = "96176951794";
 
 export function whatsappHref(text: string): string | null {
   if (!/^\d{8,15}$/.test(CONTACT_WHATSAPP)) return null;
