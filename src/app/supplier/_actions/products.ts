@@ -45,6 +45,8 @@ export async function createProduct(input: unknown): Promise<ProductActionResult
       name: parsed.data.name,
       price: parsed.data.price.toFixed(2),
       unit: parsed.data.unit,
+      brand: parsed.data.brand,
+      description: parsed.data.description,
     })
     .select("id");
 
@@ -78,6 +80,8 @@ export async function updateProduct(productId: string, input: unknown): Promise<
       name: parsed.data.name,
       price: parsed.data.price.toFixed(2),
       unit: parsed.data.unit,
+      brand: parsed.data.brand,
+      description: parsed.data.description,
     })
     .eq("id", productId)
     .eq("supplier_id", userId)

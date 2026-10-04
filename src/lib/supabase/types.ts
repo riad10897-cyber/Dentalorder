@@ -191,6 +191,8 @@ export interface Database {
           category_id: string;
           name: string;
           description: string | null;
+          /** Optional, up to 60 characters. Describes the product; not copied onto order lines. */
+          brand: string | null;
           image_url: string | null;
           price: string;
           unit: string | null;
@@ -207,6 +209,7 @@ export interface Database {
           category_id: string;
           name: string;
           description?: string | null;
+          brand?: string | null;
           image_url?: string | null;
           price: string;
           unit?: string | null;

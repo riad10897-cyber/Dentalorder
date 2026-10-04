@@ -8,6 +8,8 @@ export interface Product {
   category: ProductCategorySlug;
   price: number;
   unit: string | null;
+  brand: string | null;
+  description: string | null;
   inStock: boolean;
   /** Off means the seller stopped selling it. */
   isActive: boolean;
@@ -18,12 +20,14 @@ type Row = {
   name: string;
   price: string;
   unit: string | null;
+  brand: string | null;
+  description: string | null;
   in_stock: boolean;
   is_active: boolean;
   product_categories: { slug: string } | null;
 };
 
-const SELECT = "id, name, price, unit, in_stock, is_active, product_categories(slug)";
+const SELECT = "id, name, price, unit, brand, description, in_stock, is_active, product_categories(slug)";
 
 function toProduct(row: Row): Product {
   return {
@@ -32,6 +36,8 @@ function toProduct(row: Row): Product {
     category: (row.product_categories?.slug ?? "materials") as ProductCategorySlug,
     price: Number(row.price),
     unit: row.unit,
+    brand: row.brand,
+    description: row.description,
     inStock: row.in_stock,
     isActive: row.is_active,
   };
@@ -70,6 +76,18 @@ export async function listOrderableProducts(supplierId: string): Promise<Product
     .eq("is_active", true)
     .eq("in_stock", true);
   return ((data ?? []) as Row[]).map(toProduct).sort(byShelf);
+}
+
+/** One of the seller's own products, for its edit screen. RLS: own rows only. */
+export async function getOwnProduct(supplierId: string, productId: string): Promise<Product | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select(SELECT)
+    .eq("supplier_id", supplierId)
+    .eq("id", productId)
+    .maybeSingle();
+  return data ? toProduct(data as Row) : null;
 }
 
 export async function categoryIdFor(slug: ProductCategorySlug): Promise<string | null> {

@@ -38,7 +38,7 @@ no product images, no shop browse page, no carts across sellers, no commission.
   shows "Message Riad". Flag before building.
 - No SQL.
 
-### Step 2 — Product detail for sellers
+### Step 2 — Product detail for sellers — SHIPPED 4 Oct 2026 (not yet walked on real data)
 - New fields: **description** (up to 300 characters), **brand** (optional),
   **pack size / unit** (already there). Each with a clear label and hint.
 - Add/edit opens as its own screen instead of an inline form.

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CATEGORY_SLUGS } from "@/lib/products/categories";
 
 // Mirrors the database's own checks (products_price_range, _name_present,
-// _unit_length) so a seller is told what is wrong before a round trip.
+// _unit_length, _brand_length, _description_length) so a seller is told what is wrong before a round trip.
 // The database checks again either way.
 export const productInputSchema = z.object({
   name: z.string().trim().min(1, "Give it a name.").max(80, "Keep the name under 80 characters."),
@@ -18,6 +18,18 @@ export const productInputSchema = z.object({
     .string()
     .trim()
     .max(40, "Keep the unit under 40 characters.")
+    .optional()
+    .transform((v) => (v ? v : null)),
+  brand: z
+    .string()
+    .trim()
+    .max(60, "Keep the brand under 60 characters.")
+    .optional()
+    .transform((v) => (v ? v : null)),
+  description: z
+    .string()
+    .trim()
+    .max(300, "Keep the description under 300 characters.")
     .optional()
     .transform((v) => (v ? v : null)),
 });
