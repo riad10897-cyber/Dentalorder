@@ -13,8 +13,8 @@ export default async function SupplierDetailsPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <PushedHeader backHref="/supplier/settings" backLabel="Back to settings" title="Personal details" />
-      <div className="mt-5 px-5">
+      <PushedHeader native backText="Settings" backHref="/supplier/settings" backLabel="Back to settings" title="Personal details" />
+      <div className="native-form mt-5 px-4">
         <ProfileForm
           fullName={person.fullName}
           phone={person.phone}

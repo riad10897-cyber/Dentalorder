@@ -18,16 +18,20 @@ export default async function SupplierMarketPage() {
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
       <PushedHeader
+        native
+        backText="Settings"
         backHref="/supplier/settings"
         backLabel="Back to settings"
         title="In the market"
         intro="What students see when they choose who to order from."
       />
-      <MenuGroup title="Your listing" footnote="Contact us (Settings → Help) to change any of these.">
-        <MenuInfo label="Name" value={seller.displayName} />
-        <MenuInfo label="Faculty" value={seller.university ?? "Every faculty"} />
-        <MenuInfo label="Status" value={SELLER_STATUS_LABEL[seller.status]} />
-      </MenuGroup>
+      <div className="px-4">
+        <MenuGroup native title="Your listing" footnote="Contact us (Settings → Help) to change any of these.">
+          <MenuInfo native label="Name" value={seller.displayName} />
+          <MenuInfo native label="Faculty" value={seller.university ?? "Every faculty"} />
+          <MenuInfo native label="Status" value={SELLER_STATUS_LABEL[seller.status]} />
+        </MenuGroup>
+      </div>
       <SupplierBottomNav />
     </main>
   );

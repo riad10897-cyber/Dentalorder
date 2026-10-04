@@ -28,24 +28,27 @@ export default async function SupplierOrdersPage() {
     orders.filter((o) => o.weekNumber === currentWeek).map((o) => o.studentId),
   ).size;
 
+  // "Paper, native": a tab, so a large title and no back arrow.
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <header className="px-5 pt-6">
-        <h1 className="font-display text-heading">
-          <span className="tnum">{orderedThisWeek}</span> of{" "}
-          <span className="tnum">{students.length}</span>{" "}
-          {students.length === 1 ? "student has" : "students have"} ordered this week
-        </h1>
-        <div className="mt-3">
-          <WeekControl key={currentWeek} week={currentWeek} nextSwitch={nextSwitchLabel()} />
-        </div>
-      </header>
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
+      <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Orders</h1>
 
-      <InstallCard />
+      <WeekControl
+        key={currentWeek}
+        week={currentWeek}
+        nextSwitch={nextSwitchLabel()}
+        footnote={
+          <>
+            <span className="tnum font-semibold">{orderedThisWeek}</span> of{" "}
+            <span className="tnum">{students.length}</span>{" "}
+            {students.length === 1 ? "student has" : "students have"} ordered this week.
+          </>
+        }
+      />
 
-      {rep.status !== "active" && (
-        <PendingBanner displayName={rep.displayName} />
-      )}
+      {rep.status !== "active" && <PendingBanner displayName={rep.displayName} />}
+
+      <InstallCard native />
 
       <OrdersClient orders={orders} />
 

@@ -94,7 +94,8 @@ Warm paper palette, iOS structure. Light only — still no dark mode.
   tooth types; green means handed over (and fills the hold-to-place button,
   which is the moment an order becomes real).
 - **Font: the system font** — `-apple-system, BlinkMacSystemFont, system-ui, sans-serif`.
-  Newsreader and Atkinson Hyperlegible are retired from the student app.
+  Newsreader and Atkinson Hyperlegible are retired everywhere: student,
+  seller and sign-in screens all use "Paper, native".
   Weights 400 / 500 / 600 / 700.
 - Type scale (rem): large title 2.125 / 700 / −0.02em · screen title 1.75 / 700 / −0.02em ·
   sheet title 1.375 / 700 / −0.01em · nav title 1.0625 / 600 · body 1.0625 ·

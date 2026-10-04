@@ -280,6 +280,24 @@ h6 {
   }
 }
 
+/* ── Switch (seller "In stock") ────────────────────────────────────
+   The track fades, the knob slides. Reduced motion keeps the fade and
+   moves the knob at once. Tailwind's translate-x-* sets `translate`. */
+.ios-switch {
+  transition: background-color 200ms var(--ease-out);
+}
+
+.ios-switch-knob {
+  box-shadow: 0 0.1875rem 0.5rem rgba(20, 18, 15, 0.15), 0 0.0625rem 0.0625rem rgba(20, 18, 15, 0.06);
+  transition: translate 220ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-switch-knob {
+    transition: none;
+  }
+}
+
 /* The quantity badge is new content, not a state change, so it arrives
    rather than fading in place. Never from scale(0) — 0.9 keeps it a
    thing that grew rather than a thing conjured. */
@@ -386,10 +404,14 @@ h6 {
   }
 }
 
-.skeleton {
-  background: var(--card-sunk);
-  border-radius: var(--radius-control);
-  animation: skeleton-pulse 1.6s var(--ease-in-out) infinite;
+/* In the components layer so a rounded-* utility on the block wins over
+   the default radius. */
+@layer components {
+  .skeleton {
+    background: var(--card-sunk);
+    border-radius: var(--radius-control);
+    animation: skeleton-pulse 1.6s var(--ease-in-out) infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -620,9 +642,9 @@ h6 {
 }
 
 
-/* "Paper, native" forms on student screens (Personal details, Password).
-   The forms themselves are shared with seller screens, which keep the
-   old look; wrapping them in .native-form restyles them in place. Plain
+/* "Paper, native" forms (Personal details, Password), for students and
+   sellers alike. The shared forms keep their own classes; wrapping them
+   in .native-form restyles them in place. Plain
    CSS outranks Tailwind's utility layer, so these win over the forms'
    own classes. */
 .native-form label {
@@ -631,7 +653,8 @@ h6 {
 }
 
 .native-form input,
-.native-form select {
+.native-form select,
+.native-form textarea {
   min-height: 2.75rem;
   border: 0;
   border-radius: var(--radius-field);
@@ -642,7 +665,8 @@ h6 {
 }
 
 .native-form input:focus,
-.native-form select:focus {
+.native-form select:focus,
+.native-form textarea:focus {
   outline: 2px solid var(--ink);
   outline-offset: 0;
 }

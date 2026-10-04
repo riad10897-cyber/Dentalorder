@@ -68,17 +68,22 @@ export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
   return (
     <>
       {owed.count > 0 && (
-        <p className="mx-5 mt-4 rounded-card border border-rule bg-card-sunk px-4 py-2.5 text-small text-ink">
-          <span className="tnum font-display">{owed.count}</span>{" "}
-          {owed.count === 1 ? "order" : "orders"} handed over, not paid ·{" "}
-          <span className="tnum font-display">${owed.total.toFixed(2)}</span> outstanding
+        <p className="mt-4 flex items-baseline justify-between gap-3 rounded-group bg-card px-4 py-3 text-list-secondary text-ink-muted">
+          <span>
+            <span className="tnum font-semibold text-ink">{owed.count}</span>{" "}
+            {owed.count === 1 ? "order" : "orders"} handed over, not paid
+          </span>
+          <span className="tnum shrink-0 text-native-body font-bold text-ink">${owed.total.toFixed(2)}</span>
         </p>
       )}
 
+      {/* Capsules, scrolling sideways if the text is set large. The -mx/px
+          pair lets them scroll out to the screen edge. */}
       <div
-        className="mt-4 flex gap-1.5 overflow-x-auto px-5 pb-1"
+        className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1"
         style={{ scrollbarWidth: "none" }}
         role="tablist"
+        aria-label="Orders by status"
       >
         {TABS.map((t) => (
           <button
@@ -87,35 +92,39 @@ export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`pressable flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border px-3 py-1.5 font-display text-small ${
-              tab === t.key ? "border-ink bg-ink text-card" : "border-rule bg-card text-ink-muted"
+            className={`pressable state-fade relative flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-list-secondary font-semibold after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] ${
+              tab === t.key ? "bg-ink text-card" : "bg-fill text-ink"
             }`}
           >
             {t.label}
-            <span className="tnum text-caption opacity-70">{counts[t.key]}</span>
+            <span className={`tnum font-normal ${tab === t.key ? "text-card/65" : "text-ink-faint"}`}>{counts[t.key]}</span>
           </button>
         ))}
       </div>
 
-      <div className="mt-3 px-5">
+      <label className="mt-3 flex h-[2.375rem] items-center gap-2 rounded-field bg-fill px-2.5 text-ink-faint">
+        <svg aria-hidden width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" className="h-4 w-4 shrink-0">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-4-4" />
+        </svg>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search a name or tooth number"
           aria-label="Search orders by student name or tooth number"
-          className="min-h-11 w-full rounded-control border border-rule bg-card px-3 py-2 text-body text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent text-native-body text-ink placeholder:text-ink-faint focus:outline-none"
         />
-      </div>
+      </label>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={<ClipboardIcon />} className="mx-5 mt-4">
+        <EmptyState native icon={<ClipboardIcon />} className="mt-3">
           {query.trim()
             ? `Nothing in ${TABS.find((t) => t.key === tab)?.label.toLowerCase()} matches “${query.trim()}”.`
             : EMPTY[tab]}
         </EmptyState>
       ) : (
-        <ul className="mt-3 flex flex-col gap-2.5 px-5">
+        <ul className="mt-3 flex flex-col gap-2.5">
           {filtered.map((order) => (
             <OrderCard key={order.id} order={order} />
           ))}
@@ -168,31 +177,34 @@ function OrderCard({ order }: { order: SupplierOrder }) {
   const unpaid = handedOverUnpaid(order);
 
   return (
-    <li className="rounded-card border border-rule bg-card p-4">
+    <li className="rounded-group bg-card p-4">
       <div className="flex items-baseline justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="truncate font-display text-body">{order.studentName}</h2>
-          <p className="tnum font-display text-caption text-ink-muted">
+          <h2 className="truncate text-native-body font-semibold text-ink">{order.studentName}</h2>
+          <p className="tnum text-native-caption text-ink-faint">
             Week {order.weekNumber} · {describeLines(teeth, extrasCount)}
           </p>
         </div>
-        <span className="tnum shrink-0 font-display text-lead">${order.totalPrice.toFixed(2)}</span>
+        <span className="tnum shrink-0 text-[1.25rem] font-bold tracking-[-0.01em] text-ink">
+          ${order.totalPrice.toFixed(2)}
+        </span>
       </div>
 
       {unpaid && (
         // Deliberately ink, not a status colour: --fulfilled means fulfilled
         // and --frasaco means Frasaco. Neither may be borrowed to mean "owes
         // you money".
-        <p className="mt-2 inline-block rounded-control border border-ink px-1.5 py-0.5 text-micro uppercase text-ink">
+        <p className="mt-2 inline-block rounded-full border border-ink px-2 py-px text-native-caption font-semibold text-ink">
           Handed over · not paid
         </p>
       )}
 
+      {order.items.length > 0 && (
       <ul className="mt-3 flex flex-wrap gap-1">
         {order.items.map((item, i) => (
           <li
             key={i}
-            className="tnum rounded-control px-1.5 py-0.5 text-caption text-card"
+            className="tnum rounded-full px-2 py-0.5 text-native-caption font-semibold text-white"
             style={{
               background: item.toothType === "frasaco" ? "var(--frasaco)" : "var(--copy-a)",
             }}
@@ -202,19 +214,22 @@ function OrderCard({ order }: { order: SupplierOrder }) {
           </li>
         ))}
       </ul>
+      )}
 
       <ExtrasLines extras={order.extras} />
 
       {order.fulfillmentStatus === "rejected" ? (
-        <div className="mt-3 border-t border-hairline pt-3">
-          <p className="text-micro uppercase text-ink-faint">Rejected</p>
+        <div className="mt-3 border-t-[0.5px] border-separator pt-3">
+          <p className="text-native-caption font-semibold text-ink-faint">Rejected</p>
           {order.rejectionReason && (
-            <p className="mt-1 text-small text-ink-muted">{order.rejectionReason}</p>
+            <p className="mt-1.5 rounded-field bg-fill-faint px-3 py-2 text-list-secondary text-ink">
+              {order.rejectionReason}
+            </p>
           )}
         </div>
       ) : rejecting ? (
-        <div className="mt-3 border-t border-hairline pt-3">
-          <label className="text-micro uppercase text-ink-faint" htmlFor={`reason-${order.id}`}>
+        <div className="mt-3 border-t-[0.5px] border-separator pt-3">
+          <label className="text-native-caption text-ink-muted" htmlFor={`reason-${order.id}`}>
             Why are you rejecting this?
           </label>
           <input
@@ -225,9 +240,9 @@ function OrderCard({ order }: { order: SupplierOrder }) {
             maxLength={200}
             autoFocus
             placeholder="Out of stock this week"
-            className="mt-1.5 min-h-11 w-full rounded-control border border-rule bg-card px-3 py-2 text-body text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none"
+            className="mt-1.5 min-h-11 w-full rounded-field bg-fill px-3.5 text-native-body text-ink placeholder:text-ink-faint focus:outline-2 focus:outline-ink"
           />
-          <p className="mt-1 text-caption text-ink-muted">The student sees this.</p>
+          <p className="mt-1 text-native-caption text-ink-faint">The student sees this.</p>
           <div className="mt-3 flex gap-2">
             <button
               type="button"
@@ -237,7 +252,7 @@ function OrderCard({ order }: { order: SupplierOrder }) {
                 setReason("");
                 setError(null);
               }}
-              className="pressable min-h-11 flex-1 rounded-control border border-rule py-2.5 font-display text-small text-ink-muted disabled:opacity-50"
+              className={`${SECONDARY} flex-1 bg-fill text-ink-muted`}
             >
               Cancel
             </button>
@@ -245,7 +260,7 @@ function OrderCard({ order }: { order: SupplierOrder }) {
               type="button"
               disabled={pending}
               onClick={confirmReject}
-              className="pressable min-h-11 flex-[2] rounded-control bg-ink py-2.5 font-display text-small text-card disabled:opacity-50"
+              className={`${PRIMARY} flex-[2]`}
             >
               {pending ? "Rejecting…" : "Reject order"}
             </button>
@@ -261,7 +276,7 @@ function OrderCard({ order }: { order: SupplierOrder }) {
       )}
 
       {error && (
-        <p className="mt-2 text-caption text-ink" role="alert">
+        <p className="mt-2 text-native-caption text-ink" role="alert">
           {error}
         </p>
       )}
@@ -270,6 +285,12 @@ function OrderCard({ order }: { order: SupplierOrder }) {
 }
 
 type StatusPatch = Parameters<typeof updateOrderStatus>[0];
+
+const PRIMARY =
+  "pressable min-h-11 rounded-field bg-ink px-3 text-native-body font-semibold text-card disabled:opacity-50";
+// Colour left off, so each use sets its own without two utilities fighting.
+const SECONDARY =
+  "pressable min-h-11 rounded-field px-3 text-native-body font-semibold disabled:opacity-50";
 
 /**
  * One obvious next step per order: Confirm, then Mark handed over, then
@@ -313,14 +334,14 @@ function OrderActions({
       : [];
 
   return (
-    <div className="mt-3 border-t border-hairline pt-3">
+    <div className="mt-3 border-t-[0.5px] border-separator pt-3">
       <div className="flex gap-2">
         {next && (
           <button
             type="button"
             disabled={pending}
             onClick={() => onStatus(next.patch)}
-            className="pressable min-h-11 flex-[2] rounded-control bg-ink px-3 py-2.5 font-display text-small text-card disabled:opacity-50"
+            className={`${PRIMARY} flex-[2]`}
           >
             {next.label}
           </button>
@@ -333,9 +354,7 @@ function OrderActions({
             aria-label={paid ? "Paid. Tap to mark as not paid" : "Mark paid"}
             disabled={pending}
             onClick={() => onStatus({ orderId: order.id, paymentStatus: paid ? "unpaid" : "paid" })}
-            className={`pressable state-fade min-h-11 flex-1 whitespace-nowrap rounded-control border px-3 py-2.5 font-display text-small disabled:opacity-50 ${
-              paid ? "border-hairline bg-card-sunk text-ink-muted" : "border-rule bg-card text-ink"
-            }`}
+            className={`${SECONDARY} state-fade flex-1 whitespace-nowrap ${paid ? "bg-fill-faint text-ink-muted" : "bg-fill text-ink"}`}
           >
             {/* Short, so it never wraps beside the main button. Tapping it again undoes. */}
             {paid ? "Paid ✓" : "Mark paid"}
@@ -348,8 +367,8 @@ function OrderActions({
             aria-label="More actions"
             disabled={pending}
             onClick={() => setMoreOpen((open) => !open)}
-            className={`pressable flex min-h-11 w-11 shrink-0 items-center justify-center rounded-control border disabled:opacity-50 ${
-              moreOpen ? "border-ink bg-card-sunk" : "border-rule"
+            className={`pressable state-fade flex min-h-11 w-11 shrink-0 items-center justify-center rounded-field disabled:opacity-50 ${
+              moreOpen ? "bg-ink text-card" : "bg-fill text-ink"
             }`}
           >
             <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -361,9 +380,9 @@ function OrderActions({
         )}
       </div>
       {moreOpen && more.length > 0 && (
-        <ul className="menu-in mt-2 overflow-hidden rounded-control border border-rule bg-card-sunk">
+        <ul className="menu-in mt-2 overflow-hidden rounded-field bg-fill-faint">
           {more.map((item) => (
-            <li key={item.label} className="border-b border-hairline last:border-none">
+            <li key={item.label} className="border-b-[0.5px] border-separator last:border-none">
               <button
                 type="button"
                 disabled={pending}
@@ -371,7 +390,7 @@ function OrderActions({
                   setMoreOpen(false);
                   item.onClick();
                 }}
-                className="pressable flex min-h-11 w-full items-center px-3 text-left text-small text-ink disabled:opacity-50"
+                className="pressable flex min-h-11 w-full items-center px-3.5 text-left text-native-body text-ink disabled:opacity-50"
               >
                 {item.label}
               </button>

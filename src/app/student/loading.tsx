@@ -1,53 +1,32 @@
 import { StudentBottomNav } from "./_components/bottom-nav";
 
-// Mirrors the real home layout's shape and spacing so the page does not
-// jump when the data arrives. The nav and the greeting are real chrome,
-// painted immediately; only the data-backed blocks are placeholders.
+// Mirrors the Market's shape ("Paper, native") so the page does not jump
+// when the data arrives. The title and the nav are real chrome, painted
+// at once; only the data-backed blocks are placeholders.
 export default function StudentHomeLoading() {
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <header className="px-5 pt-6">
-        <p className="text-small text-ink-muted">Good to see you,</p>
-        <div className="skeleton mt-1 h-9 w-40" />
-      </header>
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
+      <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Market</h1>
 
-      <section className="mx-5 mt-5 rounded-card border border-rule bg-card p-4">
-        <p className="text-micro uppercase text-ink-faint">Semester</p>
-        <div className="skeleton mt-2 h-6 w-32" />
-        <div className="mt-3 flex gap-[2px]">
-          {Array.from({ length: 17 }, (_, i) => (
-            <span key={i} className="skeleton h-1.5 flex-1 rounded-[1px]" />
-          ))}
-        </div>
-        <div className="skeleton mt-3 h-4 w-28" />
-      </section>
+      <div className="h-[2.375rem] rounded-field bg-fill" />
 
-      <div className="skeleton mx-5 mt-3 h-[4.75rem] rounded-card" />
+      <div className="skeleton mt-4 h-[4.5rem] rounded-button" />
 
-      <h2 className="px-5 pb-2 pt-7 text-micro uppercase text-ink-faint">Recent orders</h2>
-      <div className="mx-5 overflow-hidden rounded-card border border-rule bg-card">
+      <div className="skeleton mx-1 mb-1.5 mt-[1.375rem] h-3 w-24" />
+      <div className="overflow-hidden rounded-group bg-card">
         {Array.from({ length: 3 }, (_, i) => (
           <div
             key={i}
-            className="flex items-center justify-between border-b border-hairline px-4 py-3 last:border-none"
+            className="ml-4 flex items-center justify-between border-b-[0.5px] border-separator py-3.5 pr-4 last:border-none"
           >
             <div>
-              <div className="skeleton h-4 w-20" />
-              <div className="skeleton mt-1.5 h-3 w-28" />
+              <div className="skeleton h-4 w-32" />
+              <div className="skeleton mt-1.5 h-3 w-20" />
             </div>
-            <div className="skeleton h-4 w-14" />
+            <div className="skeleton h-6 w-24 rounded-full" />
           </div>
         ))}
       </div>
-
-      <h2 className="px-5 pb-2 pt-7 text-micro uppercase text-ink-faint">You order from</h2>
-      <section className="mx-5 rounded-card border border-rule bg-card p-4">
-        <div className="skeleton h-4 w-32" />
-        <div className="mt-3 flex gap-6">
-          <div className="skeleton h-9 w-16" />
-          <div className="skeleton h-9 w-16" />
-        </div>
-      </section>
 
       <StudentBottomNav />
     </main>

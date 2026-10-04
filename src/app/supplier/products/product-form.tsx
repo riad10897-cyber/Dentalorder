@@ -6,8 +6,9 @@ import type { Product } from "@/lib/products/data";
 import { PRODUCT_CATEGORIES } from "@/lib/products/categories";
 import { createProduct, setProductActive, updateProduct } from "../_actions/products";
 
+// "Paper, native": borderless card fields on the paper page.
 const inputClass =
-  "min-h-11 w-full rounded-control border border-rule bg-card px-3 py-2 text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none";
+  "min-h-11 w-full rounded-field bg-card px-3.5 py-2.5 text-native-body text-ink placeholder:text-ink-faint focus:outline-2 focus:outline-ink";
 
 const DESCRIPTION_MAX = 300;
 const BRAND_MAX = 60;
@@ -138,14 +139,14 @@ export function ProductForm({ product }: { product?: Product }) {
       </Field>
 
       {product && (
-        <p className="text-caption text-ink-muted">
+        <p className="px-1 text-native-caption text-ink-muted">
           A new price applies to orders placed from now on. Orders already placed keep the price
           they were placed at.
         </p>
       )}
 
       {error && (
-        <p className="text-small text-ink" role="alert">
+        <p className="px-1 text-list-secondary text-ink" role="alert">
           {error}
         </p>
       )}
@@ -153,7 +154,7 @@ export function ProductForm({ product }: { product?: Product }) {
       <button
         type="submit"
         disabled={pending}
-        className="pressable min-h-11 rounded-control bg-ink px-4 py-3 font-display text-body text-card disabled:opacity-60"
+        className="pressable flex h-[3.125rem] items-center justify-center rounded-button bg-ink px-4 text-native-body font-semibold text-card disabled:opacity-60"
       >
         {pending ? "Saving…" : product ? "Save" : "Add product"}
       </button>
@@ -163,7 +164,7 @@ export function ProductForm({ product }: { product?: Product }) {
           type="button"
           onClick={switchOff}
           disabled={pending}
-          className="pressable min-h-11 rounded-control text-small text-ink-muted underline underline-offset-2"
+          className="pressable -mt-1 flex h-[3.125rem] items-center justify-center rounded-button bg-fill px-4 text-native-body font-semibold text-ink-muted disabled:opacity-60"
         >
           Switch off — stop selling this
         </button>
@@ -186,14 +187,14 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-small text-ink-muted">
-      <span className="flex items-baseline justify-between gap-2">
+    <label className="flex flex-col gap-1.5 text-native-caption text-ink-muted">
+      <span className="flex items-baseline justify-between gap-2 px-1">
         <span>{label}</span>
-        {counter && <span className="text-caption text-ink-faint">{counter}</span>}
+        {counter && <span className="text-ink-faint">{counter}</span>}
       </span>
       {children}
-      {hint && !error && <span className="text-caption text-ink-faint">{hint}</span>}
-      {error && <span className="text-caption text-ink">{error}</span>}
+      {hint && !error && <span className="px-1 text-ink-faint">{hint}</span>}
+      {error && <span className="px-1 text-ink">{error}</span>}
     </label>
   );
 }

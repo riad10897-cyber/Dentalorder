@@ -4,6 +4,7 @@ import { getSupplierContext, listSupplierStudents } from "@/lib/supplier/data";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SupplierBottomNav } from "../_components/bottom-nav";
 import { EmptyState, PeopleIcon } from "@/app/_components/icons";
+import { NativeChevron } from "@/app/_components/settings/menu";
 
 function initials(name: string) {
   return (
@@ -27,48 +28,50 @@ export default async function SupplierStudentsPage() {
   if (!rep) redirect("/sign-in");
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <header className="px-5 pt-6">
-        <h1 className="font-display text-display">Students</h1>
-        <p className="mt-1 text-small text-ink-muted">
-          <span className="tnum">{students.length}</span>{" "}
-          {students.length === 1 ? "student has" : "students have"} ordered from you.
-        </p>
-      </header>
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
+      <h1 className="px-1 pt-1 text-large-title font-bold text-ink">Students</h1>
+      <p className="px-1 text-list-secondary text-ink-muted">
+        <span className="tnum">{students.length}</span>{" "}
+        {students.length === 1 ? "student has" : "students have"} ordered from you.
+      </p>
 
       {students.length === 0 ? (
-        <EmptyState icon={<PeopleIcon />} className="mx-5 mt-6">
+        <EmptyState native icon={<PeopleIcon />} className="mt-5">
           No student has ordered from you yet. They appear here after their first order.
         </EmptyState>
       ) : (
-        <ul className="mx-5 mt-5 overflow-hidden rounded-card border border-rule bg-card">
+        <ul className="mt-5 overflow-hidden rounded-group bg-card">
           {students.map((student) => (
-            <li key={student.studentId} className="border-b border-hairline last:border-none">
+            <li key={student.studentId} className="group">
+              {/* The separator runs under the text only, inset past the
+                  initials, as in an iOS list. */}
               <Link
                 href={`/supplier/students/${student.studentId}`}
-                className="pressable flex min-h-12 items-center gap-3 px-4 py-3"
+                className="pressable flex items-center gap-3 pl-4"
               >
                 <span
                   aria-hidden
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card-sunk font-display text-small text-ink"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card-sunk text-list-secondary font-semibold text-ink"
                 >
                   {initials(student.fullName)}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-body text-ink">{student.fullName}</span>
-                  <span className="block text-caption text-ink-muted">
-                    {student.lastWeekOrdered ? `Last: week ${student.lastWeekOrdered}` : "No orders yet"}
+                <span className="flex min-h-[3.75rem] min-w-0 flex-1 items-center gap-3 border-b-[0.5px] border-separator py-2.5 pr-4 group-last:border-none">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-native-body text-ink">{student.fullName}</span>
+                    <span className="block text-list-secondary text-ink-faint">
+                      {student.lastWeekOrdered ? `Last: week ${student.lastWeekOrdered}` : "No orders yet"}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 text-right">
-                  <span className="tnum block font-display text-body">${student.totalSpent.toFixed(2)}</span>
-                  <span className="tnum block text-caption text-ink-muted">
-                    {student.orderCount} {student.orderCount === 1 ? "order" : "orders"}
+                  <span className="shrink-0 text-right">
+                    <span className="tnum block text-native-body font-semibold text-ink">
+                      ${student.totalSpent.toFixed(2)}
+                    </span>
+                    <span className="tnum block text-native-caption text-ink-faint">
+                      {student.orderCount} {student.orderCount === 1 ? "order" : "orders"}
+                    </span>
                   </span>
+                  <NativeChevron />
                 </span>
-                <svg aria-hidden className="h-4 w-4 shrink-0 text-ink-faint" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
               </Link>
             </li>
           ))}

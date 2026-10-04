@@ -15,8 +15,8 @@ export default async function NewProductPage() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <PushedHeader backHref="/supplier/products" backLabel="Back to products" title="New product" />
-      <div className="mt-5 px-5">
+      <PushedHeader native backText="Products" backHref="/supplier/products" backLabel="Back to products" title="New product" />
+      <div className="mt-5 px-4">
         <ProductForm />
       </div>
       <SupplierBottomNav />

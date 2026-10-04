@@ -12,6 +12,8 @@ export default async function ShareMolaroPage() {
   return (
     <main className="mx-auto min-h-dvh max-w-md pb-28">
       <PushedHeader
+        native
+        backText="Settings"
         backHref="/supplier/settings"
         backLabel="Back to settings"
         title="Share Molaro"

@@ -23,7 +23,8 @@ export function ToothPricesForm({
   const [copyA, setCopyA] = useState(copyAPrice.toFixed(2));
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const changed = frasaco !== frasacoPrice.toFixed(2) || copyA !== copyAPrice.toFixed(2);
+  // By value, so "2.5" against a saved 2.50 is not a change.
+  const changed = Number(frasaco) !== frasacoPrice || Number(copyA) !== copyAPrice;
 
   function handleSave() {
     setMessage(null);
@@ -42,25 +43,25 @@ export function ToothPricesForm({
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-rule bg-card">
-      <PriceRow label="Frasaco" dotClass="bg-frasaco" value={frasaco} onChange={setFrasaco} disabled={disabled} />
-      <PriceRow label="Copy A" dotClass="bg-copy-a" value={copyA} onChange={setCopyA} disabled={disabled} />
-      <div className="px-3 pb-3 pt-1">
-        {message && (
-          <p className="pb-2 text-caption text-ink-muted" aria-live="polite">
-            {message}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={pending || disabled || !changed}
-          className="pressable min-h-11 w-full rounded-control bg-ink px-4 py-3 font-display text-body text-card disabled:opacity-40"
-        >
-          {pending ? "Saving…" : "Save tooth prices"}
-        </button>
+    <>
+      <div className="overflow-hidden rounded-group bg-card">
+        <PriceRow label="Frasaco" dotClass="bg-frasaco" value={frasaco} onChange={setFrasaco} disabled={disabled} />
+        <PriceRow label="Copy A" dotClass="bg-copy-a" value={copyA} onChange={setCopyA} disabled={disabled} last />
       </div>
-    </div>
+      {message && (
+        <p className="mx-1 mt-1.5 text-native-caption text-ink-muted" aria-live="polite">
+          {message}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={pending || disabled || !changed}
+        className="pressable mt-2.5 flex h-[3.125rem] w-full items-center justify-center rounded-button bg-ink px-4 text-native-body font-semibold text-card disabled:bg-fill disabled:text-ink-faint"
+      >
+        {pending ? "Saving…" : "Save tooth prices"}
+      </button>
+    </>
   );
 }
 
@@ -70,22 +71,28 @@ function PriceRow({
   value,
   onChange,
   disabled,
+  last = false,
 }: {
   label: string;
   dotClass: string;
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
+  last?: boolean;
 }) {
   return (
-    <label className="flex min-h-14 items-center justify-between gap-3 border-b border-hairline px-3 py-2">
-      <span className="flex items-center gap-2 font-display text-body text-ink">
-        <span aria-hidden className={`inline-block h-2.5 w-2.5 rounded-control ${dotClass}`} />
+    <label
+      className={`ml-4 flex min-h-[3.25rem] items-center justify-between gap-3 py-1.5 pr-3 ${
+        last ? "" : "border-b-[0.5px] border-separator"
+      }`}
+    >
+      <span className="flex items-center gap-2 text-native-body text-ink">
+        <span aria-hidden className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass}`} />
         {label}
-        <span className="font-body text-caption text-ink-muted">per tooth</span>
+        <span className="text-list-secondary text-ink-faint">per tooth</span>
       </span>
-      <span className="flex min-h-11 items-center gap-1 rounded-control border border-rule bg-card-sunk px-3">
-        <span className="text-ink-muted">$</span>
+      <span className="flex h-10 items-center gap-0.5 rounded-field bg-fill px-3 focus-within:outline-2 focus-within:outline-ink">
+        <span className="text-native-body text-ink-faint">$</span>
         <input
           type="number"
           inputMode="decimal"
@@ -95,7 +102,7 @@ function PriceRow({
           disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
           aria-label={`${label} price per tooth, USD`}
-          className="tnum w-16 bg-transparent text-right font-display text-body text-ink outline-none"
+          className="tnum w-14 bg-transparent text-right text-native-body font-semibold text-ink outline-none"
         />
       </span>
     </label>

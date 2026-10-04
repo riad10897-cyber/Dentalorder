@@ -7,24 +7,28 @@ import type { Product } from "@/lib/products/data";
 import { PRODUCT_CATEGORIES, categoryName } from "@/lib/products/categories";
 import { setProductActive, setProductInStock } from "../_actions/products";
 import { EmptyState, BoxIcon } from "@/app/_components/icons";
+import { SectionHeader } from "@/app/_components/section-header";
 
 export function ProductsClient({ products, canAdd }: { products: Product[]; canAdd: boolean }) {
   const selling = products.filter((p) => p.isActive);
   const switchedOff = products.filter((p) => !p.isActive);
 
   return (
-    <div className="mt-3 flex flex-col gap-4 px-5">
+    <div className="mt-3">
       {canAdd && (
         <Link
           href="/supplier/products/new"
-          className="pressable flex min-h-11 items-center justify-center rounded-control bg-ink px-4 py-3 font-display text-body text-card"
+          className="pressable flex h-[3.125rem] items-center justify-center gap-1.5 rounded-button bg-ink px-4 text-native-body font-semibold text-card"
         >
+          <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
           Add a product
         </Link>
       )}
 
       {products.length === 0 && (
-        <EmptyState icon={<BoxIcon />}>
+        <EmptyState native icon={<BoxIcon />} className="mt-3">
           No products yet. Start with whatever your class asks you for besides teeth — gloves,
           burs, a box of masks.
         </EmptyState>
@@ -35,8 +39,8 @@ export function ProductsClient({ products, canAdd }: { products: Product[]; canA
         if (inCategory.length === 0) return null;
         return (
           <section key={category.slug}>
-            <h3 className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">{category.name}</h3>
-            <ul className="overflow-hidden rounded-card border border-rule bg-card">
+            <SectionHeader>{category.name}</SectionHeader>
+            <ul className="overflow-hidden rounded-group bg-card">
               {inCategory.map((product) => (
                 <ProductRow key={product.id} product={product} />
               ))}
@@ -47,15 +51,15 @@ export function ProductsClient({ products, canAdd }: { products: Product[]; canA
 
       {switchedOff.length > 0 && (
         <section>
-          <h3 className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">Switched off</h3>
-          <p className="px-0.5 pb-2 text-caption text-ink-muted">
-            Students don&rsquo;t see these. Past orders keep them as they were.
-          </p>
-          <ul className="overflow-hidden rounded-card border border-rule bg-card-sunk">
+          <SectionHeader>Switched off</SectionHeader>
+          <ul className="overflow-hidden rounded-group bg-card">
             {switchedOff.map((product) => (
               <SwitchedOffRow key={product.id} product={product} />
             ))}
           </ul>
+          <p className="mx-4 mt-1.5 text-native-caption text-ink-faint">
+            Students don&rsquo;t see these. Past orders keep them as they were.
+          </p>
         </section>
       )}
     </div>
@@ -90,16 +94,19 @@ function ProductRow({ product }: { product: Product }) {
   }
 
   return (
-    <li className="flex items-center gap-3 border-b border-hairline px-3 py-2.5 last:border-none">
+    <li className="ml-4 flex items-center gap-3 border-b-[0.5px] border-separator py-2 pr-3 last:border-none">
       <Link
         href={`/supplier/products/${product.id}`}
         aria-label={`Edit ${product.name}`}
-        className="pressable min-h-11 min-w-0 flex-1 text-left"
+        className="pressable flex min-h-11 min-w-0 flex-1 flex-col justify-center text-left"
       >
-        <span className="block truncate font-display text-body text-ink">{product.name}</span>
-        <span className="tnum block truncate text-caption text-ink-muted">{summary(product)}</span>
+        <span className="block truncate text-native-body text-ink">{product.name}</span>
+        <span className="tnum block truncate text-list-secondary text-ink-faint">
+          {!inStock && <span className="text-ink-muted">Out of stock · </span>}
+          {summary(product)}
+        </span>
         {error && (
-          <span className="block text-caption text-ink" role="alert">
+          <span className="block text-native-caption text-ink" role="alert">
             {error}
           </span>
         )}
@@ -111,22 +118,19 @@ function ProductRow({ product }: { product: Product }) {
         aria-label={`${product.name} in stock`}
         onClick={toggleStock}
         disabled={pending}
-        className="pressable flex min-h-11 shrink-0 items-center gap-2 rounded-control px-1"
+        className="pressable flex min-h-11 shrink-0 items-center"
       >
-        <span className={`text-caption ${inStock ? "text-ink" : "text-ink-muted"}`}>
-          {inStock ? "In stock" : "Out of stock"}
-        </span>
+        {/* An iOS switch, in ink: green would read as "fulfilled". */}
         <span
           aria-hidden
-          className={`relative inline-block h-6 w-10 rounded-full border transition-colors duration-150 ${
-            inStock ? "border-ink bg-ink" : "border-rule bg-card-sunk"
+          className={`ios-switch relative inline-block h-[1.9375rem] w-[3.1875rem] rounded-full ${
+            inStock ? "bg-ink" : "bg-rule"
           }`}
         >
           <span
-            className={`absolute top-0.5 h-4.5 w-4.5 rounded-full bg-card transition-transform duration-150 ${
-              inStock ? "translate-x-[1.125rem]" : "translate-x-0.5"
+            className={`ios-switch-knob absolute left-0.5 top-0.5 h-[1.6875rem] w-[1.6875rem] rounded-full bg-white ${
+              inStock ? "translate-x-[1.25rem]" : "translate-x-0"
             }`}
-            style={{ height: "1.125rem", width: "1.125rem" }}
           />
         </span>
       </button>
@@ -152,14 +156,14 @@ function SwitchedOffRow({ product }: { product: Product }) {
   }
 
   return (
-    <li className="flex items-center gap-3 border-b border-hairline px-3 py-2.5 last:border-none">
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-display text-body text-ink-muted">{product.name}</span>
-        <span className="tnum block truncate text-caption text-ink-faint">
+    <li className="ml-4 flex items-center gap-3 border-b-[0.5px] border-separator py-2 pr-3 last:border-none">
+      <span className="min-w-0 flex-1 py-0.5">
+        <span className="block truncate text-native-body text-ink-muted">{product.name}</span>
+        <span className="tnum block truncate text-list-secondary text-ink-faint">
           {categoryName(product.category)} · {summary(product)}
         </span>
         {error && (
-          <span className="block text-caption text-ink" role="alert">
+          <span className="block text-native-caption text-ink" role="alert">
             {error}
           </span>
         )}
@@ -168,7 +172,7 @@ function SwitchedOffRow({ product }: { product: Product }) {
         type="button"
         onClick={switchOn}
         disabled={pending}
-        className="pressable min-h-11 shrink-0 rounded-control border border-rule bg-card px-3 font-display text-small text-ink"
+        className="pressable relative flex h-8 shrink-0 items-center rounded-full bg-fill px-3.5 text-list-secondary font-semibold text-ink after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']"
       >
         {pending ? "…" : "Switch on"}
       </button>

@@ -22,11 +22,8 @@ export default async function RepSummaryPage() {
       : rep.currentWeek;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <header className="px-5 pt-6">
-        <p className="text-micro uppercase text-ink-faint">Weekly batch</p>
-        <h1 className="mt-1 font-display text-heading">What to buy</h1>
-      </header>
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
+      <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">What to buy</h1>
 
       <SummaryClient orders={orders} initialWeek={currentWeek} />
 

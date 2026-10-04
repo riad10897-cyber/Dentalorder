@@ -32,35 +32,36 @@ export default async function SupplierSettingsPage() {
   if (!seller || !person) redirect("/sign-in");
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <h1 className="px-5 pt-6 font-display text-display">Settings</h1>
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
+      <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Settings</h1>
 
       <AccountHeader
+        native
         name={person.fullName || seller.displayName}
         detail={`Seller · ${SELLER_STATUS_LABEL[seller.status]}`}
       />
 
-      <MenuGroup title="Account">
-        <MenuLink href="/supplier/settings/details" label="Personal details" icon={<PersonIcon />} detail={person.phone ?? "Add your phone"} />
-        {email && <MenuInfo label="Email" value={email} icon={<MailIcon />} />}
-        <MenuLink href="/supplier/settings/password" label="Password" detail="Change" icon={<LockIcon />} />
+      <MenuGroup native title="Account">
+        <MenuLink native href="/supplier/settings/details" label="Personal details" icon={<PersonIcon />} detail={person.phone ?? "Add your phone"} />
+        {email && <MenuInfo native label="Email" value={email} icon={<MailIcon />} />}
+        <MenuLink native href="/supplier/settings/password" label="Password" detail="Change" icon={<LockIcon />} />
       </MenuGroup>
 
-      <MenuGroup title="Selling">
-        <MenuLink href="/supplier/settings/market" label="How you appear in the market" icon={<StoreIcon />} detail={seller.displayName} />
-        <MenuLink href="/supplier/products" label="Prices and products" icon={<BoxIcon />} />
+      <MenuGroup native title="Selling">
+        <MenuLink native href="/supplier/settings/market" label="In the market" icon={<StoreIcon />} detail={seller.displayName} />
+        <MenuLink native href="/supplier/products" label="Prices and products" icon={<BoxIcon />} />
       </MenuGroup>
 
-      <MenuGroup title="Share" footnote="Show the code in class, or send the link to your group.">
-        <MenuLink href="/supplier/settings/share" label="Share Molaro" detail="QR code" icon={<QrIcon />} />
+      <MenuGroup native title="Share" footnote="Show the code in class, or send the link to your group.">
+        <MenuLink native href="/supplier/settings/share" label="Share Molaro" detail="QR code" icon={<QrIcon />} />
       </MenuGroup>
 
-      <MenuGroup title="Help">
-        <ContactRow />
-        <MenuInfo label="Version" value={APP_VERSION} icon={<InfoIcon />} />
+      <MenuGroup native title="Help">
+        <ContactRow native />
+        <MenuInfo native label="Version" value={APP_VERSION} icon={<InfoIcon />} />
       </MenuGroup>
 
-      <SignOutRow />
+      <SignOutRow native />
 
       <SupplierBottomNav />
     </main>

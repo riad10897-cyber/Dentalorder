@@ -6,6 +6,7 @@ import { SupplierBottomNav } from "../_components/bottom-nav";
 import { ProductsClient } from "./products-client";
 import { ToothPricesForm } from "./tooth-prices-form";
 import { CheckIcon } from "@/app/_components/icons";
+import { SectionHeader } from "@/app/_components/section-header";
 
 /** Everything a seller sells, and its price: teeth first, then extras. */
 const DONE_LABEL = { added: "Added", saved: "Saved", off: "Switched off" } as const;
@@ -28,16 +29,14 @@ export default async function SupplierProductsPage({
   const doneLabel = justDone ? DONE_LABEL[done as keyof typeof DONE_LABEL] : null;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md pb-28">
-      <header className="px-5 pt-6">
-        <h1 className="font-display text-display">Products</h1>
-        <p className="mt-1 text-small text-ink-muted">What you sell, and what you charge for it.</p>
-      </header>
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
+      <h1 className="px-1 pt-1 text-large-title font-bold text-ink">Products</h1>
+      <p className="px-1 text-list-secondary text-ink-muted">What you sell, and what you charge for it.</p>
 
-      <section className="mt-5 px-5" aria-labelledby="teeth-heading">
-        <h2 id="teeth-heading" className="px-0.5 pb-1.5 text-micro uppercase text-ink-faint">
-          Teeth
-        </h2>
+      <section aria-labelledby="teeth-heading">
+        <SectionHeader>
+          <span id="teeth-heading">Teeth</span>
+        </SectionHeader>
         <ToothPricesForm
           frasacoPrice={supplier.frasacoPrice}
           copyAPrice={supplier.copyAPrice}
@@ -45,19 +44,17 @@ export default async function SupplierProductsPage({
         />
       </section>
 
-      <section className="mt-7" aria-labelledby="extras-heading">
-        <div className="px-5">
-          <h2 id="extras-heading" className="px-0.5 text-micro uppercase text-ink-faint">
-            Extras
-          </h2>
-          <p className="mt-1 px-0.5 text-small text-ink-muted">
-            Students add these to their weekly order with you, beside their teeth.
-          </p>
-        </div>
+      <section className="mt-3" aria-labelledby="extras-heading">
+        <SectionHeader>
+          <span id="extras-heading">Extras</span>
+        </SectionHeader>
+        <p className="mx-1 -mt-0.5 text-native-caption text-ink-muted">
+          Students add these to their weekly order with you, beside their teeth. The switch says whether one is in stock.
+        </p>
         {justDone && doneLabel && (
           <p
             role="status"
-            className="note-in mx-5 mt-3 flex items-center gap-2 rounded-control border border-rule bg-card-sunk px-3 py-2.5 text-small text-ink"
+            className="note-in mt-3 flex items-center gap-2 rounded-field bg-fill px-3.5 py-2.5 text-list-secondary text-ink"
           >
             <CheckIcon className="h-4 w-4 shrink-0" />
             <span className="min-w-0 truncate">

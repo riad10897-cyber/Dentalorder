@@ -5,12 +5,21 @@ import { useRouter } from "next/navigation";
 import { setCurrentWeek } from "../_actions/orders";
 
 /**
- * "Week 4 of 17", with − and +. The week moves on by itself every
- * Saturday at 1:00 PM; the buttons are for putting it right (the first
- * week of a semester, a holiday). Shown at once, put back if the save
- * fails.
+ * "Week 4 of 17", with − and +, as an inset card ("Paper, native"). The
+ * week moves on by itself every Saturday at 1:00 PM; the buttons are for
+ * putting it right (the first week of a semester, a holiday). Shown at
+ * once, put back if the save fails. `footnote` sits under the week, on
+ * the card's lower row (how many students have ordered).
  */
-export function WeekControl({ week, nextSwitch }: { week: number; nextSwitch: string }) {
+export function WeekControl({
+  week,
+  nextSwitch,
+  footnote,
+}: {
+  week: number;
+  nextSwitch: string;
+  footnote?: React.ReactNode;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [shown, setShown] = useState(week);
@@ -33,44 +42,63 @@ export function WeekControl({ week, nextSwitch }: { week: number; nextSwitch: st
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="Previous week"
-          disabled={pending || shown <= 1}
-          onClick={() => change(shown - 1)}
-          className="pressable flex h-11 w-11 items-center justify-center rounded-control border border-rule bg-card font-display text-lead disabled:opacity-30"
-        >
-          −
-        </button>
-        <p className="min-w-[7.5rem] text-center" aria-live="polite">
-          <span className="block text-micro uppercase text-ink-faint">Taking orders for</span>
-          <span className="font-display text-body text-ink">
+    <section aria-label="Ordering week" className="rounded-group bg-card">
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <p aria-live="polite" className="min-w-0">
+          <span className="block text-native-caption text-ink-faint">Taking orders for</span>
+          <span className="text-[1.375rem] font-bold leading-tight tracking-[-0.015em] text-ink">
             Week <span className="tnum">{shown}</span>
-            <span className="text-ink-muted"> of 17</span>
+            <span className="font-normal text-ink-faint"> of 17</span>
           </span>
         </p>
-        <button
-          type="button"
-          aria-label="Next week"
-          disabled={pending || shown >= 17}
-          onClick={() => change(shown + 1)}
-          className="pressable flex h-11 w-11 items-center justify-center rounded-control border border-rule bg-card font-display text-lead disabled:opacity-30"
-        >
-          +
-        </button>
+        <span className="flex h-9 shrink-0 items-center rounded-full bg-fill">
+          <WeekButton label="Previous week" disabled={pending || shown <= 1} onClick={() => change(shown - 1)}>
+            −
+          </WeekButton>
+          <span aria-hidden className="h-4 w-[0.5px] bg-separator" />
+          <WeekButton label="Next week" disabled={pending || shown >= 17} onClick={() => change(shown + 1)}>
+            +
+          </WeekButton>
+        </span>
       </div>
-      <p className="text-caption text-ink-muted">
-        {shown < 17
-          ? <>Moves to week <span className="tnum">{shown + 1}</span> on {nextSwitch}.</>
-          : "Last week of the semester. Set week 1 when the next one starts."}
-      </p>
-      {error && (
-        <p className="text-caption text-ink" role="alert">
-          {error}
+      <div className="border-t-[0.5px] border-separator px-4 py-2.5 text-native-caption text-ink-muted">
+        {footnote && <p className="text-ink">{footnote}</p>}
+        <p>
+          {shown < 17
+            ? <>Moves to week <span className="tnum">{shown + 1}</span> on {nextSwitch}.</>
+            : "Last week of the semester. Set week 1 when the next one starts."}
         </p>
-      )}
-    </div>
+        {error && (
+          <p className="mt-1 text-ink" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function WeekButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  // 36px drawn, 48px to the finger: the ::after reaches past the pill.
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="pressable relative flex h-full w-12 items-center justify-center text-[1.25rem] text-ink after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] disabled:opacity-30"
+    >
+      {children}
+    </button>
   );
 }

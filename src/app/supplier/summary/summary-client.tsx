@@ -1,14 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SupplierOrder } from "@/lib/supplier/data";
 import { TOOTH_NAMES } from "@/lib/teeth/fdi";
 import { EmptyState, BoxIcon } from "@/app/_components/icons";
+import { SectionHeader } from "@/app/_components/section-header";
 
 type ToothType = "frasaco" | "copy_a";
 
 export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]; initialWeek: number }) {
   const [week, setWeek] = useState(initialWeek);
+
+  // Week 12's chip starts off screen; bring the opening week into view
+  // once, at once (no scroll animation on a screen opened every week).
+  const chips = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const strip = chips.current;
+    const chip = strip?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (strip && chip) strip.scrollLeft = chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2;
+  }, []);
 
   const summary = useMemo(() => {
     // Rejected and cancelled orders are not teeth to buy. Leaving them in
@@ -79,15 +89,20 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
 
   return (
     <>
-      <div className="flex gap-1.5 overflow-x-auto px-5 pb-1 pt-4" style={{ scrollbarWidth: "none" }}>
+      <div
+        ref={chips}
+        className="relative -mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+        style={{ scrollbarWidth: "none" }}
+      >
         {Array.from({ length: 17 }, (_, i) => i + 1).map((w) => (
           <button
             key={w}
             type="button"
             onClick={() => setWeek(w)}
             aria-pressed={w === week}
-            className={`pressable tnum min-h-9 shrink-0 rounded-control border px-3 py-1.5 font-display text-small ${
-              w === week ? "border-ink bg-ink text-card" : "border-rule bg-card text-ink-muted"
+            aria-label={`Week ${w}`}
+            className={`pressable state-fade tnum relative flex h-9 shrink-0 items-center rounded-full px-3.5 text-list-secondary font-semibold after:absolute after:-inset-y-1 after:inset-x-0 after:content-[''] ${
+              w === week ? "bg-ink text-card" : "bg-fill text-ink"
             }`}
           >
             Wk {w}
@@ -96,19 +111,19 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
       </div>
 
       {summary.totalTeeth === 0 && summary.extrasQuantity === 0 ? (
-        <EmptyState icon={<BoxIcon />} className="mx-5 mt-5">
+        <EmptyState native icon={<BoxIcon />} className="mt-4">
           No orders for week {week} yet.
         </EmptyState>
       ) : (
         <>
-          <p className="px-5 pb-1 pt-5 text-caption text-ink-muted">
-            <span className="tnum font-display">{summary.studentCount}</span>{" "}
+          <p className="px-1 pt-3 text-list-secondary text-ink-muted">
+            <span className="tnum font-semibold text-ink">{summary.studentCount}</span>{" "}
             {summary.studentCount === 1 ? "student" : "students"} ·{" "}
-            <span className="tnum font-display">{summary.totalTeeth}</span>{" "}
+            <span className="tnum font-semibold text-ink">{summary.totalTeeth}</span>{" "}
             {summary.totalTeeth === 1 ? "tooth" : "teeth"}
             {summary.extrasQuantity > 0 && (
               <>
-                {" "}· <span className="tnum font-display">{summary.extrasQuantity}</span>{" "}
+                {" "}· <span className="tnum font-semibold text-ink">{summary.extrasQuantity}</span>{" "}
                 {summary.extrasQuantity === 1 ? "extra" : "extras"}
               </>
             )}{" "}
@@ -135,41 +150,54 @@ export function SummaryClient({ orders, initialWeek }: { orders: SupplierOrder[]
           )}
 
           {summary.extraRows.length > 0 && (
-            <section className="mx-5 mt-3 overflow-hidden rounded-card border border-rule bg-card">
-              <h2 className="border-b border-rule px-4 py-3 font-display text-body">Extras</h2>
-              <ul>
-                {summary.extraRows.map((row) => (
-                  <li
-                    key={row.name + (row.unit ?? "")}
-                    className="flex items-baseline justify-between gap-3 border-b border-hairline px-4 py-2.5 last:border-none"
-                  >
-                    <span className="min-w-0 truncate">
-                      <span className="font-display text-body">{row.name}</span>
-                      {row.unit && <span className="ml-2 text-caption text-ink-muted">{row.unit}</span>}
-                    </span>
-                    <span className="tnum shrink-0 font-display text-body">×{row.quantity}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex items-baseline justify-between border-t border-rule bg-card-sunk px-4 py-2.5">
-                <span className="text-small text-ink-muted">
-                  <span className="tnum font-display">{summary.extrasQuantity}</span>{" "}
-                  {summary.extrasQuantity === 1 ? "extra" : "extras"}
-                </span>
-                <span className="tnum font-display text-body">${summary.extrasTotal.toFixed(2)}</span>
+            <section>
+              <SectionHeader>Extras</SectionHeader>
+              <div className="overflow-hidden rounded-group bg-card">
+                <ul>
+                  {summary.extraRows.map((row) => (
+                    <li
+                      key={row.name + (row.unit ?? "")}
+                      className="ml-4 flex items-baseline justify-between gap-3 border-b-[0.5px] border-separator py-3 pr-4 last:border-none"
+                    >
+                      <span className="min-w-0 truncate">
+                        <span className="text-native-body text-ink">{row.name}</span>
+                        {row.unit && <span className="ml-2 text-list-secondary text-ink-faint">{row.unit}</span>}
+                      </span>
+                      <span className="tnum shrink-0 text-native-body font-semibold text-ink">×{row.quantity}</span>
+                    </li>
+                  ))}
+                </ul>
+                <TableFooter
+                  label={
+                    <>
+                      <span className="tnum">{summary.extrasQuantity}</span>{" "}
+                      {summary.extrasQuantity === 1 ? "extra" : "extras"}
+                    </>
+                  }
+                  total={summary.extrasTotal}
+                />
               </div>
             </section>
           )}
 
-          <div className="mx-5 mt-3 flex items-center justify-between rounded-card bg-ink px-4 py-4">
-            <span className="text-micro uppercase text-card/70">Week {week} total</span>
-            <span className="tnum font-display text-heading text-card">
+          <div className="mt-5 flex items-center justify-between rounded-button bg-ink px-4 py-4">
+            <span className="text-list-secondary text-card/70">Week {week} total</span>
+            <span className="tnum text-[1.625rem] font-bold tracking-[-0.015em] text-card">
               ${summary.grandTotal.toFixed(2)}
             </span>
           </div>
         </>
       )}
     </>
+  );
+}
+
+function TableFooter({ label, total }: { label: React.ReactNode; total: number }) {
+  return (
+    <div className="flex items-baseline justify-between border-t-[0.5px] border-separator bg-fill-faint px-4 py-3">
+      <span className="text-list-secondary text-ink-muted">{label}</span>
+      <span className="tnum text-native-body font-semibold text-ink">${total.toFixed(2)}</span>
+    </div>
   );
 }
 
@@ -187,33 +215,36 @@ function BatchTable({
   total: number;
 }) {
   return (
-    <section className="mx-5 mt-3 overflow-hidden rounded-card border border-rule bg-card">
-      <h2 className="flex items-center gap-2 border-b border-rule px-4 py-3 font-display text-body">
-        <span className="inline-block h-2.5 w-2.5 rounded-[2px]" style={{ background: accent }} />
-        {title}
-      </h2>
-      <ul>
-        {rows.map((row) => (
-          <li
-            key={row.toothNumber}
-            className="flex items-baseline justify-between gap-3 border-b border-hairline px-4 py-2.5 last:border-none"
-          >
-            <span className="min-w-0">
-              <span className="tnum font-display text-body">{row.toothNumber}</span>
-              <span className="ml-2 text-caption text-ink-muted">
-                {TOOTH_NAMES[row.toothNumber]}
-              </span>
-            </span>
-            <span className="tnum shrink-0 font-display text-body">×{row.quantity}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="flex items-baseline justify-between border-t border-rule bg-card-sunk px-4 py-2.5">
-        <span className="text-small text-ink-muted">
-          <span className="tnum font-display">{quantity}</span> {title}{" "}
-          {quantity === 1 ? "tooth" : "teeth"}
+    <section>
+      <SectionHeader>
+        <span className="inline-flex items-center gap-1.5">
+          <span aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ background: accent }} />
+          {title}
         </span>
-        <span className="tnum font-display text-body">${total.toFixed(2)}</span>
+      </SectionHeader>
+      <div className="overflow-hidden rounded-group bg-card">
+        <ul>
+          {rows.map((row) => (
+            <li
+              key={row.toothNumber}
+              className="ml-4 flex items-baseline justify-between gap-3 border-b-[0.5px] border-separator py-3 pr-4 last:border-none"
+            >
+              <span className="min-w-0 truncate">
+                <span className="tnum text-native-body font-semibold text-ink">{row.toothNumber}</span>
+                <span className="ml-2 text-list-secondary text-ink-faint">{TOOTH_NAMES[row.toothNumber]}</span>
+              </span>
+              <span className="tnum shrink-0 text-native-body font-semibold text-ink">×{row.quantity}</span>
+            </li>
+          ))}
+        </ul>
+        <TableFooter
+          label={
+            <>
+              <span className="tnum">{quantity}</span> {title} {quantity === 1 ? "tooth" : "teeth"}
+            </>
+          }
+          total={total}
+        />
       </div>
     </section>
   );
