@@ -1,7 +1,7 @@
 {
   "name": "Molaro",
   "short_name": "Molaro",
-  "description": "Tooth ordering and dental supplies for students in Lebanon.",
+  "description": "Dental ordering made easy.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

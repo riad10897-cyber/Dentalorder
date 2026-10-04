@@ -17,7 +17,7 @@ const atkinson = Atkinson_Hyperlegible({
 
 export const metadata: Metadata = {
   title: "Molaro",
-  description: "Tooth ordering and dental supplies for students in Lebanon.",
+  description: "Dental ordering made easy.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
