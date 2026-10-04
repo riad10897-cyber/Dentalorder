@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e9e3d5;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:#14120f;-webkit-font-smoothing:antialiased}a{color:#14120f}a:hover{color:#5e574c}button{font:inherit;color:inherit}h1,h2,h3{margin:0;font-weight:400}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}.dv-opts{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.6)}.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}.dv-next{margin:28px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}</style>
+</helmet>
+
+<section class="dv-turn" id="t1" data-screen-label="Student ordering flow">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Student ordering: market → chart → tooth sheet → review → placed. All three phones are live — tap through.</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Paper, refined — same system, fewer taps</div>
+<div style="width:375px;height:780px;border:10px solid #14120f;border-radius:52px;overflow:hidden;position:relative;background:#f2ede1;color:#14120f;font-family:'Atkinson Hyperlegible',sans-serif">
+<div style="position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;padding:0 30px;font-size:14px;font-weight:700;z-index:60">9:41</div>
+
+<sc-if value="{{ A.isMarket }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;overflow-y:auto;padding-bottom:110px">
+<header style="padding:16px 20px 0"><p style="margin:0;font-size:13px;color:#5e574c">Good to see you,</p><h1 style="font-family:'Newsreader',serif;font-size:30px;line-height:1.15;letter-spacing:-0.02em">Riad</h1></header>
+<div style="margin:20px 20px 0;border:1px solid rgba(20,18,15,0.16);border-radius:6px;background:#fbf8f0;padding:16px;display:flex;flex-direction:column;gap:12px">
+<span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8a8175">Pick up where you left off</span>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'Newsreader',serif;font-size:17px">Maya Haddad</span><span style="font-size:12px;color:#5e574c">6 teeth · 1 extra · last Sunday</span></div><span style="font-family:'Newsreader',serif;font-size:20px;font-variant-numeric:tabular-nums">$20.20</span></div>
+<button onClick="{{ A.reorder }}" style="min-height:44px;border:0;border-radius:4px;background:#14120f;color:#fbf8f0;font-family:'Newsreader',serif;font-size:15px;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1)" style-active="transform:scale(0.97)">Order the same again</button>
+</div>
+<h2 style="padding:24px 20px 8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8a8175;font-family:'Atkinson Hyperlegible',sans-serif">Order from</h2>
+<div style="margin:0 20px;border:1px solid rgba(20,18,15,0.16);border-radius:6px;background:#fbf8f0;padding:8px;display:flex;flex-direction:column">
+<sc-for list="{{ A.sellers }}" as="s" hint-placeholder-count="3">
+<div onClick="{{ s.open }}" style="display:flex;min-height:44px;align-items:center;gap:12px;border-radius:4px;padding:10px;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1)" style-active="transform:scale(0.97)">
+<span style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
+<span style="font-family:'Newsreader',serif;font-size:15px">{{ s.name }}</span>
+<span style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:#5e574c"><span style="width:10px;height:10px;border-radius:2px;background:#c0362c"></span>Frasaco <span style="font-family:'Newsreader',serif;color:#14120f">{{ s.fs }}</span><span>·</span><span style="width:10px;height:10px;border-radius:2px;background:#3f5f6e"></span>Copy A <span style="font-family:'Newsreader',serif;color:#14120f">{{ s.cs }}</span></span>
+<span style="font-size:12px;color:#5e574c">{{ s.meta }}</span>
+</span>
+<svg width="16" height="16" fill="none" stroke="#8a8175" stroke-width="1.75" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg>
+</div>
+</sc-for>
+</div>
+</div>
+<nav style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;border-top:1px solid rgba(20,18,15,0.16);background:#f2ede1;padding:8px 0 22px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 16px"><svg width="24" height="24" fill="none" stroke="#14120f" stroke-width="1.6" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase">Home</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 16px;color:#8a8175"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"></path><path d="M14 2v6h6M9 13h6M9 17h4"></path></svg><span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase">Orders</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 16px;color:#8a8175"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase">Profile</span></div>
+</nav>
+</sc-if>
+
+<sc-if value="{{ A.isOrder }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;overflow-y:auto;padding-bottom:150px">
+<header style="padding:8px 20px 0;display:flex;align-items:center;gap:8px">
+<button onClick="{{ A.back }}" aria-label="Back to the market" style="margin-left:-10px;width:44px;height:44px;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="18" height="18" fill="none" stroke="#14120f" stroke-width="1.75" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></button>
+<div style="display:flex;flex-direction:column"><h1 style="font-family:'Newsreader',serif;font-size:20px;line-height:1.25;letter-spacing:-0.012em">{{ A.seller.name }}</h1><span style="font-size:12px;color:#5e574c">{{ A.seller.meta }}</span></div>
+</header>
+<div style="margin:14px 20px 0;display:flex;flex-direction:column;align-items:stretch;gap:6px">
+<span style="font-size:13px;color:#5e574c">Each tap adds</span>
+<div style="display:flex;border:1px solid rgba(20,18,15,0.16);border-radius:4px;overflow:hidden;background:#fbf8f0">
+<button onClick="{{ A.tF.pick }}" style="flex:1;justify-content:center;white-space:nowrap;min-height:40px;padding:0 12px;border:0;display:flex;align-items:center;gap:6px;cursor:pointer;background:{{ A.tF.bg }};color:{{ A.tF.fg }};font-family:'Newsreader',serif;font-size:14px;transition:background-color 140ms,color 140ms">Frasaco {{ A.seller.fs }}</button>
+<button onClick="{{ A.tC.pick }}" style="flex:1;justify-content:center;white-space:nowrap;min-height:40px;padding:0 12px;border:0;border-left:1px solid rgba(20,18,15,0.16);display:flex;align-items:center;gap:6px;cursor:pointer;background:{{ A.tC.bg }};color:{{ A.tC.fg }};font-family:'Newsreader',serif;font-size:14px;transition:background-color 140ms,color 140ms">Copy A {{ A.seller.cs }}</button>
+</div>
+</div>
+<div onPointerDown="{{ A.down }}" onPointerMove="{{ A.move }}" onPointerUp="{{ A.up }}" onPointerCancel="{{ A.up }}" style="margin:12px 8px 0;border:1px solid rgba(20,18,15,0.16);border-radius:6px;background:#fbf8f0;padding:12px 8px 14px;touch-action:none;user-select:none;-webkit-user-select:none">
+<div style="text-align:center;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8a8175;padding:4px">Upper</div>
+<sc-for list="{{ A.upper }}" as="row" hint-placeholder-count="2"><div style="display:flex;justify-content:center;gap:6px"><sc-for list="{{ row.teeth }}" as="t" hint-placeholder-count="8"><div data-tooth="{{ t.n }}" style="width:36px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY({{ t.dip }})"><span style="pointer-events:none;position:relative;width:34px;height:42px;box-sizing:border-box;border-radius:4px;border:1px solid {{ t.border }};background-color:{{ t.bg }};background-image:{{ t.img }};display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-size:12px;color:{{ t.fg }};font-variant-numeric:tabular-nums;transition:background-color 140ms cubic-bezier(0.23,1,0.32,1),color 140ms cubic-bezier(0.23,1,0.32,1)">{{ t.n }}<sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-4px;top:-4px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#14120f;color:#fbf8f0;font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center">{{ t.qty }}</span></sc-if></span></div></sc-for></div></sc-for>
+<div style="display:flex;align-items:center;gap:8px;padding:0 4px;margin:8px 0"><span style="height:1px;flex:1;background:rgba(20,18,15,0.16)"></span><span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8a8175">Midline</span><span style="height:1px;flex:1;background:rgba(20,18,15,0.16)"></span></div>
+<sc-for list="{{ A.lower }}" as="row" hint-placeholder-count="2"><div style="display:flex;justify-content:center;gap:6px"><sc-for list="{{ row.teeth }}" as="t" hint-placeholder-count="8"><div data-tooth="{{ t.n }}" style="width:36px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY({{ t.dip }})"><span style="pointer-events:none;position:relative;width:34px;height:42px;box-sizing:border-box;border-radius:4px;border:1px solid {{ t.border }};background-color:{{ t.bg }};background-image:{{ t.img }};display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-size:12px;color:{{ t.fg }};font-variant-numeric:tabular-nums;transition:background-color 140ms cubic-bezier(0.23,1,0.32,1),color 140ms cubic-bezier(0.23,1,0.32,1)">{{ t.n }}<sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-4px;top:-4px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#14120f;color:#fbf8f0;font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center">{{ t.qty }}</span></sc-if></span></div></sc-for></div></sc-for>
+<div style="text-align:center;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8a8175;padding:4px">Lower</div>
+</div>
+<p style="margin:8px 20px 0;font-size:12px;color:#5e574c;text-align:center">Tap a tooth to add it. Tap it again to change the amount.</p>
+<section style="margin:12px 8px 0;border:1px solid rgba(20,18,15,0.16);border-radius:6px;background:#fbf8f0">
+<h2 style="padding:12px 16px;border-bottom:1px solid rgba(20,18,15,0.09);font-family:'Newsreader',serif;font-size:15px">Extras from {{ A.seller.first }}</h2>
+<sc-for list="{{ A.extras }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid rgba(20,18,15,0.09)">
+<span style="min-width:0;flex:1;display:flex;flex-direction:column"><span style="font-size:15px">{{ e.name }}</span><span style="font-size:12px;color:#5e574c;font-variant-numeric:tabular-nums">{{ e.meta }}</span></span>
+<span style="display:flex;align-items:center;gap:4px"><button onClick="{{ e.dec }}" style="width:40px;height:40px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:#fbf8f0;font-family:'Newsreader',serif;font-size:17px;cursor:pointer;opacity:{{ e.decOp }}">−</button><span style="width:24px;text-align:center;font-family:'Newsreader',serif;font-size:15px;color:{{ e.qtyColor }}">{{ e.qty }}</span><button onClick="{{ e.inc }}" style="width:40px;height:40px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:#fbf8f0;font-family:'Newsreader',serif;font-size:17px;cursor:pointer">+</button></span>
+</div>
+</sc-for>
+</section>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#f2ede1;padding:12px 20px 26px;border-top:1px solid rgba(20,18,15,0.09);z-index:20">
+<sc-if value="{{ A.undo }}" hint-placeholder-val="{{ false }}"><div style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:#efe8d9;padding:4px 4px 4px 12px"><span style="font-size:13px;color:#5e574c">{{ A.undoMsg }}</span><button onClick="{{ A.undoIt }}" style="border:0;background:none;padding:8px;font-family:'Newsreader',serif;font-size:13px;text-decoration:underline;text-underline-offset:2px;cursor:pointer">Undo</button></div></sc-if>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<div><div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8a8175">Order total</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'Newsreader',serif;font-size:24px;letter-spacing:-0.015em;font-variant-numeric:tabular-nums">{{ A.totalStr }}</span><span style="font-family:'Newsreader',serif;font-size:12px;color:#5e574c">{{ A.countStr }}</span></div></div>
+<button onClick="{{ A.openReview }}" style="min-height:44px;border:0;border-radius:4px;background:#14120f;color:#fbf8f0;padding:0 24px;font-family:'Newsreader',serif;font-size:15px;cursor:pointer;opacity:{{ A.reviewOp }}">Review</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ A.isDone }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;display:flex;flex-direction:column;padding:56px 24px 32px;gap:24px">
+<div style="width:56px;height:56px;border-radius:50%;background:#14120f;color:#fbf8f0;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+<div><h1 style="font-family:'Newsreader',serif;font-size:30px;line-height:1.15;letter-spacing:-0.02em">Order placed</h1><p style="margin:6px 0 0;font-size:15px;color:#5e574c">{{ A.seller.first }} will confirm it. You pay at pickup — {{ A.totalStr }}.</p></div>
+<div style="border:1px solid rgba(20,18,15,0.16);border-radius:6px;background:#fbf8f0;padding:16px">
+<sc-for list="{{ A.steps }}" as="st" hint-placeholder-count="4">
+<div style="display:flex;gap:12px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;align-items:center"><span style="width:14px;height:14px;border-radius:50%;box-sizing:border-box;border:1.5px solid {{ st.ring }};background:{{ st.fill }};margin-top:3px"></span><span style="width:1.5px;height:26px;background:rgba(20,18,15,0.16);display:{{ st.line }}"></span></div>
+<div style="display:flex;flex-direction:column"><span style="font-family:'Newsreader',serif;font-size:15px;color:{{ st.color }}">{{ st.label }}</span><span style="font-size:12px;color:#8a8175">{{ st.hint }}</span></div>
+</div>
+</sc-for>
+</div>
+<div style="flex:1"></div>
+<button onClick="{{ A.reset }}" style="min-height:48px;border:1px solid rgba(20,18,15,0.16);border-radius:6px;background:#fbf8f0;font-family:'Newsreader',serif;font-size:15px;cursor:pointer">Back to the market</button>
+</div>
+</sc-if>
+
+<div onClick="{{ A.sheet.close }}" style="position:absolute;inset:0;z-index:40;background:rgba(20,18,15,0.45);opacity:{{ A.sheet.scrim }};pointer-events:{{ A.sheet.pe }};transition:opacity 220ms cubic-bezier(0.23,1,0.32,1)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:41;background:#fbf8f0;border-radius:12px 12px 0 0;padding-bottom:30px;box-shadow:0 -8px 32px rgba(20,18,15,0.18);transform:{{ A.sheet.tf }};transition:{{ A.sheet.tr }}">
+<div style="padding:12px 20px"><div style="margin:0 auto 16px;width:36px;height:4px;border-radius:999px;background:rgba(20,18,15,0.16)"></div><div style="font-family:'Newsreader',serif;font-size:20px">Tooth {{ A.sheet.n }}</div><div style="font-size:13px;color:#5e574c">{{ A.sheet.name }}</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:0 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;border:1px solid {{ A.sheet.fBd }};background:{{ A.sheet.fBg }};border-radius:4px;padding:12px 14px"><div style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:2px;background:#c0362c"></span><div><div style="font-family:'Newsreader',serif;font-size:15px">Frasaco</div><div style="font-family:'Newsreader',serif;font-size:12px;color:#5e574c">{{ A.seller.fs }} each</div></div></div><div style="display:flex;align-items:center;gap:10px"><button onClick="{{ A.sheet.decF }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:#fbf8f0;font-family:'Newsreader',serif;font-size:17px;cursor:pointer">−</button><span style="width:20px;text-align:center;font-family:'Newsreader',serif;font-size:17px">{{ A.sheet.sf }}</span><button onClick="{{ A.sheet.incF }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:#fbf8f0;font-family:'Newsreader',serif;font-size:17px;cursor:pointer">+</button></div></div>
+<div style="display:flex;align-items:center;justify-content:space-between;border:1px solid {{ A.sheet.cBd }};background:{{ A.sheet.cBg }};border-radius:4px;padding:12px 14px"><div style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:2px;background:#3f5f6e"></span><div><div style="font-family:'Newsreader',serif;font-size:15px">Copy A</div><div style="font-family:'Newsreader',serif;font-size:12px;color:#5e574c">{{ A.seller.cs }} each</div></div></div><div style="display:flex;align-items:center;gap:10px"><button onClick="{{ A.sheet.decC }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:#fbf8f0;font-family:'Newsreader',serif;font-size:17px;cursor:pointer">−</button><span style="width:20px;text-align:center;font-family:'Newsreader',serif;font-size:17px">{{ A.sheet.sc }}</span><button onClick="{{ A.sheet.incC }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:#fbf8f0;font-family:'Newsreader',serif;font-size:17px;cursor:pointer">+</button></div></div>
+</div>
+<div style="margin:16px 20px 0;padding-top:12px;border-top:1px solid rgba(20,18,15,0.09);display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;color:#5e574c">{{ A.sheet.countStr }} at this position</span><span style="font-family:'Newsreader',serif;font-size:17px">{{ A.sheet.sub }}</span></div>
+<div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:8px"><button onClick="{{ A.sheet.commit }}" style="min-height:44px;border:0;border-radius:4px;background:#14120f;color:#fbf8f0;font-family:'Newsreader',serif;font-size:15px;cursor:pointer">{{ A.sheet.cta }}</button><button onClick="{{ A.sheet.remove }}" style="min-height:44px;border:0;background:none;font-size:13px;color:#5e574c;cursor:pointer">Remove from order</button></div>
+</div>
+
+<div onClick="{{ A.rv.close }}" style="position:absolute;inset:0;z-index:50;background:rgba(20,18,15,0.45);opacity:{{ A.rv.scrim }};pointer-events:{{ A.rv.pe }};transition:opacity 220ms cubic-bezier(0.23,1,0.32,1)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:51;background:#fbf8f0;border-radius:12px 12px 0 0;padding-bottom:30px;box-shadow:0 -8px 32px rgba(20,18,15,0.18);transform:{{ A.rv.tf }};transition:{{ A.rv.tr }}">
+<div style="padding:12px 20px"><div style="margin:0 auto 16px;width:36px;height:4px;border-radius:999px;background:rgba(20,18,15,0.16)"></div><div style="font-family:'Newsreader',serif;font-size:20px">Review order</div><div style="font-size:13px;color:#5e574c">To {{ A.seller.name }} · pay at pickup</div></div>
+<div style="padding:0 20px">
+<sc-for list="{{ A.groups }}" as="g" hint-placeholder-count="2">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(20,18,15,0.09)">
+<div style="display:flex;gap:10px;min-width:0"><span style="width:10px;height:10px;border-radius:2px;background:{{ g.color }};margin-top:6px;flex:none"></span><div style="display:flex;flex-direction:column;min-width:0"><span style="font-family:'Newsreader',serif;font-size:15px">{{ g.name }} <span style="color:#5e574c;font-size:13px">· {{ g.count }} × {{ g.each }}</span></span><span style="font-size:12px;color:#5e574c;font-variant-numeric:tabular-nums">Teeth {{ g.list }}</span></div></div>
+<span style="font-family:'Newsreader',serif;font-size:15px;font-variant-numeric:tabular-nums">{{ g.total }}</span>
+</div>
+</sc-for>
+<sc-for list="{{ A.extraLines }}" as="x" hint-placeholder-count="1">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(20,18,15,0.09)"><span style="font-size:15px">{{ x.name }} <span style="font-size:12px;color:#5e574c">· {{ x.unit }}</span></span><span style="display:flex;gap:12px;align-items:baseline"><span style="font-family:'Newsreader',serif;font-size:12px;color:#5e574c">×{{ x.qty }}</span><span style="font-family:'Newsreader',serif;font-size:15px">{{ x.total }}</span></span></div>
+</sc-for>
+<div style="margin-top:4px;padding-top:12px;border-top:1px solid rgba(20,18,15,0.16);display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;color:#5e574c">{{ A.countStr }}</span><span style="font-family:'Newsreader',serif;font-size:24px;font-variant-numeric:tabular-nums">{{ A.totalStr }}</span></div>
+<p style="margin:10px 0 0;font-size:12px;color:#5e574c">Prices are locked when you place the order. {{ A.seller.first }} can’t change them after.</p>
+</div>
+<div style="padding:16px 20px 0;display:flex;gap:8px"><button onClick="{{ A.rv.close }}" style="flex:1;min-height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:none;font-family:'Newsreader',serif;font-size:15px;color:#5e574c;cursor:pointer">Back</button><button onClick="{{ A.place }}" style="flex:2;min-height:44px;border:0;border-radius:4px;background:#14120f;color:#fbf8f0;font-family:'Newsreader',serif;font-size:15px;cursor:pointer">Place order · {{ A.totalStr }}</button></div>
+</div>
+</div>
+<ul style="margin:0;padding:0 0 0 16px;width:340px;font-size:12px;line-height:1.55;color:#5e574c;display:flex;flex-direction:column;gap:4px">
+<li><b style="color:#14120f">One tap per tooth.</b> The type picker moves above the chart; tapping adds one straight away. The sheet only opens on a tooth you’ve already added.</li>
+<li><b style="color:#14120f">Order the same again</b> on Home opens review prefilled — 2 taps for a repeat week.</li>
+<li>Review groups teeth by type, and the button carries the total.</li>
+<li>Placed screen shows the whole path: placed → confirmed → handed over → paid.</li>
+</ul>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Editorial — paper pushed toward print</div>
+<div style="width:375px;height:780px;border:10px solid #14120f;border-radius:52px;overflow:hidden;position:relative;background:#f2ede1;color:#14120f;font-family:'Atkinson Hyperlegible',sans-serif">
+<div style="position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;padding:0 30px;font-size:14px;font-weight:700;z-index:60">9:41</div>
+
+<sc-if value="{{ B.isMarket }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;overflow-y:auto;padding:4px 20px 40px">
+<div style="text-align:center;font-family:'Newsreader',serif;font-size:13px;letter-spacing:0.36em;text-transform:uppercase;padding:6px 0 10px">Molaro</div>
+<div style="border-top:2px solid #14120f;border-bottom:1px solid #14120f;height:3px"></div>
+<div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c;padding:7px 0">Sunday 4 October<span>BAU edition</span></div>
+<h1 style="margin-top:18px;font-family:'Newsreader',serif;font-size:44px;line-height:1.02;letter-spacing:-0.025em">Today’s prices</h1>
+<p style="margin:8px 0 0;font-size:13px;color:#5e574c">Set by each seller. Tap a row to start an order.</p>
+<div style="margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) 76px 76px;align-items:end;padding-bottom:6px;border-bottom:2px solid #14120f;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c">
+<span>Seller</span><span style="display:flex;align-items:center;justify-content:flex-end;gap:5px"><span style="width:8px;height:8px;background:#c0362c"></span>Frasaco</span><span style="display:flex;align-items:center;justify-content:flex-end;gap:5px"><span style="width:8px;height:8px;background:#3f5f6e"></span>Copy A</span>
+</div>
+<sc-for list="{{ B.sellers }}" as="s" hint-placeholder-count="3">
+<div onClick="{{ s.open }}" style="display:grid;grid-template-columns:minmax(0,1fr) 76px 76px;align-items:baseline;padding:14px 0;border-bottom:1px solid rgba(20,18,15,0.16);cursor:pointer;transition:opacity 120ms" style-active="opacity:0.6">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'Newsreader',serif;font-size:19px;line-height:1.2">{{ s.name }}</span><span style="font-size:12px;color:#5e574c">{{ s.meta }}</span></span>
+<span style="text-align:right;font-family:'Newsreader',serif;font-size:22px;font-variant-numeric:tabular-nums;text-decoration:{{ s.fDec }};text-decoration-thickness:2px;text-underline-offset:5px">{{ s.fs }}</span>
+<span style="text-align:right;font-family:'Newsreader',serif;font-size:22px;font-variant-numeric:tabular-nums;text-decoration:{{ s.cDec }};text-decoration-thickness:2px;text-underline-offset:5px">{{ s.cs }}</span>
+</div>
+</sc-for>
+<p style="margin:8px 0 0;font-size:12px;color:#8a8175;font-family:'Newsreader',serif;font-style:italic">Underlined: lowest today.</p>
+<div style="margin-top:28px;border-top:1px solid #14120f;padding-top:14px;display:flex;flex-direction:column;gap:10px">
+<span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c">Your last order</span>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><span style="font-family:'Newsreader',serif;font-size:19px">Maya Haddad, 6 teeth &amp; gloves</span><span style="font-family:'Newsreader',serif;font-size:22px">$20.20</span></div>
+<button onClick="{{ B.reorder }}" style="align-self:flex-start;min-height:44px;border:1px solid #14120f;border-radius:4px;background:none;padding:0 18px;font-family:'Newsreader',serif;font-size:15px;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1)" style-active="transform:scale(0.97)">Repeat it →</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ B.isOrder }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;overflow-y:auto;padding-bottom:140px">
+<div style="padding:4px 20px 0">
+<button onClick="{{ B.back }}" style="border:0;background:none;padding:10px 0;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c;cursor:pointer">← Today’s prices</button>
+<h1 style="font-family:'Newsreader',serif;font-size:34px;line-height:1.08;letter-spacing:-0.02em">{{ B.seller.name }}</h1>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:2px solid #14120f;font-size:13px;color:#5e574c"><span>Adding <button onClick="{{ B.toggle }}" style="border:0;background:none;padding:0;font-family:'Newsreader',serif;font-size:15px;color:#14120f;text-decoration:underline;text-decoration-color:{{ B.typeColor }};text-decoration-thickness:3px;text-underline-offset:4px;cursor:pointer">{{ B.typeName }}</button></span><span style="font-family:'Newsreader',serif;white-space:nowrap">F {{ B.seller.fs }} · C {{ B.seller.cs }}</span></div>
+</div>
+<div onPointerDown="{{ B.down }}" onPointerMove="{{ B.move }}" onPointerUp="{{ B.up }}" onPointerCancel="{{ B.up }}" style="margin:16px 8px 0;padding:6px 8px 10px;touch-action:none;user-select:none;-webkit-user-select:none">
+<sc-for list="{{ B.upper }}" as="row" hint-placeholder-count="2"><div style="display:flex;justify-content:center;gap:6px"><sc-for list="{{ row.teeth }}" as="t" hint-placeholder-count="8"><div data-tooth="{{ t.n }}" style="width:36px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY({{ t.dip }})"><span style="pointer-events:none;position:relative;width:34px;height:42px;box-sizing:border-box;border-radius:2px;border:1px solid {{ t.borderB }};background-color:{{ t.bgB }};background-image:{{ t.img }};display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-size:14px;color:{{ t.fgB }};font-variant-numeric:tabular-nums;transition:background-color 140ms cubic-bezier(0.23,1,0.32,1),color 140ms cubic-bezier(0.23,1,0.32,1)">{{ t.n }}<sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-5px;top:-6px;font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:#14120f;background:#f2ede1;padding:0 2px">×{{ t.qty }}</span></sc-if></span></div></sc-for></div></sc-for>
+<div style="height:1px;background:#14120f;margin:22px 4px"></div>
+<sc-for list="{{ B.lower }}" as="row" hint-placeholder-count="2"><div style="display:flex;justify-content:center;gap:6px"><sc-for list="{{ row.teeth }}" as="t" hint-placeholder-count="8"><div data-tooth="{{ t.n }}" style="width:36px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY({{ t.dip }})"><span style="pointer-events:none;position:relative;width:34px;height:42px;box-sizing:border-box;border-radius:2px;border:1px solid {{ t.borderB }};background-color:{{ t.bgB }};background-image:{{ t.img }};display:flex;align-items:center;justify-content:center;font-family:'Newsreader',serif;font-size:14px;color:{{ t.fgB }};font-variant-numeric:tabular-nums;transition:background-color 140ms cubic-bezier(0.23,1,0.32,1),color 140ms cubic-bezier(0.23,1,0.32,1)">{{ t.n }}<sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-5px;top:-6px;font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:#14120f;background:#f2ede1;padding:0 2px">×{{ t.qty }}</span></sc-if></span></div></sc-for></div></sc-for>
+</div>
+<p style="margin:6px 20px 0;font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#5e574c;text-align:center">Fig. 1 — Press and drag across the arch to add a run of teeth.</p>
+<div style="margin:20px 20px 0">
+<div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c;padding-bottom:6px;border-bottom:1px solid #14120f">In this order</div>
+<sc-if value="{{ B.empty }}" hint-placeholder-val="{{ true }}"><p style="margin:12px 0;font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#8a8175">Nothing yet.</p></sc-if>
+<sc-for list="{{ B.lines }}" as="l" hint-placeholder-count="0">
+<div onClick="{{ l.open }}" style="display:flex;align-items:baseline;gap:6px;padding:9px 0;cursor:pointer"><span style="width:8px;height:8px;background:{{ l.color }};flex:none"></span><span style="font-family:'Newsreader',serif;font-size:16px">{{ l.label }}</span><span style="flex:1;border-bottom:1px dotted rgba(20,18,15,0.4);transform:translateY(-4px)"></span><span style="font-family:'Newsreader',serif;font-size:13px;color:#5e574c">×{{ l.qty }}</span><span style="font-family:'Newsreader',serif;font-size:16px;min-width:52px;text-align:right;font-variant-numeric:tabular-nums">{{ l.total }}</span></div>
+</sc-for>
+<div style="margin-top:22px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c;padding-bottom:6px;border-bottom:1px solid #14120f">Also from {{ B.seller.first }}</div>
+<sc-for list="{{ B.extras }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(20,18,15,0.09)"><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-family:'Newsreader',serif;font-size:16px">{{ e.name }}</span><span style="font-size:12px;color:#5e574c">{{ e.meta }}</span></span><button onClick="{{ e.dec }}" style="width:36px;height:36px;border:0;background:none;font-family:'Newsreader',serif;font-size:22px;cursor:pointer;opacity:{{ e.decOp }}">−</button><span style="width:18px;text-align:center;font-family:'Newsreader',serif;font-size:18px;color:{{ e.qtyColor }}">{{ e.qty }}</span><button onClick="{{ e.inc }}" style="width:36px;height:36px;border:0;background:none;font-family:'Newsreader',serif;font-size:22px;cursor:pointer">+</button></div>
+</sc-for>
+</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#f2ede1;padding:10px 20px 26px;border-top:2px solid #14120f;z-index:20">
+<sc-if value="{{ B.undo }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:6px;font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#5e574c">{{ B.undoMsg }}<button onClick="{{ B.undoIt }}" style="border:0;background:none;padding:4px 0;font-family:'Newsreader',serif;font-size:13px;text-decoration:underline;cursor:pointer;color:#14120f">Undo</button></div></sc-if>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+<div style="display:flex;flex-direction:column"><span style="font-family:'Newsreader',serif;font-size:42px;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ B.totalStr }}</span><span style="font-size:12px;color:#5e574c;margin-top:4px">{{ B.countStr }}</span></div>
+<button onClick="{{ B.openReview }}" style="min-height:48px;border:0;border-radius:4px;background:#14120f;color:#fbf8f0;padding:0 22px;font-family:'Newsreader',serif;font-size:16px;cursor:pointer;opacity:{{ B.reviewOp }}">Review →</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ B.isDone }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;display:flex;flex-direction:column;padding:40px 24px 32px;gap:20px">
+<div style="align-self:flex-start;transform:rotate(-4deg);border:2px solid #14120f;padding:6px 14px;font-family:'Newsreader',serif;font-size:13px;letter-spacing:0.3em;text-transform:uppercase">Placed</div>
+<div><div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c">Order No. {{ B.no }}</div><h1 style="margin-top:6px;font-family:'Newsreader',serif;font-size:40px;line-height:1.05;letter-spacing:-0.02em">{{ B.seller.first }} has it.</h1><p style="margin:10px 0 0;font-family:'Newsreader',serif;font-size:17px;line-height:1.45;color:#5e574c">You’ll see a tick here when she confirms. Bring <span style="color:#14120f">{{ B.totalStr }}</span> to pickup.</p></div>
+<div style="border-top:2px solid #14120f">
+<sc-for list="{{ B.steps }}" as="st" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(20,18,15,0.16)"><span style="font-family:'Newsreader',serif;font-size:17px;color:{{ st.color }}">{{ st.num }}  {{ st.label }}</span><span style="font-size:12px;color:#8a8175">{{ st.hint }}</span></div></sc-for>
+</div>
+<div style="flex:1"></div>
+<button onClick="{{ B.reset }}" style="min-height:48px;border:1px solid #14120f;border-radius:4px;background:none;font-family:'Newsreader',serif;font-size:15px;cursor:pointer">Back to today’s prices</button>
+</div>
+</sc-if>
+
+<div onClick="{{ B.sheet.close }}" style="position:absolute;inset:0;z-index:40;background:rgba(20,18,15,0.45);opacity:{{ B.sheet.scrim }};pointer-events:{{ B.sheet.pe }};transition:opacity 220ms cubic-bezier(0.23,1,0.32,1)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:41;background:#fbf8f0;border-radius:12px 12px 0 0;padding:20px 20px 30px;box-shadow:0 -8px 32px rgba(20,18,15,0.18);transform:{{ B.sheet.tf }};transition:{{ B.sheet.tr }}">
+<div style="display:flex;align-items:flex-end;gap:14px;padding-bottom:12px;border-bottom:2px solid #14120f"><span style="font-family:'Newsreader',serif;font-size:72px;line-height:0.85;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ B.sheet.n }}</span><span style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#5e574c;padding-bottom:4px">{{ B.sheet.name }}</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid rgba(20,18,15,0.16)"><span style="width:10px;height:10px;background:#c0362c"></span><span style="flex:1;font-family:'Newsreader',serif;font-size:18px">Frasaco <span style="font-size:14px;color:#5e574c">{{ B.seller.fs }}</span></span><button onClick="{{ B.sheet.decF }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:50%;background:none;font-family:'Newsreader',serif;font-size:20px;cursor:pointer">−</button><span style="width:30px;text-align:center;font-family:'Newsreader',serif;font-size:28px">{{ B.sheet.sf }}</span><button onClick="{{ B.sheet.incF }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:50%;background:none;font-family:'Newsreader',serif;font-size:20px;cursor:pointer">+</button></div>
+<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid rgba(20,18,15,0.16)"><span style="width:10px;height:10px;background:#3f5f6e"></span><span style="flex:1;font-family:'Newsreader',serif;font-size:18px">Copy A <span style="font-size:14px;color:#5e574c">{{ B.seller.cs }}</span></span><button onClick="{{ B.sheet.decC }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:50%;background:none;font-family:'Newsreader',serif;font-size:20px;cursor:pointer">−</button><span style="width:30px;text-align:center;font-family:'Newsreader',serif;font-size:28px">{{ B.sheet.sc }}</span><button onClick="{{ B.sheet.incC }}" style="width:44px;height:44px;border:1px solid rgba(20,18,15,0.16);border-radius:50%;background:none;font-family:'Newsreader',serif;font-size:20px;cursor:pointer">+</button></div>
+<div style="display:flex;gap:8px;margin-top:18px"><button onClick="{{ B.sheet.remove }}" style="flex:1;min-height:48px;border:1px solid rgba(20,18,15,0.16);border-radius:4px;background:none;font-family:'Newsreader',serif;font-size:15px;color:#5e574c;cursor:pointer">Remove</button><button onClick="{{ B.sheet.commit }}" style="flex:2;min-height:48px;border:0;border-radius:4px;background:#14120f;color:#fbf8f0;font-family:'Newsreader',serif;font-size:15px;cursor:pointer">{{ B.sheet.cta }} · {{ B.sheet.sub }}</button></div>
+</div>
+
+<div onClick="{{ B.rv.close }}" style="position:absolute;inset:0;z-index:50;background:rgba(20,18,15,0.55);opacity:{{ B.rv.scrim }};pointer-events:{{ B.rv.pe }};transition:opacity 220ms cubic-bezier(0.23,1,0.32,1)"></div>
+<div style="position:absolute;left:14px;right:14px;bottom:24px;z-index:51;transform:{{ B.rv.tf }};transition:{{ B.rv.tr }};display:flex;flex-direction:column;gap:10px">
+<div style="background:#fbf8f0;padding:26px 22px 24px;-webkit-mask:radial-gradient(circle at 7px 0,transparent 5px,#000 5.5px) top/14px 51% repeat-x,radial-gradient(circle at 7px 100%,transparent 5px,#000 5.5px) bottom/14px 51% repeat-x;mask:radial-gradient(circle at 7px 0,transparent 5px,#000 5.5px) top/14px 51% repeat-x,radial-gradient(circle at 7px 100%,transparent 5px,#000 5.5px) bottom/14px 51% repeat-x">
+<div style="text-align:center;font-family:'Newsreader',serif;font-size:12px;letter-spacing:0.36em;text-transform:uppercase">Molaro</div>
+<div style="text-align:center;font-size:12px;color:#5e574c;margin-top:4px">Order for {{ B.seller.name }}</div>
+<div style="border-top:1px dashed rgba(20,18,15,0.4);margin:14px 0 6px"></div>
+<sc-for list="{{ B.lines }}" as="l" hint-placeholder-count="3"><div style="display:flex;align-items:baseline;gap:6px;padding:4px 0;font-family:'Newsreader',serif;font-size:15px"><span>{{ l.label }}</span><span style="font-size:12px;color:#5e574c">{{ l.type }}</span><span style="flex:1;border-bottom:1px dotted rgba(20,18,15,0.4);transform:translateY(-4px)"></span><span style="font-size:12px;color:#5e574c">×{{ l.qty }}</span><span style="min-width:48px;text-align:right">{{ l.total }}</span></div></sc-for>
+<sc-for list="{{ B.extraLines }}" as="x" hint-placeholder-count="1"><div style="display:flex;align-items:baseline;gap:6px;padding:4px 0;font-family:'Newsreader',serif;font-size:15px"><span>{{ x.name }}</span><span style="flex:1;border-bottom:1px dotted rgba(20,18,15,0.4);transform:translateY(-4px)"></span><span style="font-size:12px;color:#5e574c">×{{ x.qty }}</span><span style="min-width:48px;text-align:right">{{ x.total }}</span></div></sc-for>
+<div style="border-top:2px solid #14120f;margin-top:10px;padding-top:2px"><div style="border-top:1px solid #14120f;padding-top:10px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5e574c">Total · pay at pickup</span><span style="font-family:'Newsreader',serif;font-size:32px;letter-spacing:-0.02em">{{ B.totalStr }}</span></div></div>
+<p style="margin:10px 0 0;text-align:center;font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:#8a8175">Prices locked at the moment you place it.</p>
+</div>
+<div style="display:flex;gap:8px"><button onClick="{{ B.rv.close }}" style="flex:1;min-height:48px;border:1px solid rgba(251,248,240,0.5);border-radius:4px;background:none;color:#fbf8f0;font-family:'Newsreader',serif;font-size:15px;cursor:pointer">Back</button><button onClick="{{ B.place }}" style="flex:2;min-height:48px;border:0;border-radius:4px;background:#fbf8f0;color:#14120f;font-family:'Newsreader',serif;font-size:15px;cursor:pointer">Place order</button></div>
+</div>
+</div>
+<ul style="margin:0;padding:0 0 0 16px;width:340px;font-size:12px;line-height:1.55;color:#5e574c;display:flex;flex-direction:column;gap:4px">
+<li><b style="color:#14120f">Market as a price table.</b> Sellers compared column by column; lowest price underlined.</li>
+<li><b style="color:#14120f">Drag to paint.</b> Press and slide across the arch to add a run of teeth. Tap an added tooth for quantity.</li>
+<li>Big-figure total, dotted-leader lines, and a perforated receipt for review.</li>
+<li>Thick/thin rules replace cards; the chart sits on the page.</li>
+</ul>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Native iOS feel — glass chrome, draggable sheets, hold to place</div>
+<div style="width:375px;height:780px;border:10px solid #14120f;border-radius:52px;overflow:hidden;position:relative;background:#f2ede1;color:#14120f;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif">
+<div style="position:absolute;top:0;left:0;right:0;height:44px;display:flex;align-items:center;padding:0 30px;font-size:15px;font-weight:600;z-index:60">9:41</div>
+
+<sc-if value="{{ C.isMarket }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;overflow-y:auto;padding:6px 16px 120px">
+<h1 style="font-size:34px;font-weight:700;letter-spacing:-0.02em;padding:4px 4px 10px">Market</h1>
+<label style="display:flex;align-items:center;gap:8px;height:38px;border-radius:10px;background:rgba(20,18,15,0.07);padding:0 10px;color:#8a8175"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><input value="{{ C.q }}" onInput="{{ C.onQ }}" placeholder="Search sellers" style="flex:1;border:0;background:none;outline:none;font:inherit;font-size:17px;color:#14120f"></label>
+<div style="margin-top:16px;border-radius:16px;background:#14120f;color:#fbf8f0;padding:16px;display:flex;align-items:center;gap:14px">
+<div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:13px;color:rgba(251,248,240,0.65)">Last order · Maya Haddad</span><span style="font-size:20px;font-weight:600;letter-spacing:-0.01em">6 teeth, gloves · $20.20</span></div>
+<button onClick="{{ C.reorder }}" style="height:36px;border:0;border-radius:999px;background:#fbf8f0;color:#14120f;padding:0 16px;font-size:15px;font-weight:600;cursor:pointer;transition:transform 160ms cubic-bezier(0.23,1,0.32,1)" style-active="transform:scale(0.94)">Reorder</button>
+</div>
+<div style="margin:22px 4px 6px;font-size:13px;color:#8a8175;text-transform:uppercase;letter-spacing:0.02em">Sellers</div>
+<div style="border-radius:14px;background:#fbf8f0;overflow:hidden">
+<sc-for list="{{ C.sellers }}" as="s" hint-placeholder-count="3">
+<div onClick="{{ s.open }}" style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;background:#fbf8f0;transition:background-color 120ms" style-active="background-color:#efe8d9">
+<span style="width:40px;height:40px;border-radius:50%;background:#efe8d9;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex:none">{{ s.init }}</span>
+<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-bottom:11px;margin-bottom:-11px;border-bottom:{{ s.sep }}">
+<span style="font-size:17px;font-weight:500">{{ s.name }}</span>
+<span style="display:flex;gap:6px;align-items:center"><span style="display:flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;background:rgba(192,54,44,0.1);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums"><span style="width:7px;height:7px;border-radius:50%;background:#c0362c"></span>{{ s.fs }}</span><span style="display:flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;background:rgba(63,95,110,0.12);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums"><span style="width:7px;height:7px;border-radius:50%;background:#3f5f6e"></span>{{ s.cs }}</span><span style="font-size:13px;color:#8a8175">{{ s.short }}</span></span>
+</span>
+<svg width="14" height="14" fill="none" stroke="#b5ad9f" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg>
+</div>
+</sc-for>
+<sc-if value="{{ C.noResults }}" hint-placeholder-val="{{ false }}"><p style="margin:0;padding:18px;text-align:center;font-size:15px;color:#8a8175">No seller called “{{ C.q }}”.</p></sc-if>
+</div>
+</div>
+<nav style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:rgba(242,237,225,0.78);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:0.5px solid rgba(20,18,15,0.16);padding:8px 0 24px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#14120f"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg><span style="font-size:10px;font-weight:600">Market</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a8175"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"></path><path d="M14 2v6h6"></path></svg><span style="font-size:10px;font-weight:600">Orders</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a8175"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span style="font-size:10px;font-weight:600">Profile</span></div>
+</nav>
+</sc-if>
+
+<sc-if value="{{ C.isOrder }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;padding:100px 0 130px">
+<div style="margin:0 16px;position:relative;display:flex;height:34px;border-radius:9px;background:rgba(20,18,15,0.07);padding:2px;box-sizing:border-box">
+<span style="position:absolute;top:2px;bottom:2px;left:2px;width:calc(50% - 2px);border-radius:7px;background:#fbf8f0;box-shadow:0 3px 8px rgba(20,18,15,0.12),0 1px 1px rgba(20,18,15,0.06);transform:{{ C.thumb }};transition:transform 320ms cubic-bezier(0.32,0.72,0,1)"></span>
+<button onClick="{{ C.tF.pick }}" style="position:relative;flex:1;border:0;background:none;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;cursor:pointer"><span style="width:8px;height:8px;border-radius:50%;background:#c0362c"></span>Frasaco {{ C.seller.fs }}</button>
+<button onClick="{{ C.tC.pick }}" style="position:relative;flex:1;border:0;background:none;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;cursor:pointer"><span style="width:8px;height:8px;border-radius:50%;background:#3f5f6e"></span>Copy A {{ C.seller.cs }}</button>
+</div>
+<div onPointerDown="{{ C.down }}" onPointerMove="{{ C.move }}" onPointerUp="{{ C.up }}" onPointerCancel="{{ C.up }}" style="margin:14px 8px 0;border-radius:18px;background:#fbf8f0;padding:16px 8px 18px;touch-action:none;user-select:none;-webkit-user-select:none">
+<sc-for list="{{ C.upper }}" as="row" hint-placeholder-count="2"><div style="display:flex;justify-content:center;gap:6px"><sc-for list="{{ row.teeth }}" as="t" hint-placeholder-count="8"><div data-tooth="{{ t.n }}" style="width:36px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY({{ t.dip }})"><span style="pointer-events:none;position:relative;width:34px;height:42px;box-sizing:border-box;border-radius:11px;background-color:{{ t.bgC }};background-image:{{ t.img }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:{{ t.fgC }};font-variant-numeric:tabular-nums;transform:scale({{ t.scale }});transition:background-color 160ms cubic-bezier(0.23,1,0.32,1),color 160ms,transform 380ms cubic-bezier(0.34,1.56,0.64,1)">{{ t.n }}<sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#14120f;color:#fbf8f0;border:2px solid #fbf8f0;font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center">{{ t.qty }}</span></sc-if></span></div></sc-for></div></sc-for>
+<div style="height:30px"></div>
+<sc-for list="{{ C.lower }}" as="row" hint-placeholder-count="2"><div style="display:flex;justify-content:center;gap:6px"><sc-for list="{{ row.teeth }}" as="t" hint-placeholder-count="8"><div data-tooth="{{ t.n }}" style="width:36px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:translateY({{ t.dip }})"><span style="pointer-events:none;position:relative;width:34px;height:42px;box-sizing:border-box;border-radius:11px;background-color:{{ t.bgC }};background-image:{{ t.img }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:{{ t.fgC }};font-variant-numeric:tabular-nums;transform:scale({{ t.scale }});transition:background-color 160ms cubic-bezier(0.23,1,0.32,1),color 160ms,transform 380ms cubic-bezier(0.34,1.56,0.64,1)">{{ t.n }}<sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#14120f;color:#fbf8f0;border:2px solid #fbf8f0;font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center">{{ t.qty }}</span></sc-if></span></div></sc-for></div></sc-for>
+</div>
+<p style="margin:8px 20px 0;font-size:13px;color:#8a8175;text-align:center">Tap a tooth to choose type and quantity</p>
+<div style="margin:22px 20px 6px;font-size:13px;color:#8a8175;text-transform:uppercase;letter-spacing:0.02em">Also from {{ C.seller.first }}</div>
+<div style="margin:0 16px;border-radius:14px;background:#fbf8f0;overflow:hidden">
+<sc-for list="{{ C.extras }}" as="e" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:0.5px solid rgba(20,18,15,0.12)"><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:16px">{{ e.name }}</span><span style="font-size:13px;color:#8a8175">{{ e.meta }}</span></span><span style="display:flex;align-items:center;height:32px;border-radius:999px;background:rgba(20,18,15,0.07)"><button onClick="{{ e.dec }}" style="width:38px;height:32px;border:0;background:none;font-size:18px;cursor:pointer;opacity:{{ e.decOp }}">−</button><span style="min-width:16px;text-align:center;font-size:15px;font-weight:600;color:{{ e.qtyColor }}">{{ e.qty }}</span><button onClick="{{ e.inc }}" style="width:38px;height:32px;border:0;background:none;font-size:18px;cursor:pointer">+</button></span></div>
+</sc-for>
+</div>
+</div>
+<div style="position:absolute;top:0;left:0;right:0;z-index:30;padding:44px 8px 8px;display:flex;align-items:center;background:rgba(242,237,225,0.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:0.5px solid rgba(20,18,15,0.14)">
+<button onClick="{{ C.back }}" style="height:44px;border:0;background:none;display:flex;align-items:center;gap:2px;font-size:17px;cursor:pointer;padding:0 8px"><svg width="12" height="20" fill="none" stroke="#14120f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 12 20"><path d="M10 2L2 10l8 8"></path></svg>Market</button>
+<span style="position:absolute;left:0;right:0;bottom:19px;text-align:center;font-size:17px;font-weight:600;pointer-events:none">{{ C.seller.name }}</span>
+</div>
+<sc-if value="{{ C.undo }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:31;display:flex;align-items:center;gap:12px;height:36px;padding:0 6px 0 14px;border-radius:999px;background:rgba(20,18,15,0.86);color:#fbf8f0;font-size:14px;white-space:nowrap">{{ C.undoMsg }}<button onClick="{{ C.undoIt }}" style="height:28px;border:0;border-radius:999px;background:rgba(251,248,240,0.16);color:#fbf8f0;padding:0 12px;font-size:14px;font-weight:600;cursor:pointer">Undo</button></div></sc-if>
+<div style="position:absolute;left:12px;right:12px;bottom:26px;z-index:30;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:24px;background:rgba(251,248,240,0.76);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);box-shadow:0 8px 28px rgba(20,18,15,0.16),inset 0 0.5px 0 rgba(255,255,255,0.7);border:0.5px solid rgba(20,18,15,0.1)">
+<div style="flex:1;display:flex;flex-direction:column"><span style="font-size:22px;font-weight:700;letter-spacing:-0.01em;font-variant-numeric:tabular-nums">{{ C.totalStr }}</span><span style="font-size:13px;color:#5e574c">{{ C.countStr }}</span></div>
+<button onClick="{{ C.openReview }}" style="height:48px;border:0;border-radius:18px;background:#14120f;color:#fbf8f0;padding:0 24px;font-size:17px;font-weight:600;cursor:pointer;opacity:{{ C.reviewOp }};transition:transform 160ms cubic-bezier(0.23,1,0.32,1)" style-active="transform:scale(0.95)">Review</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ C.isDone }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:44px;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;padding:70px 20px 32px;gap:14px;text-align:center">
+<div style="width:84px;height:84px;border-radius:50%;background:#14120f;color:#fbf8f0;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+<h1 style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin-top:8px">Sent to {{ C.seller.first }}</h1>
+<p style="margin:0;font-size:17px;color:#5e574c">{{ C.countStr }} · {{ C.totalStr }} at pickup</p>
+<div style="align-self:stretch;margin-top:20px;border-radius:20px;background:#fbf8f0;padding:16px;text-align:left;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;font-size:15px"><span style="font-weight:600">Waiting for {{ C.seller.first }}</span><span style="color:#8a8175">just now</span></div>
+<div style="display:flex;gap:4px"><span style="flex:1;height:5px;border-radius:999px;background:#14120f"></span><span style="flex:1;height:5px;border-radius:999px;background:rgba(20,18,15,0.12)"></span><span style="flex:1;height:5px;border-radius:999px;background:rgba(20,18,15,0.12)"></span></div>
+<div style="display:flex;justify-content:space-between;font-size:12px;color:#8a8175"><span>Placed</span><span>Confirmed</span><span>Handed over</span></div>
+</div>
+<div style="flex:1"></div>
+<button onClick="{{ C.reset }}" style="align-self:stretch;height:50px;border:0;border-radius:14px;background:rgba(20,18,15,0.07);font-size:17px;font-weight:600;cursor:pointer">Done</button>
+</div>
+</sc-if>
+
+<div onClick="{{ C.sheet.close }}" style="position:absolute;inset:0;z-index:40;background:rgba(20,18,15,0.32);opacity:{{ C.sheet.scrim }};pointer-events:{{ C.sheet.pe }};transition:opacity 260ms cubic-bezier(0.23,1,0.32,1)"></div>
+<div style="position:absolute;left:8px;right:8px;bottom:8px;z-index:41;background:#fbf8f0;border-radius:32px;padding-bottom:20px;box-shadow:0 10px 40px rgba(20,18,15,0.22);transform:{{ C.sheet.tf }};transition:{{ C.sheet.tr }}">
+<div onPointerDown="{{ C.sheet.gDown }}" onPointerMove="{{ C.sheet.gMove }}" onPointerUp="{{ C.sheet.gUp }}" onPointerCancel="{{ C.sheet.gUp }}" style="padding:8px 22px 6px;touch-action:none;cursor:grab"><div style="margin:0 auto 14px;width:36px;height:5px;border-radius:999px;background:rgba(20,18,15,0.2)"></div><div style="font-size:22px;font-weight:700;letter-spacing:-0.01em">Tooth {{ C.sheet.n }}</div><div style="font-size:15px;color:#8a8175">{{ C.sheet.name }}</div></div>
+<div style="margin:10px 16px 0;border-radius:16px;background:rgba(20,18,15,0.05)">
+<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:0.5px solid rgba(20,18,15,0.12)"><span style="width:10px;height:10px;border-radius:50%;background:#c0362c"></span><span style="flex:1;font-size:17px">Frasaco <span style="color:#8a8175;font-size:15px">{{ C.seller.fs }}</span></span><span style="display:flex;align-items:center;height:36px;border-radius:999px;background:#fbf8f0"><button onClick="{{ C.sheet.decF }}" style="width:44px;height:36px;border:0;background:none;font-size:20px;cursor:pointer">−</button><span style="min-width:20px;text-align:center;font-size:17px;font-weight:600">{{ C.sheet.sf }}</span><button onClick="{{ C.sheet.incF }}" style="width:44px;height:36px;border:0;background:none;font-size:20px;cursor:pointer">+</button></span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:12px 14px"><span style="width:10px;height:10px;border-radius:50%;background:#3f5f6e"></span><span style="flex:1;font-size:17px">Copy A <span style="color:#8a8175;font-size:15px">{{ C.seller.cs }}</span></span><span style="display:flex;align-items:center;height:36px;border-radius:999px;background:#fbf8f0"><button onClick="{{ C.sheet.decC }}" style="width:44px;height:36px;border:0;background:none;font-size:20px;cursor:pointer">−</button><span style="min-width:20px;text-align:center;font-size:17px;font-weight:600">{{ C.sheet.sc }}</span><button onClick="{{ C.sheet.incC }}" style="width:44px;height:36px;border:0;background:none;font-size:20px;cursor:pointer">+</button></span></div>
+</div>
+<div style="display:flex;gap:8px;padding:16px 16px 0"><button onClick="{{ C.sheet.remove }}" style="height:50px;border:0;border-radius:16px;background:rgba(20,18,15,0.07);padding:0 18px;font-size:17px;font-weight:600;cursor:pointer">Remove</button><button onClick="{{ C.sheet.commit }}" style="flex:1;height:50px;border:0;border-radius:16px;background:#14120f;color:#fbf8f0;font-size:17px;font-weight:600;cursor:pointer">{{ C.sheet.cta }} · {{ C.sheet.sub }}</button></div>
+</div>
+
+<div onClick="{{ C.rv.close }}" style="position:absolute;inset:0;z-index:50;background:rgba(20,18,15,0.32);opacity:{{ C.rv.scrim }};pointer-events:{{ C.rv.pe }};transition:opacity 260ms cubic-bezier(0.23,1,0.32,1)"></div>
+<div style="position:absolute;left:8px;right:8px;bottom:8px;z-index:51;background:#fbf8f0;border-radius:32px;padding-bottom:20px;box-shadow:0 10px 40px rgba(20,18,15,0.22);transform:{{ C.rv.tf }};transition:{{ C.rv.tr }}">
+<div onPointerDown="{{ C.rv.gDown }}" onPointerMove="{{ C.rv.gMove }}" onPointerUp="{{ C.rv.gUp }}" onPointerCancel="{{ C.rv.gUp }}" style="padding:8px 22px 6px;touch-action:none;cursor:grab"><div style="margin:0 auto 14px;width:36px;height:5px;border-radius:999px;background:rgba(20,18,15,0.2)"></div><div style="font-size:22px;font-weight:700;letter-spacing:-0.01em">Review</div><div style="font-size:15px;color:#8a8175">{{ C.seller.name }} · pay at pickup</div></div>
+<div style="margin:10px 16px 0;border-radius:16px;background:rgba(20,18,15,0.05);padding:4px 14px;max-height:230px;overflow-y:auto">
+<sc-for list="{{ C.lines }}" as="l" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid rgba(20,18,15,0.1)"><span style="width:8px;height:8px;border-radius:50%;background:{{ l.color }}"></span><span style="flex:1;font-size:16px">{{ l.label }} <span style="color:#8a8175;font-size:14px">{{ l.type }}</span></span><span style="font-size:14px;color:#8a8175">×{{ l.qty }}</span><span style="min-width:52px;text-align:right;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums">{{ l.total }}</span></div></sc-for>
+<sc-for list="{{ C.extraLines }}" as="x" hint-placeholder-count="1"><div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid rgba(20,18,15,0.1)"><span style="flex:1;font-size:16px">{{ x.name }}</span><span style="font-size:14px;color:#8a8175">×{{ x.qty }}</span><span style="min-width:52px;text-align:right;font-size:16px;font-weight:600">{{ x.total }}</span></div></sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 22px 0"><span style="font-size:15px;color:#8a8175">Total · locked when placed</span><span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ C.totalStr }}</span></div>
+<div style="padding:14px 16px 0"><button onPointerDown="{{ C.holdDown }}" onPointerUp="{{ C.holdUp }}" onPointerLeave="{{ C.holdUp }}" onPointerCancel="{{ C.holdUp }}" style="position:relative;overflow:hidden;width:100%;height:56px;border:0;border-radius:18px;background:#14120f;color:#fbf8f0;font-size:17px;font-weight:600;cursor:pointer;touch-action:none;user-select:none"><span style="position:absolute;inset:0;background:#4a6b41;transform-origin:left;transform:scaleX({{ C.fill }});transition:{{ C.fillTr }}"></span><span style="position:relative">{{ C.holdLabel }}</span></button></div>
+</div>
+</div>
+<ul style="margin:0;padding:0 0 0 16px;width:340px;font-size:12px;line-height:1.55;color:#5e574c;display:flex;flex-direction:column;gap:4px">
+<li><b style="color:#14120f">Glass chrome.</b> Translucent nav and a floating total bar; content scrolls underneath. (Breaks the current “no blur” rule.)</li>
+<li><b style="color:#14120f">Sheets you can throw.</b> Drag either sheet’s header down; a flick projects momentum and dismisses.</li>
+<li><b style="color:#14120f">Hold to place.</b> Press and hold ~1s instead of a second confirm tap. Release early to cancel.</li>
+<li>Tapping a tooth opens its sheet, as it does today. The segmented control sets which type the sheet starts on. Teeth pop in with a spring, Reorder opens straight to review, search filters sellers.</li>
+</ul>
+</div>
+
+</div>
+<p class="dv-next">Try next: “take the one-tap chart from <a class="dv-oid" href="#1a">1a</a> into <a class="dv-oid" href="#1b">1b</a>” · “<a class="dv-oid" href="#1c">1c</a> but in Newsreader” · “now do orders + seller screens”</p>
+</section>
+
+<section class="dv-turn" id="notes" data-screen-label="Marketplace readiness">
+<div class="dv-thd"><a class="dv-tid" href="#notes">N</a><span class="dv-tname">Current app vs. a full marketplace — pros and cons</span></div>
+<div style="max-width:1160px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px">
+<div style="background:#fbf8f0;border:1px solid rgba(20,18,15,0.16);border-radius:6px;padding:22px 24px">
+<h2 style="font-family:'Newsreader',serif;font-size:24px;letter-spacing:-0.015em">What carries over</h2>
+<ul style="margin:14px 0 0;padding:0 0 0 18px;font-size:14px;line-height:1.55;display:flex;flex-direction:column;gap:10px;text-wrap:pretty">
+<li><b>Money handling is already built properly.</b> Totals are worked out on the server, prices are locked at order time, and an order is refused if prices change while a student is checking out. A marketplace needs all of this, and most of it is already done.</li>
+<li><b>Data security.</b> Every table has access rules set at the database level (row-level security), and there are scripts that check them. Students can't see each other's orders, and sellers can't see other sellers' orders.</li>
+<li><b>The paper look stands out and is easy to read.</b> Body text is Atkinson Hyperlegible, sizes are in rem so they follow the phone's text-size setting, and there are settings for reduced motion and high contrast. It's unlike other dental-supply apps.</li>
+<li><b>Parts that work for any product.</b> The bottom sheet with real swipe physics, the settings menu, consistent screen headers, empty states, undo, and the price-change notices.</li>
+<li><b>One seller per order</b> keeps pickup and payment simple. A per-seller cart is a natural first step for a marketplace.</li>
+</ul>
+</div>
+<div style="background:#fbf8f0;border:1px solid rgba(20,18,15,0.16);border-radius:6px;padding:22px 24px">
+<h2 style="font-family:'Newsreader',serif;font-size:24px;letter-spacing:-0.015em">What holds it back</h2>
+<ul style="margin:14px 0 0;padding:0 0 0 18px;font-size:14px;line-height:1.55;display:flex;flex-direction:column;gap:10px;text-wrap:pretty">
+<li><b>The tooth chart is the order screen.</b> Products are "extras" listed under the chart, so a student who only wants burs still lands on a chart of teeth.</li>
+<li><b>Home is a list of sellers, not products.</b> There's no search, no category browsing and no comparing one product across sellers. Those are the core marketplace actions, and the current rules rule them out.</li>
+<li><b>The accent colours are all spoken for.</b> Red means Frasaco, blue means Copy A and green means handed over. Nothing is left for sale prices, stock, categories or brands.</li>
+<li><b>No product images.</b> Thirty plain-text rows of gloves are hard to scan, and suppliers will expect photos.</li>
+<li><b>The weekly order is built into the data.</b> An order with extras is still saved as order_type = 'tooth', and each order carries a week number. An order with only products has no proper place of its own.</li>
+<li><b>Five fixed categories,</b> and only an admin can change them. That's fine for 10 products, not for 300.</li>
+<li><b>No commission.</b> That's deliberate for now, but it means the screens have no place for fees, which a marketplace may eventually need.</li>
+</ul>
+</div>
+<div style="grid-column:1/-1;background:#14120f;color:#fbf8f0;border-radius:6px;padding:22px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+<div><h2 style="font-family:'Newsreader',serif;font-size:24px;letter-spacing:-0.015em">A way to bridge it</h2><p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:rgba(251,248,240,0.75)">Design suggestions only, nothing built.</p></div>
+<p style="margin:0;font-size:14px;line-height:1.55"><b>Make the seller's storefront the main unit.</b> Each seller gets a shop page. The tooth chart becomes one product in it: "Typodont teeth", which opens the chart for picking. Burs and gloves sit next to it with equal weight.</p>
+<p style="margin:0;font-size:14px;line-height:1.55"><b>Home becomes Shop:</b> search, categories, and "Reorder your teeth" pinned at the top for the weekly habit, so the main use case stays one tap away.</p>
+<p style="margin:0;font-size:14px;line-height:1.55"><b>Rename order_type 'tooth' to something like 'seller_order'</b> and make the week number optional before adding product-only orders. Keep the colour rule, but add a neutral system for categories so the tooth colours stay reserved for teeth.</p>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const FR = '#c0362c', CA = '#3f5f6e';
+const SELLERS = [
+  { name: 'Maya Haddad', first: 'Maya', init: 'MH', f: 2.5, c: 1.2, meta: 'Student supplier · BAU · + 4 extras', short: '4 extras' },
+  { name: 'Karim Saab', first: 'Karim', init: 'KS', f: 2.4, c: 1.25, meta: 'Student supplier · BAU', short: 'BAU' },
+  { name: 'Dental Depot', first: 'Dental Depot', init: 'DD', f: 2.75, c: 1.1, meta: 'Shop · LU · + 12 extras', short: 'Shop' }
+];
+const EXTRAS = [
+  { id: 'gl', name: 'Nitrile gloves', brand: 'Medicom', unit: 'Box of 100 · M', price: 6.5 },
+  { id: 'bur', name: 'Round diamond bur', brand: 'Mani', unit: 'FG · 1 pc', price: 1.75 },
+  { id: 'wax', name: 'Modelling wax', brand: null, unit: 'Pack of 10 sheets', price: 3 },
+  { id: 'ap', name: 'Articulating paper', brand: 'Bausch', unit: 'Book of 12', price: 2.25 }
+];
+const ROWS = [
+  { arch: 'upper', teeth: [18, 17, 16, 15, 25, 26, 27, 28] },
+  { arch: 'upper', teeth: [14, 13, 12, 11, 21, 22, 23, 24] },
+  { arch: 'lower', teeth: [44, 43, 42, 41, 31, 32, 33, 34] },
+  { arch: 'lower', teeth: [48, 47, 46, 45, 35, 36, 37, 38] }
+];
+const POS = ['', 'Central Incisor', 'Lateral Incisor', 'Canine', '1st Premolar', '2nd Premolar', '1st Molar', '2nd Molar', '3rd Molar'];
+const QUAD = ['', 'Upper Right', 'Upper Left', 'Lower Left', 'Lower Right'];
+const LAST = { sel: { 11: { f: 1, c: 0 }, 14: { f: 1, c: 0 }, 16: { f: 2, c: 0 }, 26: { f: 1, c: 0 }, 36: { f: 0, c: 1 } }, extras: { gl: 1 } };
+const money = v => '$' + v.toFixed(2);
+const fresh = () => ({ screen: 'market', seller: 0, sel: {}, type: 'f', sheetOpen: false, sheetN: 16, sf: 0, sc: 0, extras: {}, review: false, undo: null, holding: false, dragging: false, dragWhich: null, dragY: 0, q: '', no: 141, pop: null });
+
+class Component extends DCLogic {
+  state = { a: fresh(), b: fresh(), c: fresh() };
+  t = {};
+  componentWillUnmount() { Object.values(this.t).forEach(clearTimeout); }
+  set(o, p) { this.setState(s => ({ [o]: { ...s[o], ...(typeof p === 'function' ? p(s[o]) : p) } })); }
+  isOn(st, n) { const v = st.sel[n]; return !!v && v.f + v.c > 0; }
+  flash(o, msg, snap) {
+    this.set(o, { undo: { msg, snap } });
+    clearTimeout(this.t['u' + o]);
+    this.t['u' + o] = setTimeout(() => this.set(o, { undo: null }), 5000);
+  }
+  add(o, n) {
+    this.set(o, st => ({ sel: { ...st.sel, [n]: st.type === 'f' ? { f: 1, c: 0 } : { f: 0, c: 1 } }, pop: n }));
+  }
+  toothAt(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const t = el && el.closest && el.closest('[data-tooth]');
+    return t ? Number(t.getAttribute('data-tooth')) : null;
+  }
+  down(o, e) {
+    const n = this.toothAt(e); if (n == null) return;
+    e.stopPropagation();
+    const st = this.state[o]; const on = this.isOn(st, n);
+    if (o === 'a') {
+      if (on) this.openSheet(o, n);
+      else { this.add(o, n); this.flash(o, `Added tooth ${n} · ${st.type === 'f' ? 'Frasaco' : 'Copy A'}`, st.sel); }
+      return;
+    }
+    if (o === 'c') { this.openSheet(o, n); return; }
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    this.paint = { o, start: n, last: n, moved: false, on, snap: st.sel, added: on ? [] : [n] };
+    if (!on) this.add(o, n);
+  }
+  move(o, e) {
+    const p = this.paint; if (!p || p.o !== o) return;
+    const n = this.toothAt(e);
+    if (n != null && n !== p.last) {
+      p.last = n; p.moved = true;
+      if (!this.isOn(this.state[o], n) && !p.added.includes(n)) { p.added.push(n); this.add(o, n); }
+    }
+  }
+  up(o) {
+    const p = this.paint; if (!p || p.o !== o) return;
+    this.paint = null;
+    if (!p.moved && p.on) this.openSheet(o, p.start);
+    else if (p.added.length) this.flash(o, p.added.length === 1 ? `Added tooth ${p.added[0]}` : `Added ${p.added.length} teeth`, p.snap);
+  }
+  openSheet(o, n) {
+    const st = this.state[o]; const v = st.sel[n];
+    this.set(o, { sheetOpen: true, sheetN: n, sf: v ? v.f : (st.type === 'f' ? 1 : 0), sc: v ? v.c : (st.type === 'c' ? 1 : 0), dragY: 0 });
+  }
+  commit(o) {
+    const st = this.state[o]; const n = st.sheetN; const had = this.isOn(st, n);
+    const sel = { ...st.sel };
+    if (st.sf + st.sc > 0) sel[n] = { f: st.sf, c: st.sc }; else delete sel[n];
+    this.set(o, { sel, sheetOpen: false });
+    this.flash(o, st.sf + st.sc === 0 ? `Removed tooth ${n}` : had ? `Updated tooth ${n}` : `Added tooth ${n}`, st.sel);
+  }
+  remove(o) {
+    const st = this.state[o]; const sel = { ...st.sel }; delete sel[st.sheetN];
+    this.set(o, { sel, sheetOpen: false });
+    if (this.isOn(st, st.sheetN)) this.flash(o, `Removed tooth ${st.sheetN}`, st.sel);
+  }
+  gDown(o, which, e) {
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    this.drag = { o, which, y0: e.clientY, h: [{ t: performance.now(), y: 0 }] };
+    this.set(o, { dragging: true, dragWhich: which, dragY: 0 });
+  }
+  gMove(o, e) {
+    const d = this.drag; if (!d || d.o !== o) return;
+    let y = e.clientY - d.y0;
+    if (y < 0) y = -((-y) * 400 * 0.55) / (400 + 0.55 * (-y));
+    d.h.push({ t: performance.now(), y }); if (d.h.length > 6) d.h.shift();
+    this.set(o, { dragY: y });
+  }
+  gUp(o) {
+    const d = this.drag; if (!d || d.o !== o) return;
+    this.drag = null;
+    const a = d.h[0], b = d.h[d.h.length - 1];
+    const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) * 1000 : 0;
+    const proj = b.y + (v / 1000) * 0.998 / (1 - 0.998);
+    const close = proj > 180;
+    const patch = { dragging: false, dragY: close ? b.y : 0, dragWhich: null };
+    if (close) patch[d.which === 'sheet' ? 'sheetOpen' : 'review'] = false;
+    this.set(o, patch);
+  }
+  holdDown(o) {
+    if (this.state[o].holding) return;
+    this.set(o, { holding: true });
+    clearTimeout(this.t.h); this.t.h = setTimeout(() => this.place(o), 1000);
+  }
+  holdUp(o) { if (this.state[o].holding) { clearTimeout(this.t.h); this.set(o, { holding: false }); } }
+  place(o) { this.set(o, st => ({ screen: 'done', review: false, holding: false, no: st.no + 1 })); }
+
+  overlay(o, st, open, which) {
+    const drag = st.dragWhich === which;
+    const y = drag ? st.dragY : 0;
+    return {
+      tf: open ? `translateY(${y}px)` : 'translateY(110%)',
+      tr: drag ? 'none' : open ? 'transform 320ms cubic-bezier(0.32,0.72,0,1)' : 'transform 220ms cubic-bezier(0.23,1,0.32,1)',
+      scrim: open ? Math.max(0, 1 - Math.max(0, y) / 500) : 0,
+      pe: open ? 'auto' : 'none',
+      close: () => this.set(o, which === 'sheet' ? { sheetOpen: false } : { review: false }),
+      gDown: e => this.gDown(o, which, e), gMove: e => this.gMove(o, e), gUp: () => this.gUp(o)
+    };
+  }
+
+  vm(o) {
+    const st = this.state[o]; const s = SELLERS[st.seller];
+    const seller = { ...s, fs: money(s.f), cs: money(s.c) };
+    const mkRow = r => ({
+      teeth: r.teeth.map((n, i) => {
+        const v = st.sel[n] || { f: 0, c: 0 }; const q = v.f + v.c; const fr = v.f > 0, ca = v.c > 0;
+        const d = 12 * Math.pow((i - 3.5) / 3.5, 2);
+        const fill = fr ? FR : ca ? CA : null;
+        return {
+          n, dip: (r.arch === 'upper' ? d : -d) + 'px', qty: q, badge: q > 1,
+          img: fr && ca ? `linear-gradient(135deg, ${FR} 0 50%, ${CA} 50% 100%)` : 'none',
+          bg: fill || '#fbf8f0', fg: q ? '#fbf8f0' : '#8a8175', border: q ? 'transparent' : 'rgba(20,18,15,0.16)',
+          bgB: fill || 'transparent', fgB: q ? '#fbf8f0' : '#14120f', borderB: q ? 'transparent' : 'rgba(20,18,15,0.28)',
+          bgC: fill || 'rgba(20,18,15,0.06)', fgC: q ? '#fff' : '#8a8175', scale: q ? 1 : 0.92
+        };
+      })
+    });
+    const nums = Object.keys(st.sel).map(Number).filter(n => this.isOn(st, n)).sort((a, b) => a - b);
+    const lines = [];
+    nums.forEach(n => {
+      const v = st.sel[n];
+      if (v.f) lines.push({ label: `Tooth ${n}`, type: 'Frasaco', color: FR, qty: v.f, total: money(v.f * s.f), open: () => this.openSheet(o, n) });
+      if (v.c) lines.push({ label: `Tooth ${n}`, type: 'Copy A', color: CA, qty: v.c, total: money(v.c * s.c), open: () => this.openSheet(o, n) });
+    });
+    const groups = [['f', 'Frasaco', FR, s.f], ['c', 'Copy A', CA, s.c]].map(([k, name, color, price]) => {
+      const items = nums.filter(n => st.sel[n][k] > 0);
+      const count = items.reduce((a, n) => a + st.sel[n][k], 0);
+      return { name, color, count, each: money(price), total: money(count * price), list: items.map(n => st.sel[n][k] > 1 ? `${n}×${st.sel[n][k]}` : `${n}`).join(', ') };
+    }).filter(g => g.count > 0);
+    const teethCount = nums.reduce((a, n) => a + st.sel[n].f + st.sel[n].c, 0);
+    const teethTotal = nums.reduce((a, n) => a + st.sel[n].f * s.f + st.sel[n].c * s.c, 0);
+    const extras = EXTRAS.map(e => {
+      const qty = st.extras[e.id] || 0;
+      const setQ = q => this.set(o, x => ({ extras: { ...x.extras, [e.id]: Math.max(0, Math.min(10, q)) } }));
+      return { ...e, qty, meta: [e.brand, money(e.price), e.unit].filter(Boolean).join(' · '), decOp: qty ? 1 : 0.3, qtyColor: qty ? '#14120f' : '#8a8175', dec: () => setQ(qty - 1), inc: () => setQ(qty + 1) };
+    });
+    const extraLines = extras.filter(e => e.qty > 0).map(e => ({ name: e.name, unit: e.unit, qty: e.qty, total: money(e.qty * e.price) }));
+    const extrasCount = extraLines.reduce((a, e) => a + e.qty, 0);
+    const total = teethTotal + extras.reduce((a, e) => a + e.qty * e.price, 0);
+    const parts = [];
+    if (teethCount) parts.push(`${teethCount} ${teethCount === 1 ? 'tooth' : 'teeth'}`);
+    if (extrasCount) parts.push(`${extrasCount} ${extrasCount === 1 ? 'extra' : 'extras'}`);
+    const hasLines = teethCount + extrasCount > 0;
+    const minF = Math.min(...SELLERS.map(x => x.f)), minC = Math.min(...SELLERS.map(x => x.c));
+    const q = (st.q || '').toLowerCase();
+    const shown = SELLERS.map((x, i) => ({ x, i })).filter(({ x }) => o !== 'c' || !q || x.name.toLowerCase().includes(q));
+    const sellers = shown.map(({ x, i }, k) => ({
+      ...x, fs: money(x.f), cs: money(x.c),
+      fDec: x.f === minF ? 'underline' : 'none', cDec: x.c === minC ? 'underline' : 'none',
+      sep: k < shown.length - 1 ? '0.5px solid rgba(20,18,15,0.12)' : 'none',
+      open: () => this.set(o, { screen: 'order', seller: i, sel: {}, extras: {}, undo: null, review: false })
+    }));
+    const sheetCount = st.sf + st.sc;
+    const sn = st.sheetN;
+    const sheet = {
+      ...this.overlay(o, st, st.sheetOpen, 'sheet'),
+      n: sn, name: QUAD[Math.floor(sn / 10)] + ' ' + POS[sn % 10], sf: st.sf, sc: st.sc,
+      sub: money(st.sf * s.f + st.sc * s.c), countStr: `${sheetCount} ${sheetCount === 1 ? 'tooth' : 'teeth'}`,
+      cta: sheetCount === 0 ? 'Remove' : this.isOn(st, sn) ? 'Update' : 'Add',
+      fBd: st.sf ? FR : 'rgba(20,18,15,0.16)', fBg: st.sf ? '#efe8d9' : '#fbf8f0',
+      cBd: st.sc ? CA : 'rgba(20,18,15,0.16)', cBg: st.sc ? '#efe8d9' : '#fbf8f0',
+      decF: () => this.set(o, x => ({ sf: Math.max(0, x.sf - 1) })), incF: () => this.set(o, x => ({ sf: Math.min(10, x.sf + 1) })),
+      decC: () => this.set(o, x => ({ sc: Math.max(0, x.sc - 1) })), incC: () => this.set(o, x => ({ sc: Math.min(10, x.sc + 1) })),
+      commit: () => this.commit(o), remove: () => this.remove(o)
+    };
+    if (o === 'a') sheet.cta = sheetCount === 0 ? 'Remove from order' : this.isOn(st, sn) ? 'Update order' : 'Add to order';
+    const typeObj = k => ({ bg: st.type === k ? (k === 'f' ? FR : CA) : '#fbf8f0', fg: st.type === k ? '#fbf8f0' : '#14120f', pick: () => this.set(o, { type: k }) });
+    const stepsA = [
+      { label: 'Placed', hint: 'Just now', done: true },
+      { label: `${s.first} confirms`, hint: 'Usually within a day' },
+      { label: 'Handed over', hint: 'At pickup' },
+      { label: 'Paid', hint: `${money(total)} in cash` }
+    ];
+    return {
+      isMarket: st.screen === 'market', isOrder: st.screen === 'order', isDone: st.screen === 'done',
+      seller, sellers, q: st.q,
+      onQ: e => this.set(o, { q: e.target.value }), noResults: o === 'c' && shown.length === 0,
+      upper: ROWS.slice(0, 2).map(mkRow), lower: ROWS.slice(2).map(mkRow),
+      down: e => this.down(o, e), move: e => this.move(o, e), up: () => this.up(o),
+      tF: typeObj('f'), tC: typeObj('c'),
+      thumb: st.type === 'f' ? 'translateX(0)' : 'translateX(100%)',
+      toggle: () => this.set(o, x => ({ type: x.type === 'f' ? 'c' : 'f' })),
+      typeName: st.type === 'f' ? `Frasaco` : `Copy A`, typeColor: st.type === 'f' ? FR : CA,
+      extras, extraLines, lines, groups, empty: lines.length === 0,
+      totalStr: money(total), countStr: parts.join(' · ') || 'Nothing yet',
+      reviewOp: hasLines ? 1 : 0.3,
+      openReview: () => { if (hasLines) this.set(o, { review: true, dragY: 0 }); },
+      undo: !!st.undo, undoMsg: st.undo ? st.undo.msg : '',
+      undoIt: () => { const u = this.state[o].undo; if (u) this.set(o, { sel: u.snap, undo: null }); },
+      back: () => this.set(o, { screen: 'market', sheetOpen: false, review: false, undo: null }),
+      reorder: () => this.set(o, { screen: 'order', seller: 0, sel: LAST.sel, extras: LAST.extras, review: o !== 'b', undo: null }),
+      reset: () => this.set(o, { ...fresh(), no: st.no }),
+      place: () => this.place(o),
+      sheet, rv: this.overlay(o, st, st.review, 'review'),
+      holdDown: () => this.holdDown(o), holdUp: () => this.holdUp(o),
+      fill: st.holding ? 1 : 0,
+      fillTr: st.holding ? 'transform 1000ms linear' : 'transform 220ms cubic-bezier(0.23,1,0.32,1)',
+      holdLabel: st.holding ? 'Keep holding…' : `Hold to place · ${money(total)}`,
+      no: String(st.no).padStart(4, '0'),
+      steps: stepsA.map((x, i) => ({
+        ...x, num: ['I.', 'II.', 'III.', 'IV.'][i], line: i < 3 ? 'block' : 'none',
+        ring: x.done ? '#14120f' : 'rgba(20,18,15,0.28)', fill: x.done ? '#14120f' : 'transparent', color: x.done ? '#14120f' : '#8a8175'
+      }))
+    };
+  }
+
+  renderVals() { return { A: this.vm('a'), B: this.vm('b'), C: this.vm('c') }; }
+}
+</script>
+</body>
+</html>
