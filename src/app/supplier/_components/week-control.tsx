@@ -10,18 +10,9 @@ import { setCurrentWeek } from "../_actions/orders";
  * they take orders for week 5. It moves on by itself every Saturday at
  * 1:00 PM; the buttons are for
  * putting it right (the first week of a semester, a holiday). Shown at
- * once, put back if the save fails. `footnote` sits under the week, on
- * the card's lower row (how many students have ordered).
+ * once, put back if the save fails.
  */
-export function WeekControl({
-  week,
-  nextSwitch,
-  footnote,
-}: {
-  week: number;
-  nextSwitch: string;
-  footnote?: React.ReactNode;
-}) {
+export function WeekControl({ week, nextSwitch }: { week: number; nextSwitch: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [shown, setShown] = useState(week);
@@ -64,7 +55,6 @@ export function WeekControl({
         </span>
       </div>
       <div className="border-t-[0.5px] border-separator px-4 py-2.5 text-native-caption text-ink-muted">
-        {footnote && <p className="text-ink">{footnote}</p>}
         <p>
           {shown < 17
             ? <>Moves to week <span className="tnum">{shown + 1}</span> on {nextSwitch}.</>

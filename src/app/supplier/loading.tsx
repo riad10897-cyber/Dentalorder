@@ -7,7 +7,7 @@ export default function SupplierOrdersLoading() {
     <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
       <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Orders</h1>
 
-      <div className="skeleton h-[7.25rem] rounded-group" />
+      <div className="skeleton h-[6.875rem] rounded-group" />
 
       <div className="mt-5 flex gap-2">
         {Array.from({ length: 3 }, (_, i) => (
