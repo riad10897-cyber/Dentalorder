@@ -53,6 +53,12 @@ jobs:
           # A single row from a small table. Read only — this workflow
           # must never write. The key travels as a header, never in the
           # query string, so it cannot end up in a logged URL.
+          #
+          # product_categories: the five fixed categories. Anyone may read
+          # them (its RLS policy is `using (true)`), so this answers 200
+          # with the publishable key. It used to read `representatives`,
+          # which the suppliers migration renamed to an archive table; from
+          # then on every ping got a 404 and the job failed.
           STATUS=$(curl \
             --silent \
             --show-error \
@@ -66,7 +72,7 @@ jobs:
             -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}" \
             -H "Accept: application/json" \
-            "${BASE}/rest/v1/representatives?select=id&limit=1")
+            "${BASE}/rest/v1/product_categories?select=id&limit=1")
 
           echo "HTTP status: ${STATUS}"
           echo "Response body:"
