@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "./service-worker-registration";
+import { VisitCounter } from "./analytics";
 
 export const metadata: Metadata = {
   title: "Molaro",
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body className="ui-native antialiased">
         {children}
         <ServiceWorkerRegistration />
+        <VisitCounter />
       </body>
     </html>
   );
