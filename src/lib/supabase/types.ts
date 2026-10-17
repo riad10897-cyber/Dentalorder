@@ -12,6 +12,18 @@ export type FulfillmentStatus =
   | "cancelled"
   | "rejected";
 export type ToothType = "frasaco" | "copy_a";
+
+/** A line a seller took off an order as unavailable, as it was charged. */
+export interface UnavailableLine {
+  tooth_number: number | null;
+  tooth_type: ToothType | null;
+  product_name: string | null;
+  product_unit: string | null;
+  quantity: number;
+  /** numeric in the database, so JSON gives a number. */
+  unit_price: number;
+  line_total: number;
+}
 export type AccountStatus = "active" | "suspended" | "pending_approval";
 export type SupplierKind = "student_supplier" | "shop";
 
@@ -250,6 +262,10 @@ export interface Database {
           replaced_by: string | null;
           /** Set when the student cancelled it while pending. Frozen from then on. */
           cancelled_at: string | null;
+          /** Set when the seller took unavailable lines off: the order this one replaced. */
+          amended_from: string | null;
+          /** Lines the seller took off as unavailable, each as it was charged. */
+          unavailable_lines: UnavailableLine[];
         };
         Insert: {
           id?: string;
@@ -270,6 +286,8 @@ export interface Database {
           rejection_reason?: string | null;
           replaced_by?: string | null;
           cancelled_at?: string | null;
+          amended_from?: string | null;
+          unavailable_lines?: UnavailableLine[];
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
         Relationships: [typeof REL_ORDERS_PROFILES, typeof REL_ORDERS_SUPPLIERS, typeof REL_ORDER_ITEMS_ORDERS];
@@ -375,6 +393,10 @@ export interface Database {
       };
       edit_pending_order: {
         Args: { p_order_id: string; p_items: SubmitToothOrderItem[]; p_expected_total: number | null };
+        Returns: string;
+      };
+      remove_unavailable_lines: {
+        Args: { p_order_id: string; p_line_ids: string[] };
         Returns: string;
       };
     };

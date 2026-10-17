@@ -65,6 +65,13 @@ export const rejectOrderSchema = z.object({
     .max(200, "Keep it under 200 characters."),
 });
 
+// The seller names the lines to take off, by id, and nothing else: the
+// database reprices nothing and reads no amount from the request.
+export const removeUnavailableSchema = z.object({
+  orderId: z.string().uuid(),
+  lineIds: z.array(z.string().uuid()).min(1, "Choose what isn't available.").max(100),
+});
+
 export const paymentStatusSchema = z.enum(["unpaid", "pending", "paid"]);
 
 export const updateOrderStatusSchema = z.object({

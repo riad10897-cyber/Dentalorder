@@ -4,10 +4,12 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 // type-only: keeps the server-only data module out of this client bundle
 import type { SupplierOrder } from "@/lib/supplier/data";
-import { rejectOrder, updateOrderStatus } from "./_actions/orders";
+import { rejectOrder, removeUnavailable, updateOrderStatus } from "./_actions/orders";
 import { haptic } from "@/lib/haptics";
 import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
 import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
+import { UnavailableNote } from "@/app/_components/unavailable-note";
+import { totalWithout } from "@/lib/orders/unavailable";
 
 type Tab = "pending" | "confirmed" | "fulfilled" | "rejected";
 const TABS: { key: Tab; label: string }[] = [
@@ -140,6 +142,7 @@ function OrderCard({ order }: { order: SupplierOrder }) {
   const [error, setError] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
+  const [removing, setRemoving] = useState(false);
 
   function runStatus(patch: Parameters<typeof updateOrderStatus>[0]) {
     setError(null);
@@ -219,6 +222,8 @@ function OrderCard({ order }: { order: SupplierOrder }) {
 
       <ExtrasLines extras={order.extras} />
 
+      <UnavailableNote lines={order.unavailable} total={order.totalPrice} />
+
       {order.fulfillmentStatus === "rejected" ? (
         <div className="mt-3 border-t-[0.5px] border-separator pt-3">
           <p className="text-native-caption font-semibold text-ink-faint">Rejected</p>
@@ -267,12 +272,25 @@ function OrderCard({ order }: { order: SupplierOrder }) {
             </button>
           </div>
         </div>
+      ) : removing ? (
+        <RemovePanel
+          order={order}
+          onDone={() => {
+            setRemoving(false);
+            router.refresh();
+          }}
+          onCancel={() => setRemoving(false)}
+        />
       ) : (
         <OrderActions
           order={order}
           pending={pending}
           onStatus={runStatus}
           onReject={() => setRejecting(true)}
+          onRemove={() => {
+            setError(null);
+            setRemoving(true);
+          }}
         />
       )}
 
@@ -304,11 +322,13 @@ function OrderActions({
   pending,
   onStatus,
   onReject,
+  onRemove,
 }: {
   order: SupplierOrder;
   pending: boolean;
   onStatus: (patch: StatusPatch) => void;
   onReject: () => void;
+  onRemove: () => void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const status = order.fulfillmentStatus;
@@ -318,7 +338,7 @@ function OrderActions({
     status === "pending"
       ? { label: "Confirm", patch: { orderId: order.id, fulfillmentStatus: "confirmed" } }
       : status === "confirmed"
-        ? { label: "Mark handed over", patch: { orderId: order.id, fulfillmentStatus: "fulfilled" } }
+        ? { label: "Handed over", patch: { orderId: order.id, fulfillmentStatus: "fulfilled" } }
         : status === "fulfilled" && !paid
           ? { label: "Mark paid", patch: { orderId: order.id, paymentStatus: "paid" } }
           : null;
@@ -326,13 +346,20 @@ function OrderActions({
   // The paid toggle, unless "Mark paid" is already the main button.
   const showPaidToggle = !(status === "fulfilled" && !paid);
 
+  // Taking an item off needs something left on the order afterwards.
+  const lineCount = order.items.length + order.extras.length;
+  const removeItem =
+    (status === "pending" || status === "confirmed") && lineCount > 1
+      ? [{ label: "Item not available…", onClick: onRemove }]
+      : [];
   const more: { label: string; onClick: () => void }[] =
     status === "pending"
       ? [
           { label: "Mark handed over now", onClick: () => onStatus({ orderId: order.id, fulfillmentStatus: "fulfilled" }) },
+          ...removeItem,
           { label: "Reject order…", onClick: onReject },
         ]
-      : [];
+      : removeItem;
 
   return (
     <div className="mt-3 border-t-[0.5px] border-separator pt-3">
@@ -342,7 +369,7 @@ function OrderActions({
             type="button"
             disabled={pending}
             onClick={() => onStatus(next.patch)}
-            className={`${PRIMARY} flex-[2]`}
+            className={`${PRIMARY} min-w-0 flex-[2_1_auto]`}
           >
             {next.label}
           </button>
@@ -355,7 +382,7 @@ function OrderActions({
             aria-label={paid ? "Paid. Tap to mark as not paid" : "Mark paid"}
             disabled={pending}
             onClick={() => onStatus({ orderId: order.id, paymentStatus: paid ? "unpaid" : "paid" })}
-            className={`${SECONDARY} state-fade flex-1 whitespace-nowrap ${paid ? "bg-fill-faint text-ink-muted" : "bg-fill text-ink"}`}
+            className={`${SECONDARY} state-fade flex-[1_1_auto] whitespace-nowrap ${paid ? "bg-fill-faint text-ink-muted" : "bg-fill text-ink"}`}
           >
             {/* Short, so it never wraps beside the main button. Tapping it again undoes. */}
             {paid ? "Paid ✓" : "Mark paid"}
@@ -398,6 +425,144 @@ function OrderActions({
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * "Item not available": the seller ticks what they can't get, sees the new
+ * total, and takes it off. The total shown here is the same sum the
+ * database makes — the lines that stay, at the prices first charged — and
+ * the database is what actually sets it.
+ */
+function RemovePanel({
+  order,
+  onDone,
+  onCancel,
+}: {
+  order: SupplierOrder;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set());
+
+  const lines = [
+    ...order.items.map((item) => ({
+      lineId: item.lineId,
+      label: `${item.toothNumber} ${item.toothType === "frasaco" ? "Frasaco" : "Copy A"}`,
+      dot: item.toothType === "frasaco" ? "var(--frasaco)" : "var(--copy-a)",
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+    })),
+    ...order.extras.map((extra) => ({
+      lineId: extra.lineId,
+      label: extra.unit ? `${extra.name} · ${extra.unit}` : extra.name,
+      dot: null,
+      quantity: extra.quantity,
+      lineTotal: extra.lineTotal,
+    })),
+  ];
+  const everything = chosen.size === lines.length;
+  const newTotal = totalWithout(lines, chosen);
+
+  function toggle(lineId: string) {
+    setError(null);
+    setChosen((current) => {
+      const next = new Set(current);
+      if (next.has(lineId)) next.delete(lineId);
+      else next.add(lineId);
+      return next;
+    });
+  }
+
+  function confirm() {
+    setError(null);
+    startTransition(async () => {
+      const result = await removeUnavailable({ orderId: order.id, lineIds: [...chosen] });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      onDone();
+    });
+  }
+
+  return (
+    <div className="mt-3 border-t-[0.5px] border-separator pt-3">
+      <p className="text-native-caption text-ink-muted">What isn&rsquo;t available? It comes off the order.</p>
+      <ul className="mt-2 overflow-hidden rounded-field bg-fill-faint">
+        {lines.map((line) => {
+          const on = chosen.has(line.lineId);
+          return (
+            <li key={line.lineId} className="border-b-[0.5px] border-separator last:border-none">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                disabled={pending}
+                onClick={() => toggle(line.lineId)}
+                className="pressable flex min-h-11 w-full items-center gap-3 px-3.5 py-2 text-left disabled:opacity-50"
+              >
+                <span
+                  aria-hidden
+                  className={`state-fade flex h-[1.375rem] w-[1.375rem] shrink-0 items-center justify-center rounded-full border-[1.5px] ${
+                    on ? "border-ink bg-ink text-card" : "border-rule"
+                  }`}
+                >
+                  {on && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12.5l4.5 4.5L19 7.5" />
+                    </svg>
+                  )}
+                </span>
+                <span className={`tnum flex min-w-0 flex-1 items-center gap-1.5 text-native-body ${on ? "text-ink-faint line-through" : "text-ink"}`}>
+                  {line.dot && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: line.dot }} />}
+                  <span className="truncate">{line.label}</span>
+                  <span className="shrink-0 text-ink-faint">×{line.quantity}</span>
+                </span>
+                <span className="tnum shrink-0 text-list-secondary text-ink-muted">${line.lineTotal.toFixed(2)}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <p className="tnum mt-2 flex items-baseline justify-between px-1 text-list-secondary text-ink-muted" aria-live="polite">
+        <span>{everything ? "At least one item has to stay." : "New total"}</span>
+        {!everything && (
+          <span className="text-native-body font-semibold text-ink">
+            ${newTotal.toFixed(2)}
+            {chosen.size > 0 && (
+              <span className="ml-1.5 text-list-secondary font-normal text-ink-faint line-through">
+                ${order.totalPrice.toFixed(2)}
+              </span>
+            )}
+          </span>
+        )}
+      </p>
+      <p className="mt-0.5 px-1 text-native-caption text-ink-faint">The student sees what was taken off and the new total.</p>
+
+      <div className="mt-3 flex gap-2">
+        <button type="button" disabled={pending} onClick={onCancel} className={`${SECONDARY} flex-1 bg-fill text-ink-muted`}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          disabled={pending || chosen.size === 0 || everything}
+          onClick={confirm}
+          className={`${PRIMARY} flex-[2]`}
+        >
+          {pending ? "Updating…" : "Take off"}
+        </button>
+      </div>
+
+      {error && (
+        <p className="mt-2 text-native-caption text-ink" role="alert">
+          {error}
+        </p>
       )}
     </div>
   );

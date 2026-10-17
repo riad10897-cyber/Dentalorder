@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
-import type { ToothType } from "@/lib/supabase/types";
+import type { ToothType, UnavailableLine } from "@/lib/supabase/types";
 
 export interface StudentContext {
   userId: string;
@@ -99,6 +99,8 @@ export interface StudentOrderSummary {
   items: { toothNumber: number; toothType: ToothType; quantity: number }[];
   /** Product lines, as ordered: snapshotted name, unit and price. */
   extras: { productId: string; name: string; unit: string | null; quantity: number; lineTotal: number }[];
+  /** What the seller took off as unavailable, as it was charged. */
+  unavailable: UnavailableLine[];
 }
 
 // A cancelled order is money the student did not spend. Both the student's
@@ -112,7 +114,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, supplier_id, suppliers(display_name), order_items(tooth_number, tooth_type, product_id, product_name, product_unit, quantity, line_total)",
+      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, supplier_id, unavailable_lines, suppliers(display_name), order_items(tooth_number, tooth_type, product_id, product_name, product_unit, quantity, line_total)",
     )
     .eq("student_id", userId)
     .eq("order_type", "tooth")
@@ -145,6 +147,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
         lineTotal: Number(item.line_total),
       }))
       .sort((a, b) => a.name.localeCompare(b.name)),
+    unavailable: order.unavailable_lines ?? [],
   }));
 }
 

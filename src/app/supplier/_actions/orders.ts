@@ -6,6 +6,7 @@ import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { SUPPLIER_DIRECTORY_TAG } from "@/lib/supplier/directory";
 import {
   rejectOrderSchema,
+  removeUnavailableSchema,
   updateOrderStatusSchema,
   updateRepPricesSchema,
   currentWeekSchema,
@@ -85,6 +86,44 @@ export async function rejectOrder(input: {
     // supplier is looking at a stale screen.
     return { ok: false, error: "That order can no longer be rejected. Refresh and try again." };
   }
+  return { ok: true };
+}
+
+/**
+ * Take lines that turned out to be unavailable off an order. The database
+ * (remove_unavailable_lines) decides everything: own order only, pending
+ * or confirmed only, at least one line left, and the new total from the
+ * remaining lines at the prices they were first charged. This only checks
+ * the shape of the request and reports back.
+ */
+export async function removeUnavailable(input: {
+  orderId: string;
+  lineIds: string[];
+}): Promise<ActionResult> {
+  const parsed = removeUnavailableSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+  }
+
+  const userId = await getVerifiedUserId();
+  if (!userId) return { ok: false, error: "Sign in again to change this order." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("remove_unavailable_lines", {
+    p_order_id: parsed.data.orderId,
+    p_line_ids: parsed.data.lineIds,
+  });
+  if (error) {
+    if (error.code === "DT004") {
+      return { ok: false, error: "At least one item has to stay. If nothing is available, talk to the student." };
+    }
+    if (error.code === "DT002" || error.message.includes("order not found")) {
+      return { ok: false, error: "This order can no longer be changed. Refresh and try again." };
+    }
+    return { ok: false, error: "That didn't work. Refresh and try again." };
+  }
+  revalidatePath("/supplier");
+  revalidatePath("/student/orders");
   return { ok: true };
 }
 

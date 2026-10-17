@@ -7,6 +7,7 @@ import type {
   PaymentStatus,
   SupplierKind,
   ToothType,
+  UnavailableLine,
 } from "@/lib/supabase/types";
 
 export interface SupplierContext {
@@ -57,6 +58,8 @@ export async function getSupplierContext(
 }
 
 export interface SupplierOrderItem {
+  /** The order line's id: what the seller names to take it off. */
+  lineId: string;
   toothNumber: number;
   toothType: ToothType;
   quantity: number;
@@ -67,6 +70,7 @@ export interface SupplierOrderItem {
 // A product line, as it was ordered: name, unit and price are the
 // snapshots on the line, not the product's current values.
 export interface SupplierOrderExtra {
+  lineId: string;
   productId: string;
   name: string;
   unit: string | null;
@@ -89,6 +93,8 @@ export interface SupplierOrder {
   items: SupplierOrderItem[];
   /** Product lines — the extras added to this weekly order. */
   extras: SupplierOrderExtra[];
+  /** What the seller took off as unavailable, as it was charged. */
+  unavailable: UnavailableLine[];
 }
 
 // An order nobody is going to supply is not money owed and not teeth to
@@ -117,8 +123,10 @@ function mapOrderRow(order: {
   created_at: string;
   student_id: string;
   profiles: { full_name: string } | null;
+  unavailable_lines: UnavailableLine[] | null;
   order_items:
     | {
+        id: string;
         tooth_number: number | null;
         tooth_type: ToothType | null;
         product_id: string | null;
@@ -143,6 +151,7 @@ function mapOrderRow(order: {
     items: (order.order_items ?? [])
       .filter((item) => item.tooth_number !== null && item.tooth_type !== null)
       .map((item) => ({
+        lineId: item.id,
         toothNumber: item.tooth_number!,
         toothType: item.tooth_type!,
         quantity: item.quantity,
@@ -152,6 +161,7 @@ function mapOrderRow(order: {
     extras: (order.order_items ?? [])
       .filter((item) => item.product_id !== null)
       .map((item) => ({
+        lineId: item.id,
         productId: item.product_id!,
         name: item.product_name ?? "Product",
         unit: item.product_unit,
@@ -160,15 +170,19 @@ function mapOrderRow(order: {
         lineTotal: Number(item.line_total),
       }))
       .sort((a, b) => a.name.localeCompare(b.name)),
+    unavailable: order.unavailable_lines ?? [],
   };
 }
+
+const ORDER_COLUMNS =
+  "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, student_id, unavailable_lines, profiles(full_name), order_items(id, tooth_number, tooth_type, product_id, product_name, product_unit, quantity, unit_price, line_total)";
 
 export async function listSupplierOrders(supplierId: string): Promise<SupplierOrder[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, student_id, profiles(full_name), order_items(tooth_number, tooth_type, product_id, product_name, product_unit, quantity, unit_price, line_total)",
+      ORDER_COLUMNS,
     )
     .eq("supplier_id", supplierId)
     .eq("order_type", "tooth")
@@ -268,7 +282,7 @@ export async function getStudentDetail(supplierId: string, studentId: string) {
     supabase
       .from("orders")
       .select(
-        "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, student_id, profiles(full_name), order_items(tooth_number, tooth_type, product_id, product_name, product_unit, quantity, unit_price, line_total)",
+        ORDER_COLUMNS,
       )
       .eq("supplier_id", supplierId)
       .eq("student_id", studentId)
