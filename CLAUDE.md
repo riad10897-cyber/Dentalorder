@@ -32,6 +32,7 @@ Do not introduce a new dependency without saying what it is for and why nothing 
 4. **Money is `numeric(10,2)`.** Never a float. Currency is USD everywhere.
 5. **Prices are snapshotted at order time.** A price change must never alter a past order's total.
 6. **Totals are computed server-side at insert.** No route or role may edit `unit_price`, `line_total`, `subtotal`, `commission_amount`, or `total_price` on an existing order.
+   One owner-approved exception (17 Oct 2026): a seller may take unavailable lines off a pending or confirmed order through `remove_unavailable_lines`. It never edits in place: the remaining lines are copied, at their original prices, onto a replacement order whose total the database computes at insert; the original stays untouched and is cancelled. No price or amount is ever read from the request.
 7. **Never commit `.env.local`** or any key, in any file, ever.
 
 ---
