@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Molo } from "@/app/_components/molo";
 import { describeLines } from "@/app/_components/extras-lines";
+import { ordinal, type StreakNote } from "@/lib/orders/streak";
 
 /**
  * "Sent to Mohamad" ("Paper, native"): Molo, who it went to, what it
@@ -13,7 +14,9 @@ export function ConfirmedView({
   toothCount,
   extrasCount,
   total,
+  streak,
 }: {
+  streak: StreakNote;
   wasEdit: boolean;
   supplierName: string;
   toothCount: number;
@@ -22,17 +25,33 @@ export function ConfirmedView({
 }) {
   const firstName = supplierName.split(/\s+/)[0] || supplierName;
   const steps = ["Placed", "Confirmed", "Handed over"];
+  // A first order and every milestone get the cheer; a plain week in a
+  // row keeps the hop. Either way the words say it too.
+  const cheer = streak.kind === "first" || (streak.kind === "streak" && streak.milestone);
+  const streakLine =
+    streak.kind === "first"
+      ? "Your first order on Molaro."
+      : streak.kind === "streak"
+        ? streak.milestone
+          ? `Your ${ordinal(streak.weeks)} week in a row.`
+          : `${streak.weeks} weeks in a row. Nice.`
+        : null;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center gap-3.5 px-5 pb-8 pt-[4.375rem] text-center">
       {/* Molo's hop, three times, then he rests: the order went through. */}
-      <Molo mood="gotit" size={120} loop={false} />
+      <Molo mood={cheer ? "handed" : "gotit"} size={120} loop={false} />
       <h1 className="confirm-stagger text-screen-title font-bold text-ink" style={stagger(0)}>
         {wasEdit ? `Changes sent to ${firstName}` : `Sent to ${firstName}`}
       </h1>
       <p className="confirm-stagger tnum text-native-body text-ink-muted" style={stagger(1)}>
         {describeLines(toothCount, extrasCount)} · ${total.toFixed(2)} at pickup
       </p>
+      {streakLine && (
+        <p className="confirm-stagger tnum -mt-1 rounded-full bg-card px-3.5 py-1.5 text-list-secondary font-semibold text-ink" style={stagger(1)}>
+          {streakLine}
+        </p>
+      )}
 
       <section
         aria-label="Order status"

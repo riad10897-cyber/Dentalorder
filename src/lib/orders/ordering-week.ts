@@ -44,6 +44,11 @@ function weekIndex(at: Date): number {
   return Math.floor((beirutWallClockMs(at) - ANCHOR_LOCAL_MS) / WEEK_MS);
 }
 
+/** Which ordering week (Saturday 1:00 PM to Saturday 1:00 PM) a moment falls in. Only differences matter. */
+export function orderingWeekIndex(at: Date): number {
+  return weekIndex(at);
+}
+
 /** The week a seller is on now: the week they set, plus one per Saturday 1:00 PM since. */
 export function effectiveWeek(week: number, setAt: Date, at: Date = new Date()): number {
   return Math.min(LAST_WEEK, Math.max(1, week + weekIndex(at) - weekIndex(setAt)));
