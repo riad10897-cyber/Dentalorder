@@ -1,4 +1,5 @@
 import "server-only";
+import { Molo } from "./molo";
 import { headers } from "next/headers";
 import { encode } from "uqr";
 import { ShareActions } from "./share-actions";
@@ -33,7 +34,10 @@ export function ShareApp({ url }: { url: string }) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="w-full max-w-[17rem] rounded-card border border-rule bg-card p-2">
+      {/* Molo waving beside the code: this is the screen shown to a
+          classmate, so it is where Molaro introduces itself. */}
+      <Molo mood="hello" size={96} loop={false} />
+      <div className="w-full max-w-[17rem] rounded-group bg-card p-3">
         <svg
           role="img"
           aria-label={`QR code for ${url}`}
@@ -45,9 +49,9 @@ export function ShareApp({ url }: { url: string }) {
           <path d={d.join("")} fill="var(--ink)" />
         </svg>
       </div>
-      <p className="text-center text-small text-ink-muted">
+      <p className="text-center text-list-secondary text-ink-muted">
         Point a phone camera at the code, or send the link:
-        <span className="mt-0.5 block select-all break-all font-display text-body text-ink">{url}</span>
+        <span className="mt-0.5 block select-all break-all text-native-body font-semibold text-ink">{url}</span>
       </p>
       <ShareActions url={url} />
     </div>

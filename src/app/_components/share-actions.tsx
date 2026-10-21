@@ -39,7 +39,7 @@ export function ShareActions({ url }: { url: string }) {
         <button
           type="button"
           onClick={share}
-          className="pressable min-h-11 flex-1 rounded-control bg-ink px-4 font-display text-body text-card"
+          className="pressable flex h-[3.125rem] flex-1 items-center justify-center rounded-button bg-ink px-4 text-native-body font-semibold text-card"
         >
           Share link
         </button>
@@ -47,8 +47,8 @@ export function ShareActions({ url }: { url: string }) {
       <button
         type="button"
         onClick={copy}
-        className={`pressable min-h-11 flex-1 rounded-control border px-4 font-display text-body ${
-          canShare ? "border-rule bg-card text-ink" : "border-ink bg-ink text-card"
+        className={`pressable state-fade flex h-[3.125rem] flex-1 items-center justify-center rounded-button px-4 text-native-body font-semibold ${
+          canShare ? "bg-fill text-ink" : "bg-ink text-card"
         }`}
         aria-live="polite"
       >

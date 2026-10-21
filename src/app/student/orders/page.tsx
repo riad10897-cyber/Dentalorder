@@ -142,16 +142,6 @@ function OrderCard({ order }: { order: StudentOrderSummary }) {
         {/* Only once the order is finished: ordering again while it is
             still on its way would be a second order. It opens the chart
             filled with these lines at today's prices, onto the review. */}
-        {/* Rejected: ordering the same again from the same seller is the
-            one thing that won't work, so the way on is another seller. */}
-        {rejected && (
-          <Link
-            href="/student"
-            className="flex h-9 shrink-0 items-center rounded-full bg-ink px-4 text-list-secondary font-semibold text-card transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.94] motion-reduce:active:scale-100"
-          >
-            Order from another seller
-          </Link>
-        )}
         {finished && !rejected && (
           <Link
             href={`/student/order?supplier=${order.supplierId}&from=${order.id}`}
@@ -161,6 +151,18 @@ function OrderCard({ order }: { order: StudentOrderSummary }) {
           </Link>
         )}
       </div>
+
+      {/* Rejected: ordering the same again from the same seller is the one
+          thing that won't work, so the way on is another seller. Its own
+          full-width row, so the status beside it is never squeezed. */}
+      {rejected && (
+        <Link
+          href="/student"
+          className="pressable mt-3 flex h-11 w-full items-center justify-center rounded-field bg-ink px-3 text-native-body font-semibold text-card"
+        >
+          Order from another seller
+        </Link>
+      )}
 
       {/* Pending only: the seller hasn't acted on it yet. The database
           checks again, under a lock, when it saves. */}

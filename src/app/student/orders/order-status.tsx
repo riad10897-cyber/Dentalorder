@@ -19,7 +19,14 @@ export function OrderStatus({
   /** "3 h ago": when it reached this state. */
   when?: string;
 }) {
-  const time = when ? <span className="whitespace-nowrap font-normal text-ink-faint"> · {when}</span> : null;
+  // The space sits outside the no-wrap span, so the time can drop to its
+  // own line rather than push the button beside it off the card.
+  const time = when ? (
+    <>
+      {" "}
+      <span className="whitespace-nowrap font-normal text-ink-faint">· {when}</span>
+    </>
+  ) : null;
   switch (status) {
     case "pending":
       return (
@@ -43,7 +50,7 @@ export function OrderStatus({
         <p className="flex items-center gap-1.5 text-list-secondary font-semibold" style={{ color: "var(--fulfilled)" }}>
           <Tick />
           <span>
-            Handed over
+            <span className="whitespace-nowrap">Handed over</span>
             {time}
           </span>
         </p>

@@ -10,6 +10,7 @@ import { StudentBottomNav } from "./_components/bottom-nav";
 import { MarketList } from "./_components/market-list";
 import { EmptyState, StoreIcon } from "@/app/_components/icons";
 import { timeAgo } from "@/lib/time";
+import { Molo } from "@/app/_components/molo";
 
 /**
  * Home is the market ("Paper, native").
@@ -96,7 +97,13 @@ const FIRST_ORDER_STEPS = [
 function FirstOrderSteps() {
   return (
     <section aria-label="Your first order" className="mt-4 rounded-group bg-card px-4 py-3.5">
-      <p className="text-native-body font-semibold text-ink">Your first order, in 3 steps</p>
+      {/* Molo waves new students in, until their first order. One Molo on
+          the screen: the Market's other Molo is its empty state, which
+          never shows alongside this. */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-native-body font-semibold text-ink">Your first order, in 3 steps</p>
+        <Molo mood="hello" size={64} loop={false} ground={false} className="-my-2 shrink-0" />
+      </div>
       <ol className="mt-2.5 flex flex-col gap-2">
         {FIRST_ORDER_STEPS.map((step, i) => (
           <li key={step} className="flex items-center gap-3">
@@ -136,7 +143,7 @@ function LatestUpdate({ order }: { order: StudentOrderSummary }) {
     >
       <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-ink" />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-native-body font-semibold text-ink">{what}</span>
+        <span className="block text-native-body font-semibold text-ink">{what}</span>
         <span className="block text-list-secondary text-ink-faint">{timeAgo(order.updatedAt)} · see Orders</span>
       </span>
       <svg aria-hidden className="h-3.5 w-3.5 shrink-0" fill="none" stroke="var(--chevron)" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24">
@@ -165,11 +172,14 @@ function ReorderCard({ order }: { order: StudentOrderSummary }) {
   return (
     <div className="mt-4 flex items-center gap-3.5 rounded-button bg-ink p-4 text-card">
       <div className="flex min-w-0 flex-1 flex-col gap-[0.1875rem]">
-        <span className="truncate text-native-caption text-card/65">Last order · {order.supplierName}</span>
-        {/* The total never truncates; the description gives way first. */}
-        <span className="flex min-w-0 text-[1.25rem] font-semibold leading-tight tracking-[-0.01em]">
-          <span className="truncate">{summarise(order)}</span>
+        <span className="flex min-w-0 text-native-caption text-card/65">
+          <span className="truncate">{order.supplierName}</span>
           <span className="tnum shrink-0 whitespace-pre"> · ${order.totalPrice.toFixed(2)}</span>
+        </span>
+        {/* Wraps rather than cuts: "2 teeth, Nitrile gloves" is the point
+            of the card. Two lines at most; the total sits with the seller. */}
+        <span className="line-clamp-2 text-[1.125rem] font-semibold leading-tight tracking-[-0.01em]">
+          {summarise(order)}
         </span>
       </div>
       <Link
