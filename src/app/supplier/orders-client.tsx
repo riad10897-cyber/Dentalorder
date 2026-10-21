@@ -9,13 +9,14 @@ import { haptic } from "@/lib/haptics";
 import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
 import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
 import { UnavailableNote } from "@/app/_components/unavailable-note";
+import { HelpLinks } from "@/app/_components/help-links";
 import { totalWithout } from "@/lib/orders/unavailable";
 
 type Tab = "pending" | "confirmed" | "fulfilled" | "rejected";
 const TABS: { key: Tab; label: string }[] = [
   { key: "pending", label: "Pending" },
   { key: "confirmed", label: "Confirmed" },
-  { key: "fulfilled", label: "Done" },
+  { key: "fulfilled", label: "Handed over" },
   { key: "rejected", label: "Rejected" },
 ];
 
@@ -295,9 +296,10 @@ function OrderCard({ order }: { order: SupplierOrder }) {
       )}
 
       {error && (
-        <p className="mt-2 text-native-caption text-ink" role="alert">
-          {error}
-        </p>
+        <div className="mt-2" role="alert">
+          <p className="text-native-caption text-ink">{error}</p>
+          <HelpLinks topic="an order" />
+        </div>
       )}
     </li>
   );
@@ -338,7 +340,7 @@ function OrderActions({
     status === "pending"
       ? { label: "Confirm", patch: { orderId: order.id, fulfillmentStatus: "confirmed" } }
       : status === "confirmed"
-        ? { label: "Handed over", patch: { orderId: order.id, fulfillmentStatus: "fulfilled" } }
+        ? { label: "Hand over", patch: { orderId: order.id, fulfillmentStatus: "fulfilled" } }
         : status === "fulfilled" && !paid
           ? { label: "Mark paid", patch: { orderId: order.id, paymentStatus: "paid" } }
           : null;
@@ -560,9 +562,10 @@ function RemovePanel({
       </div>
 
       {error && (
-        <p className="mt-2 text-native-caption text-ink" role="alert">
-          {error}
-        </p>
+        <div className="mt-2" role="alert">
+          <p className="text-native-caption text-ink">{error}</p>
+          <HelpLinks topic="an order" />
+        </div>
       )}
     </div>
   );

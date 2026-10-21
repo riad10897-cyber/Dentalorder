@@ -9,6 +9,7 @@ import { getVerifiedUserId } from "@/lib/supabase/auth";
 import { StudentBottomNav } from "./_components/bottom-nav";
 import { MarketList } from "./_components/market-list";
 import { EmptyState, StoreIcon } from "@/app/_components/icons";
+import { timeAgo } from "@/lib/time";
 
 /**
  * Home is the market ("Paper, native").
@@ -38,6 +39,12 @@ export default async function StudentHomePage() {
   const onMarket = new Set(market.map((s) => s.id));
   const last = orders.find((o) => o.fulfillmentStatus !== "cancelled" && onMarket.has(o.supplierId));
 
+  // What a seller last did with one of this student's orders, while it is
+  // news: there are no notifications, so the home screen says it.
+  const update = orders
+    .filter((o) => SELLER_MOVES.has(o.fulfillmentStatus) && Date.now() - Date.parse(o.updatedAt) < UPDATE_MS)
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))[0];
+
   return (
     <main className="mx-auto min-h-dvh max-w-md px-4 pb-[7.5rem] pt-1.5">
       <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Market</h1>
@@ -57,6 +64,7 @@ export default async function StudentHomePage() {
           extrasCounts={extrasCounts}
           between={
             <>
+              {update && <LatestUpdate order={update} />}
               {last && <ReorderCard order={last} />}
               <OrderWindow />
             </>
@@ -68,6 +76,35 @@ export default async function StudentHomePage() {
 
       <StudentBottomNav />
     </main>
+  );
+}
+
+const SELLER_MOVES = new Set(["confirmed", "fulfilled", "rejected"]);
+const UPDATE_MS = 48 * 60 * 60 * 1000;
+
+/** "Maria confirmed your order · 2 h ago", one tap from the order. */
+function LatestUpdate({ order }: { order: StudentOrderSummary }) {
+  const name = order.supplierName.split(/\s+/)[0] || order.supplierName;
+  const what =
+    order.fulfillmentStatus === "confirmed"
+      ? `${name} confirmed your order`
+      : order.fulfillmentStatus === "fulfilled"
+        ? `${name} handed over your order`
+        : `${name} rejected your order`;
+  return (
+    <Link
+      href="/student/orders"
+      className="pressable mt-4 flex items-center gap-3 rounded-group bg-card px-4 py-3"
+    >
+      <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-ink" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-native-body font-semibold text-ink">{what}</span>
+        <span className="block text-list-secondary text-ink-faint">{timeAgo(order.updatedAt)} · see Orders</span>
+      </span>
+      <svg aria-hidden className="h-3.5 w-3.5 shrink-0" fill="none" stroke="var(--chevron)" strokeWidth={2.5} strokeLinecap="round" viewBox="0 0 24 24">
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </Link>
   );
 }
 

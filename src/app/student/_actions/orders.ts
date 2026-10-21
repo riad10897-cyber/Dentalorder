@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { editToothOrderSchema, submitToothOrderSchema } from "@/lib/validation/orders";
 import type { SubmitToothOrderItem, ToothType } from "@/lib/supabase/types";
+import { friendlyOrderError } from "@/lib/orders/errors";
 
 export type SubmitResult =
   | { kind: "placed"; orderId: string }
@@ -78,7 +79,7 @@ export async function submitToothOrder(input: {
     const newTotal = pricesChanged(error);
     if (newTotal !== null) return { kind: "pricesChanged", newTotal };
     if (productGone(error)) return { kind: "productGone", message: error.message };
-    return { kind: "error", message: error.message };
+    return { kind: "error", message: friendlyOrderError(error.message) };
   }
   return { kind: "placed", orderId: data };
 }
@@ -121,7 +122,7 @@ export async function editToothOrder(input: {
     const newTotal = pricesChanged(error);
     if (newTotal !== null) return { kind: "pricesChanged", newTotal };
     if (productGone(error)) return { kind: "productGone", message: error.message };
-    return { kind: "error", message: error.message };
+    return { kind: "error", message: friendlyOrderError(error.message) };
   }
   return { kind: "saved", orderId: data };
 }
@@ -137,7 +138,7 @@ export async function cancelOrder(orderId: string): Promise<{ ok: true } | { ok:
   }
   const supabase = await createClient();
   const { error } = await supabase.rpc("cancel_pending_order", { p_order_id: orderId });
-  if (error) return { ok: false, message: error.message };
+  if (error) return { ok: false, message: friendlyOrderError(error.message) };
   revalidatePath("/student/orders");
   return { ok: true };
 }

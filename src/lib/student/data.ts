@@ -95,6 +95,8 @@ export interface StudentOrderSummary {
   supplierId: string;
   supplierName: string;
   createdAt: string;
+  /** Last change of any kind: the seller confirming, handing over, rejecting. */
+  updatedAt: string;
   /** Tooth lines. */
   items: { toothNumber: number; toothType: ToothType; quantity: number }[];
   /** Product lines, as ordered: snapshotted name, unit and price. */
@@ -114,7 +116,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, supplier_id, unavailable_lines, suppliers(display_name), order_items(tooth_number, tooth_type, product_id, product_name, product_unit, quantity, line_total)",
+      "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, updated_at, supplier_id, unavailable_lines, suppliers(display_name), order_items(tooth_number, tooth_type, product_id, product_name, product_unit, quantity, line_total)",
     )
     .eq("student_id", userId)
     .eq("order_type", "tooth")
@@ -130,6 +132,7 @@ export async function listStudentOrders(userId: string): Promise<StudentOrderSum
     supplierId: order.supplier_id!,
     supplierName: order.suppliers?.display_name ?? "Unknown supplier",
     createdAt: order.created_at,
+    updatedAt: order.updated_at,
     items: (order.order_items ?? [])
       .filter((item) => item.tooth_number !== null && item.tooth_type !== null)
       .map((item) => ({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { HelpLinks } from "@/app/_components/help-links";
 import { useReducedMotion } from "motion/react";
 import type { priceToothOrder } from "@/lib/orders/tooth-pricing";
 import type { PriceMove, ProductPriceMove } from "@/lib/orders/price-change";
@@ -135,9 +136,10 @@ export function ReviewSheet({
           )}
 
           {error && (
-            <p className="mx-4 mt-3 shrink-0 rounded-button bg-fill-faint px-3.5 py-3 text-list-secondary text-ink" role="alert">
-              {error}
-            </p>
+            <div className="mx-4 mt-3 shrink-0 rounded-button bg-fill-faint px-3.5 py-3" role="alert">
+              <p className="text-list-secondary text-ink">{error}</p>
+              <HelpLinks topic="placing an order" className="mt-1" />
+            </div>
           )}
 
           <div className="shrink-0 px-4 pt-4">

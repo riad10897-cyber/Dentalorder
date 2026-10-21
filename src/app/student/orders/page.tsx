@@ -9,10 +9,15 @@ import { OrderStatus } from "./order-status";
 import { ExtrasLines, describeLines } from "@/app/_components/extras-lines";
 import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
 import { UnavailableNote } from "@/app/_components/unavailable-note";
+import { formatDay, timeAgo } from "@/lib/time";
+import { HandedOverMoment } from "./handed-over-moment";
 
 // Placed, not yet done with. A cancelled or rejected order has nothing
 // left to wait for, so it reads as history rather than as in flight.
 const IN_FLIGHT = new Set(["pending", "confirmed"]);
+
+// A hand-over is celebrated once, and only while it is news.
+const RECENT_MS = 14 * 24 * 60 * 60 * 1000;
 
 export default async function OrderHistoryPage() {
   const userId = await getVerifiedUserId();
@@ -41,6 +46,16 @@ export default async function OrderHistoryPage() {
         </EmptyState>
       ) : (
         <>
+          <HandedOverMoment
+            orders={orders
+              .filter((o) => o.fulfillmentStatus === "fulfilled" && Date.now() - Date.parse(o.updatedAt) < RECENT_MS)
+              .map((o) => ({
+                id: o.id,
+                supplierName: o.supplierName,
+                teeth: o.items.reduce((sum, item) => sum + item.quantity, 0),
+                extras: o.extras.reduce((sum, extra) => sum + extra.quantity, 0),
+              }))}
+          />
           {[
             { title: "In flight", rows: inFlight },
             { title: "Finished", rows: settled },
@@ -76,7 +91,7 @@ function OrderCard({ order }: { order: StudentOrderSummary }) {
         <div className="min-w-0">
           <h2 className="truncate text-native-body font-semibold text-ink">{order.supplierName}</h2>
           <p className="tnum text-native-caption text-ink-faint">
-            {formatDate(order.createdAt)} · {describeLines(teeth, extrasCount)}
+            {formatDay(order.createdAt)} · {describeLines(teeth, extrasCount)}
           </p>
         </div>
         <span className="tnum shrink-0 text-[1.25rem] font-bold tracking-[-0.01em] text-ink">
@@ -110,11 +125,25 @@ function OrderCard({ order }: { order: StudentOrderSummary }) {
       )}
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t-[0.5px] border-separator pt-3">
-        <OrderStatus status={order.fulfillmentStatus} supplierName={order.supplierName} />
+        <OrderStatus
+          status={order.fulfillmentStatus}
+          supplierName={order.supplierName}
+          when={timeAgo(order.fulfillmentStatus === "pending" ? order.createdAt : order.updatedAt)}
+        />
         {/* Only once the order is finished: ordering again while it is
             still on its way would be a second order. It opens the chart
             filled with these lines at today's prices, onto the review. */}
-        {finished && (
+        {/* Rejected: ordering the same again from the same seller is the
+            one thing that won't work, so the way on is another seller. */}
+        {rejected && (
+          <Link
+            href="/student"
+            className="flex h-9 shrink-0 items-center rounded-full bg-ink px-4 text-list-secondary font-semibold text-card transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.94] motion-reduce:active:scale-100"
+          >
+            Order from another seller
+          </Link>
+        )}
+        {finished && !rejected && (
           <Link
             href={`/student/order?supplier=${order.supplierId}&from=${order.id}`}
             className="flex h-9 shrink-0 items-center rounded-full bg-ink px-4 text-list-secondary font-semibold text-card transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.94] motion-reduce:active:scale-100"
@@ -144,11 +173,4 @@ function OrderCard({ order }: { order: StudentOrderSummary }) {
       )}
     </li>
   );
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
 }

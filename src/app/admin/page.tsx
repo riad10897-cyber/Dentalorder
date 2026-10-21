@@ -7,6 +7,7 @@ import { SectionHeader } from "@/app/_components/section-header";
 import { EmptyState, ClipboardIcon, PeopleIcon, StoreIcon } from "@/app/_components/icons";
 import { SignOutRow } from "@/app/_components/settings/menu";
 import type { FulfillmentStatus } from "@/lib/supabase/types";
+import { formatDay } from "@/lib/time";
 
 // Always fresh: this is the screen the owner opens to see what is
 // happening right now.
@@ -163,9 +164,4 @@ function OrderRow({ order }: { order: AdminOrder }) {
       </div>
     </li>
   );
-}
-
-/** "10 Oct", in Beirut, so a late-night order lands on the right day. */
-function formatDay(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Beirut" });
 }
