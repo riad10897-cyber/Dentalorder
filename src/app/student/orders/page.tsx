@@ -11,6 +11,7 @@ import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
 import { UnavailableNote } from "@/app/_components/unavailable-note";
 import { formatDay, timeAgo } from "@/lib/time";
 import { HandedOverMoment } from "./handed-over-moment";
+import { OrderProgress } from "@/app/_components/order-progress";
 
 // Placed, not yet done with. A cancelled or rejected order has nothing
 // left to wait for, so it reads as history rather than as in flight.
@@ -117,6 +118,14 @@ function OrderCard({ order }: { order: StudentOrderSummary }) {
       <ExtrasLines extras={order.extras} />
 
       <UnavailableNote lines={order.unavailable} total={order.totalPrice} sellerName={order.supplierName} />
+
+      {/* The same three steps as the confirmation screen, so where an
+          order stands reads the same everywhere it is shown. */}
+      {(order.fulfillmentStatus === "pending" || order.fulfillmentStatus === "confirmed") && (
+        <div className="mt-3">
+          <OrderProgress status={order.fulfillmentStatus} />
+        </div>
+      )}
 
       {rejected && order.rejectionReason && (
         <p className="mt-3 rounded-field bg-fill-faint px-3 py-2 text-list-secondary text-ink">

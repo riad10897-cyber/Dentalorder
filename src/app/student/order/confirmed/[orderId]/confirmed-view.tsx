@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Molo } from "@/app/_components/molo";
 import { describeLines } from "@/app/_components/extras-lines";
+import { OrderProgress } from "@/app/_components/order-progress";
 import { ordinal, type StreakNote } from "@/lib/orders/streak";
 
 /**
@@ -24,7 +25,6 @@ export function ConfirmedView({
   total: number;
 }) {
   const firstName = supplierName.split(/\s+/)[0] || supplierName;
-  const steps = ["Placed", "Confirmed", "Handed over"];
   // A first order and every milestone get the cheer; a plain week in a
   // row keeps the hop. Either way the words say it too.
   const cheer = streak.kind === "first" || (streak.kind === "streak" && streak.milestone);
@@ -62,25 +62,20 @@ export function ConfirmedView({
           <span className="text-list-secondary font-semibold text-ink">Waiting for {firstName}</span>
           <span className="text-list-secondary text-ink-faint">just now</span>
         </div>
-        <div className="flex gap-1" aria-hidden>
-          {steps.map((step, i) => (
-            <span
-              key={step}
-              className={`h-[0.3125rem] flex-1 rounded-full ${i === 0 ? "bg-ink" : "bg-[rgba(20,18,15,0.12)]"}`}
-            />
-          ))}
-        </div>
-        <div className="flex text-[0.75rem] text-ink-faint">
-          {steps.map((step, i) => (
-            <span key={step} className={`flex-1 ${i === 0 ? "text-ink" : ""} ${i === 1 ? "text-center" : i === 2 ? "text-right" : ""}`}>
-              {step}
-              {i === 0 && <span className="sr-only"> (done)</span>}
-            </span>
-          ))}
-        </div>
+        <OrderProgress status="pending" />
       </section>
 
-      <div className="confirm-stagger mt-auto w-full pt-8" style={stagger(3)}>
+      {/* What happens next, and the way back: a student who spots a
+          mistake right after placing should know it is not too late. */}
+      <p className="confirm-stagger text-list-secondary text-ink-muted" style={stagger(3)}>
+        Until {firstName} confirms, you can still edit or cancel it in{" "}
+        <Link href="/student/orders" className="text-ink underline underline-offset-2">
+          Orders
+        </Link>
+        .
+      </p>
+
+      <div className="confirm-stagger mt-auto w-full pt-8" style={stagger(4)}>
         <Link
           href="/student"
           className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-fill text-native-body font-semibold text-ink transition-transform duration-[120ms] ease-[var(--ease-out)] active:scale-[0.97] motion-reduce:active:scale-100"
