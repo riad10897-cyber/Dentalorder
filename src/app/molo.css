@@ -1,0 +1,89 @@
+/* Molo motion. Imported once, in the root layout. Pairs with
+   _components/molo.tsx. From the Molo kit (design/molo-kit), with one change:
+   the star never pops from scale(0) — it starts at 0.4, already invisible.
+   Every move uses transform and opacity only, so it stays smooth on low end phones.
+   Reduced motion: movement stops, only gentle fades remain. */
+
+.molo .molo-figure,
+.molo .molo-arm-l,
+.molo .molo-arm-r,
+.molo .molo-ground,
+.molo .molo-look { transform-box: view-box; }
+
+.molo .molo-fx,
+.molo .molo-confetti,
+.molo .molo-z,
+.molo .molo-dot { transform-box: fill-box; transform-origin: center; }
+
+/* Blink, every mood */
+.molo .molo-eye { transform-box: fill-box; transform-origin: center; animation: molo-blink 4.6s linear infinite; }
+@keyframes molo-blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+
+/* hello: sways and waves */
+.molo--hello .molo-figure { transform-origin: 200px 400px; animation: molo-sway 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+.molo--hello .molo-arm-r { transform-origin: 304px 246px; animation: molo-wave 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+.molo--hello .molo-fx { animation: molo-fade 2.4s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
+@keyframes molo-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes molo-wave { 0%, 64%, 100% { transform: rotate(0deg); } 12% { transform: rotate(-26deg); } 26% { transform: rotate(10deg); } 40% { transform: rotate(-22deg); } 54% { transform: rotate(6deg); } }
+@keyframes molo-fade { 0%, 64%, 100% { opacity: 0; } 10%, 52% { opacity: 1; } }
+
+/* gotit: squash, hop, land */
+.molo--gotit .molo-figure { transform-origin: 200px 400px; animation: molo-hop 1.8s infinite; }
+.molo--gotit .molo-ground { transform-origin: 200px 402px; animation: molo-shrink 1.8s infinite; }
+.molo--gotit .molo-fx { animation: molo-pop 1.8s infinite; }
+@keyframes molo-hop {
+  0% { transform: translateY(0) scale(1, 1); animation-timing-function: cubic-bezier(0.33, 0, 0.67, 1); }
+  10% { transform: translateY(0) scale(1.08, 0.9); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
+  30% { transform: translateY(-58px) scale(0.95, 1.06); animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4); }
+  48% { transform: translateY(0) scale(1.1, 0.88); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
+  58% { transform: translateY(0) scale(0.97, 1.03); }
+  68%, 100% { transform: translateY(0) scale(1, 1); }
+}
+@keyframes molo-shrink { 0%, 10%, 48%, 100% { transform: scaleX(1); opacity: 1; } 30% { transform: scaleX(0.68); opacity: 0.45; } }
+@keyframes molo-pop { 0%, 20% { transform: scale(0.4) rotate(0deg); opacity: 0; } 32% { transform: scale(1.2) rotate(25deg); opacity: 1; } 44% { transform: scale(1) rotate(35deg); opacity: 1; } 60%, 100% { transform: scale(0.4) rotate(50deg); opacity: 0; } }
+
+/* handed: jumps, arms up, confetti */
+.molo--handed .molo-figure { transform-origin: 200px 400px; animation: molo-cheer 1.1s infinite; }
+.molo--handed .molo-ground { transform-origin: 200px 402px; animation: molo-shrink2 1.1s infinite; }
+.molo--handed .molo-arm-l { transform-origin: 96px 244px; animation: molo-wig-l 0.55s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.molo--handed .molo-arm-r { transform-origin: 304px 244px; animation: molo-wig-r 0.55s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.molo--handed .molo-confetti { animation: molo-confetti 1.4s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
+@keyframes molo-cheer {
+  0%, 100% { transform: translateY(0) scale(1.05, 0.95); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
+  45% { transform: translateY(-34px) scale(0.98, 1.03); animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4); }
+}
+@keyframes molo-shrink2 { 0%, 100% { transform: scaleX(1); opacity: 1; } 45% { transform: scaleX(0.8); opacity: 0.55; } }
+@keyframes molo-wig-l { from { transform: rotate(-12deg); } to { transform: rotate(8deg); } }
+@keyframes molo-wig-r { from { transform: rotate(12deg); } to { transform: rotate(-8deg); } }
+@keyframes molo-confetti { 0% { transform: translateY(-10px) rotate(0deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(56px) rotate(220deg); opacity: 0; } }
+
+/* loading: looks around, thinking dots */
+.molo--loading .molo-figure { transform-origin: 200px 400px; animation: molo-lean 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+.molo--loading .molo-look { animation: molo-look 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+.molo--loading .molo-dot { animation: molo-dot 1.2s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+@keyframes molo-lean { 0%, 100% { transform: rotate(0deg); } 20%, 40% { transform: rotate(-3deg); } 60%, 80% { transform: rotate(3deg); } }
+@keyframes molo-look { 0%, 100% { transform: translateX(0); } 20%, 40% { transform: translateX(-11px); } 60%, 80% { transform: translateX(11px); } }
+@keyframes molo-dot { 0%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-12px); opacity: 1; } }
+
+/* sleepy: breathes, z's float up */
+.molo--sleepy .molo-figure { transform-origin: 200px 400px; animation: molo-breathe 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+.molo--sleepy .molo-z { animation: molo-z 3.6s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
+@keyframes molo-breathe { 0%, 100% { transform: rotate(-5deg) scale(1, 1); } 50% { transform: rotate(-5deg) scale(1.02, 1.045); } }
+@keyframes molo-z { 0% { transform: translate(0, 10px) scale(0.6); opacity: 0; } 25% { opacity: 1; } 100% { transform: translate(26px, -54px) scale(1.15); opacity: 0; } }
+
+/* Play the mood a few times, then rest. Add with <Molo loop={false} />. */
+.molo--once .molo-figure,
+.molo--once .molo-arm-l,
+.molo--once .molo-arm-r,
+.molo--once .molo-ground,
+.molo--once .molo-fx,
+.molo--once .molo-confetti,
+.molo--once .molo-look { animation-iteration-count: 3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .molo * { animation: none !important; }
+  .molo--sleepy .molo-z,
+  .molo--loading .molo-dot,
+  .molo--handed .molo-confetti { animation: molo-glow 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite !important; }
+}
+@keyframes molo-glow { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }

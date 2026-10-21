@@ -28,7 +28,7 @@ export function ProductsClient({ products, canAdd }: { products: Product[]; canA
       )}
 
       {products.length === 0 && (
-        <EmptyState native icon={<BoxIcon />} className="mt-3">
+        <EmptyState native molo icon={<BoxIcon />} className="mt-3">
           No products yet. Start with whatever your class asks you for besides teeth — gloves,
           burs, a box of masks.
         </EmptyState>

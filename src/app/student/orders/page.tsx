@@ -36,7 +36,7 @@ export default async function OrderHistoryPage() {
       <h1 className="px-1 pb-2.5 pt-1 text-large-title font-bold text-ink">Orders</h1>
 
       {orders.length === 0 ? (
-        <EmptyState native icon={<ClipboardIcon />} className="mt-2">
+        <EmptyState native molo icon={<ClipboardIcon />} className="mt-2">
           No orders yet. Once you place your first order, it will be listed here.
         </EmptyState>
       ) : (

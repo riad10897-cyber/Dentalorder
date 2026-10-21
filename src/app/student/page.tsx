@@ -45,7 +45,7 @@ export default async function StudentHomePage() {
       {market.length === 0 ? (
         <>
           <OrderWindow />
-          <EmptyState native icon={<StoreIcon />} className="mt-4">
+          <EmptyState native molo icon={<StoreIcon />} className="mt-4">
             No seller is taking orders yet. As soon as someone in your year starts selling, they will
             show up here.
           </EmptyState>

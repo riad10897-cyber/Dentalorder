@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { homeForUser } from "@/lib/supabase/home";
 import { getVerifiedUserId } from "@/lib/supabase/auth";
+import { Molo } from "@/app/_components/molo";
+import { Wordmark } from "@/app/_components/wordmark";
 
 
 export default async function LandingPage() {
@@ -12,7 +14,10 @@ export default async function LandingPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 px-5 py-10 text-center">
-      <h1 className="text-[2.75rem] font-bold leading-none tracking-[-0.03em] text-ink">Molaro</h1>
+      <Molo mood="hello" size={160} />
+      <h1 aria-label="Molaro">
+        <Wordmark size="3rem" />
+      </h1>
       <p className="text-native-body text-ink-muted">
         Dental ordering made easy.
       </p>

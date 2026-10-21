@@ -120,7 +120,7 @@ export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
       </label>
 
       {filtered.length === 0 ? (
-        <EmptyState native icon={<ClipboardIcon />} className="mt-3">
+        <EmptyState native molo={orders.length === 0} icon={<ClipboardIcon />} className="mt-3">
           {query.trim()
             ? `Nothing in ${TABS.find((t) => t.key === tab)?.label.toLowerCase()} matches “${query.trim()}”.`
             : EMPTY[tab]}

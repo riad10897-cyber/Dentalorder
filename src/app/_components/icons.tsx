@@ -1,3 +1,4 @@
+import { Molo } from "./molo";
 /*
  * The app's few line icons, drawn like the bottom nav's: 24-unit box,
  * round caps, stroke in the current text colour. Decoration only — every
@@ -112,12 +113,19 @@ export function EmptyState({
   children,
   className = "",
   native = false,
+  molo = false,
 }: {
   icon: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   /** "Paper, native": a plain inset group rather than a dashed box. */
   native?: boolean;
+  /**
+   * Sleepy Molo instead of the icon. Only on a screen's one real empty
+   * list ("no orders yet"), never on a search with no match, never twice
+   * on a screen. The sentence stays: Molo never replaces words.
+   */
+  molo?: boolean;
 }) {
   return (
     <div
@@ -125,7 +133,7 @@ export function EmptyState({
         native ? "rounded-group bg-card text-list-secondary" : "rounded-card border border-dashed border-rule text-small"
       } text-ink-muted ${className}`}
     >
-      <span className="text-ink-faint">{icon}</span>
+      {molo ? <Molo mood="sleepy" size={120} handle={false} /> : <span className="text-ink-faint">{icon}</span>}
       <p>{children}</p>
     </div>
   );

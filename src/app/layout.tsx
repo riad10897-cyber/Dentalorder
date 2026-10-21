@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./molo.css";
 import { ServiceWorkerRegistration } from "./service-worker-registration";
 import { VisitCounter } from "./analytics";
 

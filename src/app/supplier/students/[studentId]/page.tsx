@@ -72,7 +72,7 @@ export default async function SupplierStudentDetailPage({
         <SectionHeader>Order history</SectionHeader>
 
         {orders.length === 0 ? (
-          <EmptyState native icon={<ClipboardIcon />}>
+          <EmptyState native molo icon={<ClipboardIcon />}>
             This student hasn&rsquo;t placed an order yet.
           </EmptyState>
         ) : (

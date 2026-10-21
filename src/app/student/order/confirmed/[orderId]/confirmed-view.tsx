@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ConfirmIcon } from "./confirm-icon";
+import { Molo } from "@/app/_components/molo";
 import { describeLines } from "@/app/_components/extras-lines";
 
 /**
- * "Sent to Mohamad" ("Paper, native"): the tick, who it went to, what it
+ * "Sent to Mohamad" ("Paper, native"): Molo, who it went to, what it
  * comes to, and where it stands. Only reached right after placing, so the
  * order is always at its first step.
  */
@@ -25,7 +25,8 @@ export function ConfirmedView({
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center gap-3.5 px-5 pb-8 pt-[4.375rem] text-center">
-      <ConfirmIcon />
+      {/* Molo's hop, three times, then he rests: the order went through. */}
+      <Molo mood="gotit" size={120} loop={false} />
       <h1 className="confirm-stagger text-screen-title font-bold text-ink" style={stagger(0)}>
         {wasEdit ? `Changes sent to ${firstName}` : `Sent to ${firstName}`}
       </h1>

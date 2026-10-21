@@ -36,7 +36,7 @@ export default async function SupplierStudentsPage() {
       </p>
 
       {students.length === 0 ? (
-        <EmptyState native icon={<PeopleIcon />} className="mt-5">
+        <EmptyState native molo icon={<PeopleIcon />} className="mt-5">
           No student has ordered from you yet. They appear here after their first order.
         </EmptyState>
       ) : (

@@ -1,10 +1,12 @@
 import { SignInForm } from "./sign-in-form";
 import { emailHref, whatsappHref } from "@/lib/contact";
+import { Molo } from "@/app/_components/molo";
 
 export default function SignInPage() {
   const whatsapp = whatsappHref("Hi, I forgot my Molaro password. My email is: ");
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-5 py-10">
+      <Molo mood="hello" size={140} className="mx-auto" />
       <div>
         <h1 className="text-screen-title font-bold text-ink">Sign in</h1>
         <p className="mt-1 text-native-body text-ink-muted">Welcome back to Molaro.</p>
