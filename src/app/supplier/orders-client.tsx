@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 // type-only: keeps the server-only data module out of this client bundle
 import type { SupplierOrder } from "@/lib/supplier/data";
@@ -31,9 +31,54 @@ function handedOverUnpaid(order: SupplierOrder): boolean {
   return order.fulfillmentStatus === "fulfilled" && order.paymentStatus !== "paid";
 }
 
+/** An order that just left the tab on screen, and how to put it back. */
+interface Moved {
+  message: string;
+  revert: StatusPatch;
+}
+
+const UNDO_MS = 5000;
+
 export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("pending");
   const [query, setQuery] = useState("");
+
+  // Confirming or handing over moves the card to another tab, so it
+  // vanishes from under the seller's thumb. Say where it went, and offer
+  // the way back for a few seconds: a mis-tap should cost one tap.
+  const [moved, setMoved] = useState<Moved | null>(null);
+  const [undoError, setUndoError] = useState<string | null>(null);
+  const [undoing, startUndo] = useTransition();
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const announceMove = useCallback((next: Moved) => {
+    setUndoError(null);
+    setMoved(next);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setMoved(null), UNDO_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimer.current) clearTimeout(undoTimer.current);
+    };
+  }, []);
+
+  function undoMove() {
+    if (!moved) return;
+    const { revert } = moved;
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    startUndo(async () => {
+      const result = await updateOrderStatus(revert);
+      if (!result.ok) {
+        setUndoError(result.error);
+        return;
+      }
+      setMoved(null);
+      router.refresh();
+    });
+  }
 
   const counts = useMemo(
     () =>
@@ -129,15 +174,50 @@ export function OrdersClient({ orders }: { orders: SupplierOrder[] }) {
       ) : (
         <ul className="mt-3 flex flex-col gap-2.5">
           {filtered.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard key={order.id} order={order} onMoved={announceMove} />
           ))}
         </ul>
+      )}
+
+      {(moved || undoError) && (
+        <div
+          className="pointer-events-none fixed inset-x-0 z-40 mx-auto flex w-full max-w-md justify-center px-3"
+          style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
+        >
+          <div
+            role="status"
+            className="note-in pointer-events-auto flex min-h-9 max-w-full items-center gap-3 rounded-full bg-[rgba(20,18,15,0.86)] py-1 pl-3.5 pr-1.5 text-[0.875rem] text-card"
+          >
+            <span className="min-w-0 truncate">{undoError ?? moved?.message}</span>
+            {undoError ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setUndoError(null);
+                  setMoved(null);
+                }}
+                className="pressable relative h-7 shrink-0 rounded-full bg-[rgba(251,248,240,0.16)] px-3 text-[0.875rem] font-semibold text-card after:absolute after:-inset-2 after:content-['']"
+              >
+                OK
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={undoing}
+                onClick={undoMove}
+                className="pressable relative h-7 shrink-0 rounded-full bg-[rgba(251,248,240,0.16)] px-3 text-[0.875rem] font-semibold text-card after:absolute after:-inset-2 after:content-[''] disabled:opacity-60"
+              >
+                {undoing ? "Undoing…" : "Undo"}
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </>
   );
 }
 
-function OrderCard({ order }: { order: SupplierOrder }) {
+function OrderCard({ order, onMoved }: { order: SupplierOrder; onMoved: (moved: Moved) => void }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -152,11 +232,24 @@ function OrderCard({ order }: { order: SupplierOrder }) {
     // moment it is meant to confirm. Handing over and being paid are both
     // worth a haptic; confirming is a routine step along the way.
     if (patch.fulfillmentStatus === "fulfilled" || patch.paymentStatus === "paid") haptic();
+    const from = order.fulfillmentStatus;
     startTransition(async () => {
       const result = await updateOrderStatus(patch);
       if (!result.ok) {
         setError(result.error);
         return;
+      }
+      // Only a move between tabs needs announcing; the paid toggle stays
+      // on the card and undoes itself with a second tap.
+      if (patch.fulfillmentStatus && (from === "pending" || from === "confirmed")) {
+        const first = order.studentName.split(/\s+/)[0] || order.studentName;
+        onMoved({
+          message:
+            patch.fulfillmentStatus === "confirmed"
+              ? `Confirmed ${first}’s order`
+              : `Handed over ${first}’s order`,
+          revert: { orderId: order.id, fulfillmentStatus: from },
+        });
       }
       router.refresh();
     });
