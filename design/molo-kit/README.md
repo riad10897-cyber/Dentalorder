@@ -52,7 +52,7 @@ Rules that keep him charming instead of annoying:
 - One Molo per screen, never in lists, cards or the tab bar.
 - Screens people see often (the orders tab, the catalogue) get Molo only in their empty or loading state, never as decoration.
 - Molo never replaces words. Every state still has its text.
-- Errors stay in ink, with no Molo. Red means Frasaco only, so Molo never signals a problem.
+- Errors stay in ink. Molo appears only as his sad self, and only on the crash and not-found screens, never beside an inline error. Red means Frasaco only, so Molo never signals a problem in red.
 - Show `loading` only after ~400 ms, so fast loads don't flash him.
 - Reduced motion is built in: movement stops, only gentle fades remain.
 

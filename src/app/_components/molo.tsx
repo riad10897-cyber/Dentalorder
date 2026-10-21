@@ -5,8 +5,8 @@
 
 import type { CSSProperties } from "react";
 
-export type MoloMood = "idle" | "hello" | "gotit" | "handed" | "loading" | "sleepy";
-export type MoloFace = "happy" | "wink" | "wow" | "joy" | "sleepy" | "focus";
+export type MoloMood = "idle" | "hello" | "gotit" | "handed" | "loading" | "sleepy" | "sad";
+export type MoloFace = "happy" | "wink" | "wow" | "joy" | "sleepy" | "focus" | "sad";
 
 export type MoloProps = {
   /** Width in px. Height is size * 1.05. */
@@ -40,6 +40,7 @@ const FACE_BY_MOOD: Record<Exclude<MoloMood, "idle">, MoloFace> = {
   handed: "joy",
   loading: "focus",
   sleepy: "sleepy",
+  sad: "sad",
 };
 
 function Arm({ d, fill }: { d: string; fill: string }) {
@@ -75,8 +76,8 @@ export function Molo({
   style,
 }: MoloProps) {
   const f: MoloFace = mood === "idle" ? face : FACE_BY_MOOD[mood];
-  const eyesOpenL = f === "happy" || f === "wink" || f === "wow" || f === "focus";
-  const eyesOpenR = f === "happy" || f === "wow" || f === "focus";
+  const eyesOpenL = f === "happy" || f === "wink" || f === "wow" || f === "focus" || f === "sad";
+  const eyesOpenR = f === "happy" || f === "wow" || f === "focus" || f === "sad";
   const armL = mood === "handed" ? ARM_L.up : ARM_L.down;
   const armR =
     mood === "hello" ? ARM_R.wave : mood === "handed" ? ARM_R.up : mood === "gotit" ? ARM_R.fist : ARM_R.down;
@@ -157,6 +158,15 @@ export function Molo({
           )}
           {(f === "happy" || f === "wink") && <path d="M178 264 C190 282 210 282 222 264" />}
           {(f === "sleepy" || f === "focus") && <path d="M190 272 C196 276 204 276 210 272" />}
+          {/* Sad: a small frown and brows tipped up in the middle. Only on
+              the screens where something on our side went wrong. */}
+          {f === "sad" && (
+            <>
+              <path d="M184 282 C192 268 208 268 216 282" />
+              <path d="M146 196 C156 192 166 192 176 186" strokeWidth={7} />
+              <path d="M254 196 C244 192 234 192 224 186" strokeWidth={7} />
+            </>
+          )}
         </g>
         {(f === "wow" || f === "joy") && (
           <g>
