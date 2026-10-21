@@ -66,6 +66,7 @@ export default async function StudentHomePage() {
             <>
               {update && <LatestUpdate order={update} />}
               {last && <ReorderCard order={last} />}
+              {orders.length === 0 && <FirstOrderSteps />}
               <OrderWindow />
             </>
           }
@@ -80,6 +81,43 @@ export default async function StudentHomePage() {
 }
 
 const SELLER_MOVES = new Set(["confirmed", "fulfilled", "rejected"]);
+
+const FIRST_ORDER_STEPS = [
+  "Pick a seller below",
+  "Tap the teeth you need",
+  "Hold to place. You pay at pickup.",
+];
+
+/**
+ * Until the first order, the whole job in three steps, with the first one
+ * marked as where they are. Once there is an order, the Reorder card takes
+ * this spot and the steps are never shown again.
+ */
+function FirstOrderSteps() {
+  return (
+    <section aria-label="Your first order" className="mt-4 rounded-group bg-card px-4 py-3.5">
+      <p className="text-native-body font-semibold text-ink">Your first order, in 3 steps</p>
+      <ol className="mt-2.5 flex flex-col gap-2">
+        {FIRST_ORDER_STEPS.map((step, i) => (
+          <li key={step} className="flex items-center gap-3">
+            <span
+              aria-hidden
+              className={`tnum flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-native-caption font-semibold ${
+                i === 0 ? "bg-ink text-card" : "border border-rule text-ink-muted"
+              }`}
+            >
+              {i + 1}
+            </span>
+            <span className={`text-list-secondary ${i === 0 ? "font-semibold text-ink" : "text-ink-muted"}`}>
+              {step}
+              {i === 0 && <span className="sr-only"> (you are here)</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
 const UPDATE_MS = 48 * 60 * 60 * 1000;
 
 /** "Maria confirmed your order · 2 h ago", one tap from the order. */
