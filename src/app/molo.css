@@ -92,3 +92,47 @@
   .molo--handed .molo-confetti { animation: molo-glow 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite !important; }
 }
 @keyframes molo-glow { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+/* ── Welcome hero (welcome-hero.tsx) ─────────────────────────────────────
+   Calm on purpose: long loops, small distances, opacity and transform
+   only. The rise and the staggered text play once; nothing here can be
+   triggered by a tap. */
+.welcome-halo {
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--card) 0%, var(--card) 55%, rgba(251, 248, 240, 0) 72%);
+  animation: welcome-breathe 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes welcome-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.06); } }
+
+.welcome-rise { animation: welcome-rise 700ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+@keyframes welcome-rise { from { opacity: 0; transform: translateY(1.25rem); } to { opacity: 1; transform: translateY(0); } }
+
+.welcome-float { animation: welcome-float 3.6s cubic-bezier(0.45, 0, 0.55, 1) 700ms infinite; }
+@keyframes welcome-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.4rem); } }
+
+/* He glances to the side now and then while he waves. */
+.welcome-hero .molo--hello .molo-look { animation: welcome-glance 7.2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+@keyframes welcome-glance { 0%, 62%, 100% { transform: translateX(0); } 68%, 80% { transform: translateX(9px); } 86% { transform: translateX(0); } }
+
+.welcome-drift { opacity: 0; animation: welcome-drift 7s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+@keyframes welcome-drift {
+  0% { opacity: 0; transform: translateY(0.75rem) rotate(-8deg); }
+  25% { opacity: 0.9; }
+  75% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-1.75rem) rotate(8deg); }
+}
+
+.welcome-twinkle { opacity: 0.15; animation: welcome-twinkle 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+@keyframes welcome-twinkle { 0%, 100% { opacity: 0.12; transform: scale(0.8) rotate(0deg); } 50% { opacity: 0.55; transform: scale(1) rotate(20deg); } }
+
+/* The words arrive after Molo, one after another. */
+.welcome-in { animation: welcome-in 520ms cubic-bezier(0.23, 1, 0.32, 1) both; animation-delay: calc(350ms + var(--i, 0) * 90ms); }
+@keyframes welcome-in { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-halo, .welcome-float, .welcome-hero .molo--hello .molo-look { animation: none; }
+  .welcome-rise, .welcome-in { animation: molo-fadein 400ms ease-out both; }
+  .welcome-drift { animation: molo-glow 6s cubic-bezier(0.45, 0, 0.55, 1) infinite; transform: none; }
+  .welcome-twinkle { animation: molo-glow 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite; transform: none; }
+}
+@keyframes molo-fadein { from { opacity: 0; } to { opacity: 1; } }
