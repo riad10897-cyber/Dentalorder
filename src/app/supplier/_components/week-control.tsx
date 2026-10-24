@@ -8,7 +8,7 @@ import { setCurrentWeek } from "../_actions/orders";
  * "Week 5 of 17", with − and +, as an inset card ("Paper, native"): the
  * week these orders are FOR. Sellers are students too, so during week 4
  * they take orders for week 5. It moves on by itself every Saturday at
- * 1:00 PM; the buttons are for
+ * 5:00 PM; the buttons are for
  * putting it right (the first week of a semester, a holiday). Shown at
  * once, put back if the save fails.
  */

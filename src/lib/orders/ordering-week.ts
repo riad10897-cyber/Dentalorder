@@ -3,9 +3,9 @@
  * ordered in: sellers are students too, so during week 4 they take
  * orders for week 5, and an order filed under week 5 is handed over then.
  *
- * Ordering weeks run from Saturday 1:00 PM to the next Saturday 1:00 PM,
- * Beirut time. Students are told to order by 12:50 PM; anything placed
- * before 1:00 PM still goes into that week.
+ * Ordering weeks run from Saturday 5:00 PM to the next Saturday 5:00 PM,
+ * Beirut time (1:00 PM until 24 Oct 2026). Students are told to order by
+ * 4:50 PM; anything placed before 5:00 PM still goes into that week.
  *
  * The same rule lives in the database (public.effective_week), which is
  * what actually files each order. This copy only decides what screens
@@ -14,8 +14,9 @@
 
 const TIME_ZONE = "Asia/Beirut";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-// A Saturday 1:00 PM, as Beirut wall-clock time. Only differences matter.
-const ANCHOR_LOCAL_MS = Date.UTC(2026, 0, 3, 13, 0);
+// A Saturday 5:00 PM, as Beirut wall-clock time. Only differences matter.
+// The same starting point as public.ordering_week_index in the database.
+const ANCHOR_LOCAL_MS = Date.UTC(2026, 0, 3, 17, 0);
 /** How long before the switch students are asked to have ordered. */
 export const DEADLINE_LEAD_MINUTES = 10;
 export const LAST_WEEK = 17;
@@ -44,12 +45,12 @@ function weekIndex(at: Date): number {
   return Math.floor((beirutWallClockMs(at) - ANCHOR_LOCAL_MS) / WEEK_MS);
 }
 
-/** Which ordering week (Saturday 1:00 PM to Saturday 1:00 PM) a moment falls in. Only differences matter. */
+/** Which ordering week (Saturday 5:00 PM to Saturday 5:00 PM) a moment falls in. Only differences matter. */
 export function orderingWeekIndex(at: Date): number {
   return weekIndex(at);
 }
 
-/** The week a seller is on now: the week they set, plus one per Saturday 1:00 PM since. */
+/** The week a seller is on now: the week they set, plus one per Saturday 5:00 PM since. */
 export function effectiveWeek(week: number, setAt: Date, at: Date = new Date()): number {
   return Math.min(LAST_WEEK, Math.max(1, week + weekIndex(at) - weekIndex(setAt)));
 }
@@ -65,16 +66,16 @@ const wallClockFormat = new Intl.DateTimeFormat("en-GB", {
 });
 
 function formatWallClock(localMs: number): string {
-  // "Saturday 10 Oct, 12:50 pm" → "Saturday 10 Oct, 12:50 PM"
+  // "Saturday 10 Oct, 4:50 pm" → "Saturday 10 Oct, 4:50 PM"
   return wallClockFormat.format(new Date(localMs)).replace(/\b(am|pm)\b/, (m) => m.toUpperCase());
 }
 
-/** When this ordering week ends and the next begins: "Saturday 10 Oct, 1:00 PM". */
+/** When this ordering week ends and the next begins: "Saturday 10 Oct, 5:00 PM". */
 export function nextSwitchLabel(at: Date = new Date()): string {
   return formatWallClock(ANCHOR_LOCAL_MS + (weekIndex(at) + 1) * WEEK_MS);
 }
 
-/** What students are told to order by: "Saturday 10 Oct, 12:50 PM". */
+/** What students are told to order by: "Saturday 10 Oct, 4:50 PM". */
 export function deadlineLabel(at: Date = new Date()): string {
   return formatWallClock(ANCHOR_LOCAL_MS + (weekIndex(at) + 1) * WEEK_MS - DEADLINE_LEAD_MINUTES * 60 * 1000);
 }

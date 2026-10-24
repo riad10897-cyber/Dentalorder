@@ -1,8 +1,8 @@
 import { deadlineLabel } from "@/lib/orders/ordering-week";
 
 /**
- * When to order by. Ordering weeks close every Saturday at 1:00 PM
- * (Beirut); students are asked to be in by 12:50. Worked out on the
+ * When to order by. Ordering weeks close every Saturday at 5:00 PM
+ * (Beirut); students are asked to be in by 4:50. Worked out on the
  * server at request time, so it is always this week's Saturday.
  */
 export function OrderWindow({ compact = false }: { compact?: boolean }) {

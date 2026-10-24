@@ -101,12 +101,12 @@ export function AdminView({ data }: { data: AdminOverview }) {
   );
 }
 
-/** This ordering week, Saturday 1 PM to Saturday 1 PM: the numbers that move. */
+/** This ordering week, Saturday 5 PM to Saturday 5 PM: the numbers that move. */
 function WeekCard({ data }: { data: AdminOverview }) {
   const w = data.week;
   return (
     <section aria-label="This week" className="mt-4 rounded-button bg-ink px-4 pb-4 pt-3.5 text-card">
-      <p className="text-native-caption text-card/65">This week · since Saturday 1 PM</p>
+      <p className="text-native-caption text-card/65">This week · since Saturday 5 PM</p>
       <div className="mt-1 flex items-baseline justify-between gap-3">
         <p className="tnum text-[2.25rem] font-bold leading-none tracking-[-0.02em]">
           {w.orders}

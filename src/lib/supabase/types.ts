@@ -266,6 +266,12 @@ export interface Database {
           amended_from: string | null;
           /** Lines the seller took off as unavailable, each as it was charged. */
           unavailable_lines: UnavailableLine[];
+          /** Timeline, stamped by the database on each status change. */
+          confirmed_at: string | null;
+          fulfilled_at: string | null;
+          paid_at: string | null;
+          rejected_at: string | null;
+          amended_at: string | null;
         };
         Insert: {
           id?: string;

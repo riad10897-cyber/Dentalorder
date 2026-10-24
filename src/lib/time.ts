@@ -19,3 +19,22 @@ export function timeAgo(iso: string, now: Date = new Date()): string {
   if (dayKey(then) === dayKey(yesterday)) return "yesterday";
   return formatDay(iso);
 }
+
+const clock = (d: Date) =>
+  d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ });
+
+/**
+ * A moment on an order's timeline: "Today at 9:12 AM", "Yesterday at
+ * 5:00 PM", "Monday at 5:00 PM" within the week, then "12 Oct at 5:00 PM".
+ */
+export function formatMoment(iso: string, now: Date = new Date()): string {
+  const then = new Date(iso);
+  const at = `at ${clock(then)}`;
+  if (dayKey(then) === dayKey(now)) return `Today ${at}`;
+  if (dayKey(then) === dayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000))) return `Yesterday ${at}`;
+  if (now.getTime() - then.getTime() < 6 * 24 * 60 * 60 * 1000) {
+    return `${then.toLocaleDateString("en-US", { weekday: "long", timeZone: TZ })} ${at}`;
+  }
+  return `${formatDay(iso)} ${at}`;
+}
+

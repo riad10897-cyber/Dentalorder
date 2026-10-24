@@ -29,9 +29,9 @@ test("a second order in the student's first week is not a 'first order'", () => 
   assert.deepEqual(streakNote([40, 40], 40), { kind: "none" });
 });
 
-test("weeks turn over at Saturday 1:00 PM Beirut", () => {
-  // 12:59 and 13:00 Beirut on Saturday 10 Oct 2026 (UTC+3).
-  assert.equal(orderingWeekIndex(new Date("2026-10-10T10:00:00Z")) - orderingWeekIndex(new Date("2026-10-10T09:59:00Z")), 1);
+test("weeks turn over at Saturday 5:00 PM Beirut", () => {
+  // 4:59 and 5:00 PM Beirut on Saturday 10 Oct 2026 (UTC+3).
+  assert.equal(orderingWeekIndex(new Date("2026-10-10T14:00:00Z")) - orderingWeekIndex(new Date("2026-10-10T13:59:00Z")), 1);
 });
 
 test("ordinals", () => {

@@ -11,6 +11,7 @@ import { EmptyState, ClipboardIcon } from "@/app/_components/icons";
 import { UnavailableNote } from "@/app/_components/unavailable-note";
 import { HelpLinks } from "@/app/_components/help-links";
 import { totalWithout } from "@/lib/orders/unavailable";
+import { formatMoment } from "@/lib/time";
 
 type Tab = "pending" | "confirmed" | "fulfilled" | "rejected";
 const TABS: { key: Tab; label: string }[] = [
@@ -317,6 +318,8 @@ function OrderCard({ order, onMoved }: { order: SupplierOrder; onMoved: (moved: 
       <ExtrasLines extras={order.extras} />
 
       <UnavailableNote lines={order.unavailable} total={order.totalPrice} />
+
+      <Timeline order={order} />
 
       {order.fulfillmentStatus === "rejected" ? (
         <div className="mt-3 border-t-[0.5px] border-separator pt-3">
@@ -663,3 +666,43 @@ function RemovePanel({
     </div>
   );
 }
+
+/**
+ * What happened to this order and when, oldest first: "Lea ordered
+ * Monday at 5:00 PM", "You confirmed Tuesday at 9:12 AM"… Every time is
+ * stamped by the database, never by a phone. A step with no time (an
+ * order from before times were kept) is left out rather than guessed.
+ */
+function Timeline({ order }: { order: SupplierOrder }) {
+  const first = order.studentName.split(/\s+/)[0] || order.studentName;
+  const t = order.times;
+  const events = [
+    { label: `${first} ordered`, at: order.createdAt },
+    { label: "You confirmed", at: t.confirmed },
+    { label: "You took items off", at: t.amended },
+    { label: "You rejected it", at: t.rejected },
+    { label: "You handed it over", at: t.fulfilled },
+    { label: "Marked paid", at: t.paid },
+  ]
+    .filter((e): e is { label: string; at: string } => Boolean(e.at))
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+
+  return (
+    <ol aria-label="Timeline" className="mt-3 flex flex-col">
+      {events.map((e, i) => (
+        <li key={e.label} className="relative flex gap-2.5 pb-1.5 last:pb-0">
+          {/* The dot, and the thread down to the next step. */}
+          <span aria-hidden className="relative flex w-2 shrink-0 justify-center pt-[0.4rem]">
+            <span className={`h-1.5 w-1.5 rounded-full ${i === events.length - 1 ? "bg-ink" : "bg-ink-faint"}`} />
+            {i < events.length - 1 && <span className="absolute bottom-[-0.375rem] top-[0.95rem] w-px bg-separator" />}
+          </span>
+          <span className="min-w-0 text-native-caption text-ink-muted">
+            <span className={i === events.length - 1 ? "font-semibold text-ink" : ""}>{e.label}</span>{" "}
+            <span className="tnum">{formatMoment(e.at).replace(/^Today /, "today ").replace(/^Yesterday /, "yesterday ")}</span>
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+

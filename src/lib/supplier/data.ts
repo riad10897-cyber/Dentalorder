@@ -22,7 +22,7 @@ export interface SupplierContext {
    *  but takes no orders, so every screen has to say so. */
   status: AccountStatus;
   /** The week this seller is taking orders for now: the week they set,
-   *  moved on by every Saturday 1:00 PM since. New orders take it. */
+   *  moved on by every Saturday 5:00 PM since. New orders take it. */
   currentWeek: number;
 }
 
@@ -95,6 +95,8 @@ export interface SupplierOrder {
   extras: SupplierOrderExtra[];
   /** What the seller took off as unavailable, as it was charged. */
   unavailable: UnavailableLine[];
+  /** When each step happened (null: not yet, or before times were kept). */
+  times: { confirmed: string | null; fulfilled: string | null; paid: string | null; rejected: string | null; amended: string | null };
 }
 
 // An order nobody is going to supply is not money owed and not teeth to
@@ -124,6 +126,11 @@ function mapOrderRow(order: {
   student_id: string;
   profiles: { full_name: string } | null;
   unavailable_lines: UnavailableLine[] | null;
+  confirmed_at: string | null;
+  fulfilled_at: string | null;
+  paid_at: string | null;
+  rejected_at: string | null;
+  amended_at: string | null;
   order_items:
     | {
         id: string;
@@ -171,11 +178,18 @@ function mapOrderRow(order: {
       }))
       .sort((a, b) => a.name.localeCompare(b.name)),
     unavailable: order.unavailable_lines ?? [],
+    times: {
+      confirmed: order.confirmed_at,
+      fulfilled: order.fulfilled_at,
+      paid: order.paid_at,
+      rejected: order.rejected_at,
+      amended: order.amended_at,
+    },
   };
 }
 
 const ORDER_COLUMNS =
-  "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, student_id, unavailable_lines, profiles(full_name), order_items(id, tooth_number, tooth_type, product_id, product_name, product_unit, quantity, unit_price, line_total)";
+  "id, week_number, total_price, payment_status, fulfillment_status, rejection_reason, created_at, student_id, unavailable_lines, confirmed_at, fulfilled_at, paid_at, rejected_at, amended_at, profiles(full_name), order_items(id, tooth_number, tooth_type, product_id, product_name, product_unit, quantity, unit_price, line_total)";
 
 export async function listSupplierOrders(supplierId: string): Promise<SupplierOrder[]> {
   const supabase = await createClient();

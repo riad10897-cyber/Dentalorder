@@ -22,7 +22,7 @@ interface OrderBuilderProps {
   copyAPrice: number;
   initialWeek: number;
   initialToothType: ToothType;
-  /** "Saturday 10 Oct, 12:50 PM": when this week's orders close. */
+  /** "Saturday 10 Oct, 4:50 PM": when this week's orders close. */
   deadline: string;
   /** The seller's in-stock products right now, priced. Empty hides the section. */
   extras: ExtraOption[];

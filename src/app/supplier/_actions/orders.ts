@@ -161,7 +161,7 @@ export async function updateSupplierPrices(input: {
 /**
  * Set the week this seller is taking orders for, from now. Every order
  * placed after this lands in it, and it moves on by itself each Saturday
- * at 1:00 PM. Orders already placed keep theirs. Confined to the seller's
+ * at 5:00 PM. Orders already placed keep theirs. Confined to the seller's
  * own row by suppliers_update_own. week_set_at is sent only so the write
  * counts as a new setting even when the number is unchanged; the database
  * replaces the time with its own.

@@ -28,7 +28,7 @@ export interface AdminOrder {
   paid: boolean;
   /** The seller took something off as unavailable. */
   changed: boolean;
-  /** Placed in the current ordering week (Saturday 1 PM to Saturday 1 PM). */
+  /** Placed in the current ordering week (Saturday 5 PM to Saturday 5 PM). */
   thisWeek: boolean;
   teeth: { toothNumber: number; toothType: ToothType; quantity: number }[];
   extras: { name: string; quantity: number }[];

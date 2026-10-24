@@ -1,6 +1,6 @@
 // The weekly ordering streak shown on the confirmation screen.
 //
-// Counted in ordering weeks (Saturday 1:00 PM to Saturday 1:00 PM, Beirut),
+// Counted in ordering weeks (Saturday 5:00 PM to Saturday 5:00 PM, Beirut),
 // from when each order was placed, across every seller: it is the student's
 // habit, not any one seller's. Cancelled and rejected orders don't count.
 // A missed week simply starts it again; nothing ever says it was lost.
